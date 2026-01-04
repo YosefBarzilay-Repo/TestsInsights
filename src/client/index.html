@@ -188,21 +188,15 @@
             margin-right: 0.25rem;
             vertical-align: middle;
         }
-        .pill-passed { background-color: #10b981; }
-        .pill-failed { background-color: #ef4444; }
-        .pill-skipped { background-color: #9ca3af; }
         .pill-passed { background-color: #A1C45A; }
         .pill-failed { background-color: #EA4C4C; }
-        .pill-skipped { background-color: #FFF9E0; }
         .pill-skipped { background-color: #9ca3af; }
         .rate-value {
             font-size: 1.25rem;
             font-weight: 700;
         }
-        .text-green { color: #10b981; }
         .text-green { color: #A1C45A; }
         .text-yellow { color: #d97706; }
-        .text-red { color: #ef4444; }
         .text-red { color: #EA4C4C; }
         
         /* Toolbar Styles */
@@ -538,12 +532,8 @@
             height: 100%;
             transition: width 0.5s ease-in-out;
         }
-        .bg-green { background-color: #10b981; }
-        .bg-red { background-color: #ef4444; }
-        .bg-grey { background-color: #9ca3af; }
         .bg-green { background-color: #A1C45A; }
         .bg-red { background-color: #EA4C4C; }
-        .bg-grey { background-color: #FFF9E0; }
         .bg-grey { background-color: #9ca3af; }
         
         .text-warning { color: #f59e0b; }
@@ -926,6 +916,7 @@
         let globalTestHistory = {};
         let globalTestResults = {};
         let globalTestGroups = {};
+        let globalTestNames = {};
         let runToTestsMap = {};
         let globalRunStats = [];
         let globalTestDetails = {}; // Stores full row data per test
@@ -1025,7 +1016,12 @@
             const lines = csvText.split(/\r\n|\n/).filter(line => line.trim() !== '');
             if (lines.length < 2) return;
 
-            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            let headerLine = lines[0];
+            if (headerLine.charCodeAt(0) === 0xFEFF) {
+                headerLine = headerLine.slice(1);
+            }
+
+            const headers = headerLine.split(',').map(h => h.trim().toLowerCase());
             const testNameIdx = headers.indexOf('test_name');
             const statusIdx = headers.indexOf('status');
             const runIdIdx = headers.indexOf('run_id');
@@ -1042,6 +1038,7 @@
             const testResults = {};
             const testGroups = {};
             const testHistory = {};
+            const testNames = {};
             const testDetails = {};
             const runStatsMap = {};
             const localRunToTestsMap = {};
@@ -1053,14 +1050,24 @@
             for (let i = 1; i < lines.length; i++) {
                 const cols = lines[i].split(',');
                 if (cols.length <= Math.max(testNameIdx, statusIdx)) continue;
+                if (cols.length <= testNameIdx || cols.length <= statusIdx) continue;
 
-                const testName = cols[testNameIdx].trim();
+                const rawTestName = cols[testNameIdx].trim();
+                if (!rawTestName) continue;
+
                 let status = cols[statusIdx].trim().toLowerCase();
                 // Normalize status values from CSV (pass/fail/skip -> passed/failed/skipped)
                 if (status === 'pass') status = 'passed';
                 else if (status === 'fail') status = 'failed';
                 else if (status === 'skip') status = 'skipped';
-                const groupName = groupNameIdx !== -1 && cols[groupNameIdx] ? cols[groupNameIdx].trim() : '-';
+                let groupName = '--';
+                if (groupNameIdx !== -1 && cols[groupNameIdx]) {
+                    const trimmed = cols[groupNameIdx].trim();
+                    if (trimmed) groupName = trimmed;
+                }
+
+                // Use composite key to distinguish tests with same name but different group
+                const testKey = `${rawTestName}|${groupName}`;
                 let runId = '';
 
                 if (runIdIdx !== -1 && cols[runIdIdx]) {
@@ -1098,24 +1105,25 @@
                 else if (status === 'failed') totalFailed++;
                 else if (status === 'skipped') totalSkipped++;
 
-                if (!testResults[testName]) {
-                    testResults[testName] = new Set();
+                if (!testResults[testKey]) {
+                    testResults[testKey] = new Set();
                 }
-                testResults[testName].add(status);
+                testResults[testKey].add(status);
+                testNames[testKey] = rawTestName;
 
-                if (!testGroups[testName] || testGroups[testName] === '-') {
-                    testGroups[testName] = groupName;
+                if (!testGroups[testKey] || testGroups[testKey] === '--') {
+                    testGroups[testKey] = groupName;
                 }
 
-                if (!testHistory[testName]) {
-                    testHistory[testName] = [];
+                if (!testHistory[testKey]) {
+                    testHistory[testKey] = [];
                 }
-                testHistory[testName].push(status);
+                testHistory[testKey].push(status);
 
-                if (!testDetails[testName]) {
-                    testDetails[testName] = [];
+                if (!testDetails[testKey]) {
+                    testDetails[testKey] = [];
                 }
-                testDetails[testName].push({
+                testDetails[testKey].push({
                     runId: runId,
                     status: status,
                     date: dateIdx !== -1 ? cols[dateIdx] : '-',
@@ -1127,12 +1135,13 @@
                     if (!localRunToTestsMap[runId]) {
                         localRunToTestsMap[runId] = new Set();
                     }
-                    localRunToTestsMap[runId].add(testName);
+                    localRunToTestsMap[runId].add(testKey);
                 }
             }
            globalTestHistory = testHistory;
             globalTestResults = testResults;
             globalTestGroups = testGroups;
+            globalTestNames = testNames;
             globalTestDetails = testDetails;
             runToTestsMap = localRunToTestsMap;
             
@@ -1310,14 +1319,14 @@
                     const row = document.createElement('tr');
                     const nameCell = document.createElement('td');
                     const nameLink = document.createElement('span');
-                    nameLink.textContent = testName;
+                    nameLink.textContent = globalTestNames[testName] || testName;
                     nameLink.className = 'test-name-link';
                     nameLink.onclick = () => openTestDetails(testName);
                     nameCell.appendChild(nameLink);
                     row.appendChild(nameCell);
 
                     const groupCell = document.createElement('td');
-                    groupCell.textContent = globalTestGroups[testName] || '-';
+                    groupCell.textContent = globalTestGroups[testName] || '--';
                     row.appendChild(groupCell);
 
                     sortedRuns.forEach(runId => {
@@ -1377,7 +1386,7 @@
                 // 2. Test Name Column
                 const nameCell = document.createElement('td');
                 const nameLink = document.createElement('span');
-                nameLink.textContent = testName;
+                nameLink.textContent = globalTestNames[testName] || testName;
                 nameLink.className = 'test-name-link';
                 nameLink.onclick = () => openTestDetails(testName);
                 nameCell.appendChild(nameLink);
@@ -1385,7 +1394,7 @@
 
                 // Test Group Column
                 const groupCell = document.createElement('td');
-                groupCell.textContent = globalTestGroups[testName] || '-';
+                groupCell.textContent = globalTestGroups[testName] || '--';
                 row.appendChild(groupCell);
 
                 // 3. Deviation Column
@@ -1417,7 +1426,9 @@
             const details = globalTestDetails[testName];
             if (!details) return;
 
-            document.getElementById('modalTitle').textContent = `History: ${testName}`;
+            const displayName = globalTestNames[testName] || testName;
+            const group = globalTestGroups[testName] || '--';
+            document.getElementById('modalTitle').textContent = `History: ${displayName} (Group: ${group})`;
             const tbody = document.getElementById('modalTableBody');
             tbody.innerHTML = '';
 
@@ -1783,10 +1794,11 @@
 
     
                 if (columnFilters.grade !== 'All' && grade !== columnFilters.grade) return;
-                const groupName = globalTestGroups[testName] || '-';
+                const groupName = globalTestGroups[testName] || '--';
 
     
-                tableRows.push([testName, groupName, passedCount, failedCount, skippedCount, failedCount, grade]);
+                const displayName = globalTestNames[testName] || testName;
+                tableRows.push([displayName, groupName, passedCount, failedCount, skippedCount, failedCount, grade]);
             });
 
     
