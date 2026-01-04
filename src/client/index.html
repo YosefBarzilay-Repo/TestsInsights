@@ -191,13 +191,19 @@
         .pill-passed { background-color: #10b981; }
         .pill-failed { background-color: #ef4444; }
         .pill-skipped { background-color: #9ca3af; }
+        .pill-passed { background-color: #A1C45A; }
+        .pill-failed { background-color: #EA4C4C; }
+        .pill-skipped { background-color: #FFF9E0; }
+        .pill-skipped { background-color: #9ca3af; }
         .rate-value {
             font-size: 1.25rem;
             font-weight: 700;
         }
         .text-green { color: #10b981; }
+        .text-green { color: #A1C45A; }
         .text-yellow { color: #d97706; }
         .text-red { color: #ef4444; }
+        .text-red { color: #EA4C4C; }
         
         /* Toolbar Styles */
         .toolbar {
@@ -535,9 +541,14 @@
         .bg-green { background-color: #10b981; }
         .bg-red { background-color: #ef4444; }
         .bg-grey { background-color: #9ca3af; }
+        .bg-green { background-color: #A1C45A; }
+        .bg-red { background-color: #EA4C4C; }
+        .bg-grey { background-color: #FFF9E0; }
+        .bg-grey { background-color: #9ca3af; }
         
         .text-warning { color: #f59e0b; }
         .text-danger { color: #ef4444; }
+        .text-danger { color: #EA4C4C; }
         .separator {
             width: 1px;
             height: 2rem;
@@ -724,6 +735,7 @@
                         <span>Execution Trends</span>
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <button id="compareRunsBtn" class="btn-icon hidden" onclick="toggleComparisonMode()" title="Compare Selected Runs">
+                        <button id="compareRunsBtn" class="btn-icon" onclick="toggleComparisonMode()" title="Select 2-3 runs to compare" disabled>
                                 <span class="material-symbols-outlined">compare_arrows</span>
                             </button>
                             <button id="clearRunFilterBtn" class="btn-icon hidden" onclick="setFilter('all')" title="Clear Selection">
@@ -914,6 +926,7 @@
     <script>
         let globalTestHistory = {};
         let globalTestResults = {};
+        let globalTestGroups = {};
         let runToTestsMap = {};
         let globalRunStats = [];
         let globalTestDetails = {}; // Stores full row data per test
@@ -1002,7 +1015,7 @@
             
             currentPage = 1;
             updateInsights(); // Update cards to "all" state
-            document.getElementById('compareRunsBtn').classList.add('hidden');
+            document.getElementById('compareRunsBtn').disabled = true;
             document.getElementById('clearRunFilterBtn').classList.add('hidden');
             renderTable();
             renderTrendChart('trendChartSmall', globalRunStats);
@@ -1020,6 +1033,7 @@
             const dateIdx = headers.indexOf('run_date');
             const startIdx = headers.indexOf('start_time');
             const endIdx = headers.indexOf('end_time');
+            const groupNameIdx = headers.indexOf('test_group_name');
 
             if (testNameIdx === -1 || statusIdx === -1) {
                 alert('CSV must contain "test_name" and "status" columns.');
@@ -1027,6 +1041,7 @@
             }
 
             const testResults = {};
+            const testGroups = {};
             const testHistory = {};
             const testDetails = {};
             const runStatsMap = {};
@@ -1041,7 +1056,12 @@
                 if (cols.length <= Math.max(testNameIdx, statusIdx)) continue;
 
                 const testName = cols[testNameIdx].trim();
-                const status = cols[statusIdx].trim().toLowerCase();
+                let status = cols[statusIdx].trim().toLowerCase();
+                // Normalize status values from CSV (pass/fail/skip -> passed/failed/skipped)
+                if (status === 'pass') status = 'passed';
+                else if (status === 'fail') status = 'failed';
+                else if (status === 'skip') status = 'skipped';
+                const groupName = groupNameIdx !== -1 && cols[groupNameIdx] ? cols[groupNameIdx].trim() : '-';
                 let runId = '';
 
                 if (runIdIdx !== -1 && cols[runIdIdx]) {
@@ -1084,6 +1104,10 @@
                 }
                 testResults[testName].add(status);
 
+                if (!testGroups[testName] || testGroups[testName] === '-') {
+                    testGroups[testName] = groupName;
+                }
+
                 if (!testHistory[testName]) {
                     testHistory[testName] = [];
                 }
@@ -1109,6 +1133,7 @@
             }
            globalTestHistory = testHistory;
             globalTestResults = testResults;
+            globalTestGroups = testGroups;
             globalTestDetails = testDetails;
             runToTestsMap = localRunToTestsMap;
             
@@ -1280,7 +1305,7 @@
                     return a.localeCompare(b);
                 });
 
-                let headerHtml = '<tr><th>Test Name</th>';
+                let headerHtml = '<tr><th>Test Name</th><th>Test Group</th>';
                 sortedRuns.forEach(runId => {
                     headerHtml += `<th class="text-center">Run ${runId}</th>`;
                 });
@@ -1296,6 +1321,10 @@
                     nameLink.onclick = () => openTestDetails(testName);
                     nameCell.appendChild(nameLink);
                     row.appendChild(nameCell);
+
+                    const groupCell = document.createElement('td');
+                    groupCell.textContent = globalTestGroups[testName] || '-';
+                    row.appendChild(groupCell);
 
                     sortedRuns.forEach(runId => {
                         const cell = document.createElement('td');
@@ -1317,6 +1346,7 @@
             thead.innerHTML = `
                 <tr>
                     <th>Test Name</th>
+                    <th>Test Group</th>
                     <th style="width: 10rem;">Deviation (P/F/S)</th>
                     <th class="text-right" style="width: 8rem;">Fail Count</th>
                     <th class="text-center th-interactive" style="width: 6rem;" onclick="openFilter(event, 'grade')">Grade <span class="material-symbols-outlined filter-icon">filter_alt</span></th>
@@ -1358,6 +1388,11 @@
                 nameLink.onclick = () => openTestDetails(testName);
                 nameCell.appendChild(nameLink);
                 row.appendChild(nameCell);
+
+                // Test Group Column
+                const groupCell = document.createElement('td');
+                groupCell.textContent = globalTestGroups[testName] || '-';
+                row.appendChild(groupCell);
 
                 // 3. Deviation Column
                 const deviationCell = document.createElement('td');
@@ -1542,12 +1577,12 @@
             updateInsights(activeRunFilter);
             
             const compareBtn = document.getElementById('compareRunsBtn');
-            if (activeRunFilters.length >= 2) {
-                compareBtn.classList.remove('hidden');
-                compareBtn.disabled = activeRunFilters.length > 3;
-                compareBtn.title = activeRunFilters.length > 3 ? "Select max 3 runs to compare" : "Compare Selected Runs";
+            if (activeRunFilters.length >= 2 && activeRunFilters.length <= 3) {
+                compareBtn.disabled = false;
+                compareBtn.title = "Compare Selected Runs";
             } else {
-                compareBtn.classList.add('hidden');
+                compareBtn.disabled = true;
+                compareBtn.title = activeRunFilters.length > 3 ? "Select max 3 runs to compare" : "Select 2-3 runs to compare";
                 if (isComparisonMode) {
                     isComparisonMode = false;
                 }
@@ -1702,7 +1737,7 @@
 
     
             // 2. Gather Table Data (re-implementing filtering logic from renderTable)
-            const tableHeader = ['Test Name', 'Passed', 'Failed', 'Skipped', 'Fail Count', 'Grade'];
+            const tableHeader = ['Test Name', 'Test Group', 'Passed', 'Failed', 'Skipped', 'Fail Count', 'Grade'];
             const tableRows = [];
 
     
@@ -1762,9 +1797,10 @@
 
     
                 if (columnFilters.grade !== 'All' && grade !== columnFilters.grade) return;
+                const groupName = globalTestGroups[testName] || '-';
 
     
-                tableRows.push([testName, passedCount, failedCount, skippedCount, failedCount, grade]);
+                tableRows.push([testName, groupName, passedCount, failedCount, skippedCount, failedCount, grade]);
             });
 
     
