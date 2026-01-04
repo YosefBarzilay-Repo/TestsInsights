@@ -734,11 +734,10 @@
                     <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
                         <span>Execution Trends</span>
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <button id="compareRunsBtn" class="btn-icon hidden" onclick="toggleComparisonMode()" title="Compare Selected Runs">
-                        <button id="compareRunsBtn" class="btn-icon" onclick="toggleComparisonMode()" title="Select 2-3 runs to compare" disabled>
+                            <button id="compareRunsBtn" class="btn-icon" onclick="toggleComparisonMode()" title="Select 2-3 runs to compare" disabled>
                                 <span class="material-symbols-outlined">compare_arrows</span>
                             </button>
-                            <button id="clearRunFilterBtn" class="btn-icon hidden" onclick="setFilter('all')" title="Clear Selection">
+                            <button id="clearRunFilterBtn" class="btn-icon" onclick="setFilter('all')" title="Clear Selection" disabled>
                                 <span class="material-symbols-outlined">clear</span>
                             </button>
                             <button class="btn-icon" onclick="openTrendModal()" title="Enlarge">
@@ -1016,7 +1015,7 @@
             currentPage = 1;
             updateInsights(); // Update cards to "all" state
             document.getElementById('compareRunsBtn').disabled = true;
-            document.getElementById('clearRunFilterBtn').classList.add('hidden');
+            document.getElementById('clearRunFilterBtn').disabled = true;
             renderTable();
             renderTrendChart('trendChartSmall', globalRunStats);
             renderTrendChart('trendChartLarge', globalRunStats);
@@ -1208,11 +1207,6 @@
 
             let tests = Object.keys(globalTestHistory);
 
-            // Apply run filter first if active
-            if (activeRunFilter) {
-                const runTests = runToTestsMap[activeRunFilter] || new Set();
-                tests = tests.filter(name => runTests.has(name));
-            }
             if (activeRunFilters.length > 0) {
                 const testsInSelectedRuns = new Set();
                 activeRunFilters.forEach(runId => {
@@ -1573,8 +1567,6 @@
             document.getElementById('failedFilterClickable').classList.remove('filter-active');
             document.getElementById('skippedFilterClickable').classList.remove('filter-active');
             document.getElementById('totalExecutionsClickable').classList.remove('filter-active');
-
-            updateInsights(activeRunFilter);
             
             const compareBtn = document.getElementById('compareRunsBtn');
             if (activeRunFilters.length >= 2 && activeRunFilters.length <= 3) {
@@ -1588,9 +1580,8 @@
                 }
             }
 
-            document.getElementById('clearRunFilterBtn').classList.toggle('hidden', !activeRunFilter);
             updateInsights(activeRunFilters);
-            document.getElementById('clearRunFilterBtn').classList.toggle('hidden', activeRunFilters.length === 0);
+            document.getElementById('clearRunFilterBtn').disabled = activeRunFilters.length === 0;
 
             renderTable();
             renderTrendChart('trendChartSmall', globalRunStats);
@@ -1748,12 +1739,7 @@
 
     
             let tests = Object.keys(globalTestHistory);
-
-    
-            if (activeRunFilter) {
-                const runTests = runToTestsMap[activeRunFilter] || new Set();
-                tests = tests.filter(name => runTests.has(name));
-            }
+            
             if (activeRunFilters.length > 0) {
                 const testsInSelectedRuns = new Set();
                 activeRunFilters.forEach(runId => {
