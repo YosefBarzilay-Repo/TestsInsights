@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TestsInsights</title>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Header Styles */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.75rem 1.5rem;
+            background-color: white;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .logo-box {
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            background-color: #F4EFE2;
+            color: #C1A35F;
+        }
+        .header-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #111827;
+            margin: 0;
+            letter-spacing: -0.015em;
+        }
+        .import-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: white;
+            background-color: #C1A35F;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        .import-btn:hover {
+            background-color: #A38A4F;
+        }
+        .main-content {
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            height: 100%;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .dashboard {
+        display: flex;
+        flex-direction: column;
+            flex-shrink: 0;
+        }
+    .insights-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+        .card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+    .insights-grid .card {
+        box-shadow: none;
+        border: 1px solid #e5e7eb;
+    }
+        @media (min-width: 768px) {
+        .insights-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (min-width: 1200px) {
+        .insights-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .span-full {
+                grid-column: 1 / -1;
+            }
+        }
+        .card-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+        .card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #111827;
+        }
+        .card-subtext {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .table-container {
+            background: white;
+            padding: 0;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th:first-child, td:first-child {
+            padding-left: 1.5rem;
+        }
+        th:last-child, td:last-child {
+            padding-right: 1.5rem;
+        }
+        th {
+            background-color: #f9fafb;
+            font-weight: 600;
+            color: #374151;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .status-pill {
+            display: inline-block;
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 50%;
+            margin-right: 0.25rem;
+            vertical-align: middle;
+        }
+        .pill-passed { background-color: #10b981; }
+        .pill-failed { background-color: #ef4444; }
+        .pill-skipped { background-color: #9ca3af; }
+        .rate-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        .text-green { color: #10b981; }
+        .text-yellow { color: #d97706; }
+        .text-red { color: #ef4444; }
+        
+        /* Toolbar Styles */
+        .toolbar {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            justify-content: space-between;
+            align-items: center;
+        }
+        @media (min-width: 640px) {
+            .toolbar {
+                flex-direction: row;
+            }
+        }
+        .search-container {
+            display: flex;
+            align-items: center;
+            background-color: #f3f4f6;
+            border-radius: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            flex: 1;
+            max-width: 28rem;
+            width: 100%;
+            border: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .search-container:focus-within {
+            border-color: rgba(193, 163, 95, 0.5);
+        }
+        .search-icon {
+            color: #9ca3af;
+            margin-right: 0.5rem;
+            font-size: 1.25rem;
+        }
+        .search-input {
+            background: transparent;
+            border: none;
+            outline: none;
+            width: 100%;
+            font-size: 0.875rem;
+            color: #1f2937;
+        }
+        .actions-container {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            overflow-x: auto;
+            width: 100%;
+            padding-bottom: 4px;
+        }
+        @media (min-width: 640px) {
+            .actions-container {
+                width: auto;
+                padding-bottom: 0;
+            }
+        }
+        .btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.2s;
+        }
+        .btn-primary {
+            background-color: #C1A35F;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(193, 163, 95, 0.2);
+        }
+        .btn-primary:hover { background-color: #A38A4F; }
+        .btn-secondary {
+            background-color: #f3f4f6;
+            color: #6b7280;
+        }
+        .btn-secondary:hover { background-color: #e5e7eb; }
+        .btn-secondary.active {
+            background-color: #e5e7eb;
+            color: #111827;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+        }
+        /* Dropdown & Pagination */
+        .dropdown-menu {
+            position: absolute;
+            background: white;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-radius: 0.5rem;
+            z-index: 100;
+            min-width: 140px;
+            display: none;
+        }
+        .dropdown-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: #374151;
+            display: block;
+        }
+        .dropdown-item:hover {
+            background-color: #f3f4f6;
+        }
+        .th-interactive {
+            cursor: pointer;
+        }
+        .th-interactive:hover {
+            background-color: #f3f4f6;
+        }
+        .filter-icon {
+            font-size: 16px;
+            vertical-align: middle;
+            margin-left: 4px;
+            color: #9ca3af;
+        }
+        .pagination-container {
+            border-top: 1px solid #e5e7eb;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: white;
+            flex-shrink: 0;
+        }
+        .pagination-info {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+        .pagination-info span {
+            font-weight: 500;
+            color: #111827;
+        }
+        .pagination-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .btn-page {
+            padding: 0.25rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #6b7280;
+            background: white;
+            cursor: pointer;
+        }
+        .btn-page:hover:not(:disabled) {
+            color: #111827;
+            background-color: #f9fafb;
+        }
+        .btn-page:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .clickable-count {
+            cursor: pointer;
+            color: #C1A35F;
+            text-decoration: underline;
+        }
+        .clickable-count.filter-active {
+            background-color: #F4EFE2;
+            padding: 0.1rem 0.3rem;
+            border-radius: 0.25rem;
+        }
+        .clickable-legend {
+            cursor: pointer;
+            transition: background-color 0.2s;
+            padding: 2px 6px;
+            margin: -2px -6px;
+            border-radius: 0.375rem;
+        }
+        .clickable-legend:hover {
+            background-color: #f3f4f6;
+        }
+        .clickable-legend.filter-active {
+            background-color: #F4EFE2;
+        }
+        /* Trend Chart Styles */
+        .chart-bar {
+            flex: 1;
+            display: flex;
+            flex-direction: column-reverse;
+            height: 100%;
+            min-width: 4px;
+            margin: 0 1px;
+            background-color: #f3f4f6;
+            position: relative;
+            cursor: pointer;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .chart-bar:hover {
+            filter: brightness(0.95);
+            z-index: 10;
+        }
+        .chart-bar-segment {
+            width: 100%;
+            transition: height 0.3s ease;
+        }
+        .chart-bar.active {
+            outline: 2px solid #C1A35F;
+            outline-offset: 1px;
+            filter: brightness(1);
+        }
+        /* Insights Summary Styles */
+        .insights-summary {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+        .summary-item {
+            display: flex;
+            align-items: baseline;
+            gap: 0.4rem;
+            font-size: 0.875rem;
+        }
+        .summary-label {
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+        }
+        .summary-value {
+            color: #111827;
+            font-weight: 700;
+        }
+        /* New Table Styles */
+        .status-icon-box {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+        }
+        .bg-success-subtle { background-color: #dcfce7; color: #166534; }
+        .bg-warning-subtle { background-color: #fef9c3; color: #854d0e; }
+        .bg-danger-subtle { background-color: #fee2e2; color: #991b1b; }
+        .stability-container {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .stability-track {
+            flex: 1;
+            height: 0.5rem;
+            background-color: #f3f4f6;
+            border-radius: 9999px;
+            overflow: hidden;
+            min-width: 80px;
+        }
+        .stability-bar {
+            height: 100%;
+            border-radius: 9999px;
+        }
+        .grade-badge { font-weight: 700; font-size: 1rem; }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 0.5rem;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+        }
+        .stat-icon {
+            width: 3rem;
+            height: 3rem;
+            background-color: #F4EFE2;
+            color: #C1A35F;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+        .stat-content {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-value-small {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.2;
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+        /* Progress Bar Card Styles */
+        .status-legend {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            font-size: 0.875rem;
+            color: #4b5563;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+        }
+        .legend-dot {
+            width: 0.6rem;
+            height: 0.6rem;
+            border-radius: 50%;
+            margin-right: 0.35rem;
+        }
+        .progress-track {
+            width: 100%;
+            height: 0.75rem;
+            background-color: #f3f4f6;
+            border-radius: 9999px;
+            overflow: hidden;
+            display: flex;
+        }
+        .progress-fill {
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+        }
+        .bg-green { background-color: #10b981; }
+        .bg-red { background-color: #ef4444; }
+        .bg-grey { background-color: #9ca3af; }
+        
+        .text-warning { color: #f59e0b; }
+        .text-danger { color: #ef4444; }
+        .separator {
+            width: 1px;
+            height: 2rem;
+            background-color: #e5e7eb;
+            margin: 0 0.25rem;
+        }
+        .btn-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            background-color: #f3f4f6;
+            color: #6b7280;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-icon:hover { background-color: #e5e7eb; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+        }
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        .test-name-link {
+            color: #C1A35F;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        .test-name-link:hover {
+            color: #A38A4F;
+        }
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            text-align: center;
+            color: #6b7280;
+        }
+        .empty-icon {
+            font-size: 4rem;
+            color: #d1d5db;
+            margin-bottom: 1rem;
+        }
+        .btn-icon-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            color: #6b7280;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+        }
+        .btn-icon-header:hover { background-color: #f3f4f6; color: #111827; }
+        .table-scroll-wrapper {
+            flex: 1;
+            overflow: auto;
+        }
+        #insightsContent {
+            transition: all 0.3s ease-in-out;
+            max-height: 2000px;
+            opacity: 1;
+            overflow: hidden;
+        }
+        #insightsContent.collapsed {
+            max-height: 0;
+            opacity: 0;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-left">
+            <div class="logo-box">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            </div>
+        <h2 class="header-title">TestsInsights</h2>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <a href="settings.html" class="btn-icon-header" title="Settings">
+                <span class="material-symbols-outlined">settings</span>
+            </a>
+            <button class="import-btn" onclick="document.getElementById('csvInput').click()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <span>Import CSV</span>
+            </button>
+            <input type="file" id="csvInput" accept=".csv" class="hidden" />
+        </div>
+    </header>
+
+    <div class="main-content">
+
+        <div id="emptyState" class="empty-state">
+            <span class="material-symbols-outlined empty-icon">upload_file</span>
+            <h3 style="font-size: 1.5rem; font-weight: 600; color: #111827; margin-bottom: 0.5rem;">No Data Loaded</h3>
+            <p style="margin-bottom: 2rem; max-width: 400px;">Upload a test execution CSV file to analyze stability, detect flakiness, and view execution trends.</p>
+            <button class="import-btn" style="font-size: 1rem; padding: 0.75rem 1.5rem;" onclick="document.getElementById('csvInput').click()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <span>Import CSV File</span>
+            </button>
+        </div>
+
+        <div id="dashboard" class="dashboard hidden">
+            <div class="card">
+                <div class="card-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                        <div class="card-title" style="font-size: 1.1rem; margin-bottom: 0; color: #111827;">Insights</div>
+                        <div id="insightsSummary" class="insights-summary hidden">
+                            <div class="summary-item">
+                                <span class="summary-label">Runs:</span>
+                                <span class="summary-value" id="summaryRuns">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Tests:</span>
+                                <span class="summary-value" id="summaryTests">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Flaky Rate:</span>
+                                <span class="summary-value" id="summaryFlaky">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Broken Rate:</span>
+                                <span class="summary-value" id="summaryBroken">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-icon" onclick="toggleInsights()" title="Toggle Insights">
+                        <span id="insightsToggleIcon" class="material-symbols-outlined">expand_less</span>
+                    </button>
+                </div>
+            <div id="insightsContent" class="insights-grid">
+                <!-- Status Distribution Card -->
+                <div class="card">
+                    <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Status Distribution</span>
+                        <span id="totalExecutionsClickable" class="clickable-legend" style="font-size: 0.75rem; color: #6b7280; text-transform: none; font-weight: normal;">Total: <strong id="totalExecutions" style="color: #1f2937;">-</strong></span>
+                    </div>
+                    <div class="status-legend">
+                        <div id="passedFilterClickable" class="legend-item clickable-legend">
+                            <span class="legend-dot bg-green"></span>
+                            <span>Passed: <strong id="countPassed">-</strong></span>
+                        </div>
+                        <div id="failedFilterClickable" class="legend-item clickable-legend">
+                            <span class="legend-dot bg-red"></span>
+                            <span>Failed: <strong id="countFailed">-</strong></span>
+                        </div>
+                        <div id="skippedFilterClickable" class="legend-item clickable-legend">
+                            <span class="legend-dot bg-grey"></span>
+                            <span>Skipped: <strong id="countSkipped">-</strong></span>
+                        </div>
+                    </div>
+                    <div class="progress-track">
+                        <div id="barPassed" class="progress-fill bg-green" style="width: 0%"></div>
+                        <div id="barFailed" class="progress-fill bg-red" style="width: 0%"></div>
+                        <div id="barSkipped" class="progress-fill bg-grey" style="width: 0%"></div>
+                    </div>
+                    </div>
+
+                <!-- FR-08: Execution Summary Card -->
+                <div class="card">
+                    <div class="card-title">Execution Summary</div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <!-- Play/Run Icon -->
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value-small" id="totalRuns">-</div>
+                                <div class="stat-label">Total Runs</div>
+                            </div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-icon">
+                                <!-- Beaker Icon -->
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 3h15"/><path d="M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"/><path d="M6 14h12"/></svg>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-value-small" id="totalTestsDisplay">-</div>
+                                <div class="stat-label">Total Tests</div>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+
+                <!-- FR-06 & FR-08: Flaky Tests Card -->
+                <div class="card">
+                    <div class="card-title">Flaky Tests</div>
+                    <div class="card-value" id="flakyRate">-</div>
+                    <div class="card-subtext">
+                        <span id="flakyCount" class="clickable-count">-</span> flaky tests of <span id="totalTests">-</span> total
+                    </div>
+                </div>
+
+                <!-- Continuous Failing Tests Card -->
+                <div class="card">
+                    <div class="card-title">Continuous Failing</div>
+                    <div class="card-value" id="brokenRate">-</div>
+                    <div class="card-subtext">
+                        <span id="brokenCount" class="clickable-count">-</span> failing tests of <span id="totalTestsBroken">-</span> total
+                    </div>
+                </div>
+
+                <!-- Execution Trend Card -->
+                <div class="card span-full">
+                    <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Execution Trends (Pass/Fail Rate)</span>
+                        <button class="btn-icon" onclick="openTrendModal()" title="Enlarge">
+                            <span class="material-symbols-outlined">open_in_full</span>
+                        </button>
+                    </div>
+                    <div id="trendChartSmall" style="width: 100%; height: 150px; display: flex; align-items: flex-end; padding-top: 10px;"></div>
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="details" class="table-container hidden">
+            <div class="toolbar">
+                <div class="search-container">
+                    <span class="material-symbols-outlined search-icon">search</span>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search by test name..." />
+                </div>
+                <div class="actions-container">
+                    <button class="btn btn-primary" id="btnAllTests">
+                        <span class="material-symbols-outlined text-[18px]">filter_list</span>
+                        All Tests
+                    </button>
+                    <button class="btn btn-secondary" id="btnShowFlaky">
+                        <span class="material-symbols-outlined text-[18px] text-warning">warning</span>
+                        Show Flaky
+                    </button>
+                    <button class="btn btn-secondary" id="btnShowFailing">
+                        <span class="material-symbols-outlined text-[18px] text-danger">cancel</span>
+                        Show Failing
+                    </button>
+                    <div class="separator"></div>
+                    <button class="btn-icon" title="Export CSV">
+                        <span class="material-symbols-outlined">download</span>
+                    </button>
+                </div>
+            </div>
+            <div class="table-scroll-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Test Name</th>
+                            <th style="width: 10rem;">Deviation (P/F/S)</th>
+                            <th class="text-right" style="width: 8rem;">Fail Count</th>
+                            <th class="text-center th-interactive" style="width: 6rem;" onclick="openFilter(event, 'grade')">Grade <span class="material-symbols-outlined filter-icon">filter_alt</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="testTableBody"></tbody>
+                </table>
+            </div>
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Showing <span id="pageStart">0</span> to <span id="pageEnd">0</span> of <span id="totalItems">0</span> results
+                </div>
+                <div class="pagination-controls">
+                    <button id="btnPrev" class="btn-page" disabled>Previous</button>
+                    <button id="btnNext" class="btn-page" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trend Modal -->
+        <div id="trendModal" class="modal-overlay hidden">
+            <div class="modal-content" style="max-width: 1200px; height: 80vh; display: flex; flex-direction: column;">
+                <div class="modal-header">
+                    <h2>Execution Trends</h2>
+                    <button class="close-btn" onclick="closeTrendModal()">&times;</button>
+                </div>
+                <div id="trendChartLarge" style="flex: 1; width: 100%; display: flex; align-items: flex-end; padding: 20px 0; gap: 2px;"></div>
+            </div>
+        </div>
+
+        <!-- Detailed View Modal -->
+        <div id="detailModal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle">Test Details</h2>
+                    <button class="close-btn" onclick="closeModal()">&times;</button>
+                </div>
+                
+                <!-- Visualization -->
+                <div style="margin-bottom: 2rem;">
+                    <h4>Status Trend (Pass vs Fail)</h4>
+                    <div id="chartContainer" style="width: 100%; height: 150px; border: 1px solid #e5e7eb; border-radius: 0.5rem; background: #f9fafb; position: relative;">
+                        <!-- SVG Chart will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Detailed Table -->
+                <h3>Execution Log</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Run ID</th>
+                            <th>Date</th>
+                            <th>Time (Start - End)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Filter Dropdown -->
+        <div id="filterDropdown" class="dropdown-menu"></div>
+    </div>
+
+    <script>
+        let globalTestHistory = {};
+        let globalTestResults = {};
+        let runToTestsMap = {};
+        let globalRunStats = [];
+        let globalTestDetails = {}; // Stores full row data per test
+        let currentFilter = 'all'; // 'all', 'flaky', 'failing'
+        let columnFilters = { grade: 'All' };
+        let activeRunFilter = null;
+        let currentPage = 1;
+        const itemsPerPage = 15;
+
+        document.getElementById('csvInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                processCSV(text);
+            };
+            reader.readAsText(file);
+        });
+
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            currentPage = 1;
+            renderTable();
+        });
+
+        document.getElementById('flakyCount').addEventListener('click', function() {
+            setFilter(currentFilter === 'flaky' ? 'all' : 'flaky');
+        });
+
+        document.getElementById('brokenCount').addEventListener('click', function() {
+            setFilter(currentFilter === 'broken' ? 'all' : 'broken');
+        });
+
+        document.getElementById('passedFilterClickable').addEventListener('click', () => {
+            setFilter(currentFilter === 'passed-only' ? 'all' : 'passed-only');
+        });
+        document.getElementById('failedFilterClickable').addEventListener('click', () => {
+            setFilter(currentFilter === 'failing' ? 'all' : 'failing');
+        });
+        document.getElementById('skippedFilterClickable').addEventListener('click', () => {
+            setFilter(currentFilter === 'skipped-any' ? 'all' : 'skipped-any');
+        });
+        document.getElementById('totalExecutionsClickable').addEventListener('click', () => {
+            setFilter('all');
+        });
+
+        document.getElementById('btnAllTests').addEventListener('click', () => setFilter('all'));
+        document.getElementById('btnShowFlaky').addEventListener('click', () => setFilter('flaky'));
+        document.getElementById('btnShowFailing').addEventListener('click', () => setFilter('failing'));
+
+        document.getElementById('btnPrev').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        });
+        document.getElementById('btnNext').addEventListener('click', () => {
+            currentPage++;
+            renderTable();
+        });
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            activeRunFilter = null; // Main filters clear the run filter
+            
+            // Update button states
+            document.getElementById('btnShowFlaky').classList.toggle('active', filter === 'flaky');
+            document.getElementById('btnShowFailing').classList.toggle('active', filter === 'failing');
+            
+            // Update flaky count link style
+            document.getElementById('flakyCount').classList.toggle('filter-active', filter === 'flaky');
+            // Update broken count link style
+            document.getElementById('brokenCount').classList.toggle('filter-active', filter === 'broken');
+            
+            // NEW: update status distribution legend styles
+            document.getElementById('passedFilterClickable').classList.toggle('filter-active', filter === 'passed-only');
+            document.getElementById('failedFilterClickable').classList.toggle('filter-active', filter === 'failing');
+            document.getElementById('skippedFilterClickable').classList.toggle('filter-active', filter === 'skipped-any');
+            document.getElementById('totalExecutionsClickable').classList.toggle('filter-active', filter === 'all');
+            
+            currentPage = 1;
+            renderTable();
+            renderTrendChart('trendChartSmall', globalRunStats);
+            renderTrendChart('trendChartLarge', globalRunStats);
+        }
+
+        function processCSV(csvText) {
+            const lines = csvText.split(/\r\n|\n/).filter(line => line.trim() !== '');
+            if (lines.length < 2) return;
+
+            const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+            const testNameIdx = headers.indexOf('test_name');
+            const statusIdx = headers.indexOf('status');
+            const runIdIdx = headers.indexOf('run_id');
+            const dateIdx = headers.indexOf('run_date');
+            const startIdx = headers.indexOf('start_time');
+            const endIdx = headers.indexOf('end_time');
+
+            if (testNameIdx === -1 || statusIdx === -1) {
+                alert('CSV must contain "test_name" and "status" columns.');
+                return;
+            }
+
+            const testResults = {};
+            const testHistory = {};
+            const testDetails = {};
+            const runStatsMap = {};
+            const localRunToTestsMap = {};
+            const runIds = new Set();
+            let totalPassed = 0;
+            let totalFailed = 0;
+            let totalSkipped = 0;
+
+            for (let i = 1; i < lines.length; i++) {
+                const cols = lines[i].split(',');
+                if (cols.length <= Math.max(testNameIdx, statusIdx)) continue;
+
+                const testName = cols[testNameIdx].trim();
+                const status = cols[statusIdx].trim().toLowerCase();
+                let runId = '';
+
+                if (runIdIdx !== -1 && cols[runIdIdx]) {
+                    runId = cols[runIdIdx].trim();
+                    if (runId) runIds.add(runId);
+                }
+
+                if (runId) {
+                    const currentStartTime = startIdx !== -1 ? cols[startIdx] : null;
+                    const currentEndTime = endIdx !== -1 ? cols[endIdx] : null;
+
+                    if (!runStatsMap[runId]) {
+                        runStatsMap[runId] = { 
+                            id: runId, 
+                            date: dateIdx !== -1 ? cols[dateIdx] : '', 
+                            passed: 0, failed: 0, skipped: 0, total: 0,
+                            startTime: currentStartTime,
+                            endTime: currentEndTime
+                        };
+                    }
+                    runStatsMap[runId].total++;
+                    if (status === 'passed') runStatsMap[runId].passed++;
+                    else if (status === 'failed') runStatsMap[runId].failed++;
+                    else if (status === 'skipped') runStatsMap[runId].skipped++;
+
+                    if (currentStartTime && (!runStatsMap[runId].startTime || currentStartTime < runStatsMap[runId].startTime)) {
+                        runStatsMap[runId].startTime = currentStartTime;
+                    }
+                    if (currentEndTime && (!runStatsMap[runId].endTime || currentEndTime > runStatsMap[runId].endTime)) {
+                        runStatsMap[runId].endTime = currentEndTime;
+                    }
+                }
+
+                if (status === 'passed') totalPassed++;
+                else if (status === 'failed') totalFailed++;
+                else if (status === 'skipped') totalSkipped++;
+
+                if (!testResults[testName]) {
+                    testResults[testName] = new Set();
+                }
+                testResults[testName].add(status);
+
+                if (!testHistory[testName]) {
+                    testHistory[testName] = [];
+                }
+                testHistory[testName].push(status);
+
+                if (!testDetails[testName]) {
+                    testDetails[testName] = [];
+                }
+                testDetails[testName].push({
+                    runId: runId,
+                    status: status,
+                    date: dateIdx !== -1 ? cols[dateIdx] : '-',
+                    start: startIdx !== -1 ? cols[startIdx] : '-',
+                    end: endIdx !== -1 ? cols[endIdx] : '-'
+                });
+
+                if (runId) {
+                    if (!localRunToTestsMap[runId]) {
+                        localRunToTestsMap[runId] = new Set();
+                    }
+                    localRunToTestsMap[runId].add(testName);
+                }
+            }
+           globalTestHistory = testHistory;
+            globalTestResults = testResults;
+            globalTestDetails = testDetails;
+            runToTestsMap = localRunToTestsMap;
+            
+            globalRunStats = Object.values(runStatsMap).sort((a, b) => {
+                const numA = parseFloat(a.id);
+                const numB = parseFloat(b.id);
+                if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                return a.id.localeCompare(b.id);
+            });
+            renderTrendChart('trendChartSmall', globalRunStats);
+            
+            columnFilters = { grade: 'All' };
+
+            setFilter('all');
+
+            let flakyCount = 0;
+            let brokenCount = 0;
+            const totalTests = Object.keys(testResults).length;
+            const totalRuns = runIds.size;
+
+            const totalExecutions = totalPassed + totalFailed + totalSkipped;
+            const pctPassed = totalExecutions ? (totalPassed / totalExecutions) * 100 : 0;
+            const pctFailed = totalExecutions ? (totalFailed / totalExecutions) * 100 : 0;
+            const pctSkipped = totalExecutions ? (totalSkipped / totalExecutions) * 100 : 0;
+
+            document.getElementById('countPassed').textContent = totalPassed;
+            document.getElementById('countFailed').textContent = totalFailed;
+            document.getElementById('countSkipped').textContent = totalSkipped;
+            document.getElementById('totalExecutions').textContent = totalExecutions;
+            document.getElementById('barPassed').style.width = pctPassed + '%';
+            document.getElementById('barFailed').style.width = pctFailed + '%';
+            document.getElementById('barSkipped').style.width = pctSkipped + '%';
+
+            for (const testName in testResults) {
+                const statuses = testResults[testName];
+                if (statuses.has('passed') && statuses.has('failed')) {
+                    flakyCount++;
+                }
+                if (!statuses.has('passed') && statuses.has('failed')) {
+                    brokenCount++;
+                }
+            }
+
+            renderTable();
+
+            const flakyRateNum = totalTests ? (flakyCount / totalTests) * 100 : 0;
+            const flakyRateText = flakyRateNum.toFixed(1) + '%';
+            
+            const rateEl = document.getElementById('flakyRate');
+            rateEl.textContent = flakyRateText;
+            rateEl.className = 'card-value'; // Reset classes
+            
+            if (flakyRateNum > 5) {
+                rateEl.classList.add('text-red');
+            } else if (flakyRateNum > 0) {
+                rateEl.classList.add('text-yellow');
+            } else {
+                rateEl.classList.add('text-green');
+            }
+
+            const brokenRateNum = totalTests ? (brokenCount / totalTests) * 100 : 0;
+            const brokenRateText = brokenRateNum.toFixed(1) + '%';
+            
+            const brokenRateEl = document.getElementById('brokenRate');
+            brokenRateEl.textContent = brokenRateText;
+            brokenRateEl.className = 'card-value';
+            
+            if (brokenRateNum > 5) {
+                brokenRateEl.classList.add('text-red');
+            } else if (brokenRateNum > 0) {
+                brokenRateEl.classList.add('text-yellow');
+            } else {
+                brokenRateEl.classList.add('text-green');
+            }
+            
+            document.getElementById('summaryRuns').textContent = totalRuns > 0 ? totalRuns : 1;
+            document.getElementById('summaryTests').textContent = totalTests;
+            document.getElementById('summaryFlaky').textContent = flakyRateText;
+            document.getElementById('summaryBroken').textContent = brokenRateText;
+
+            document.getElementById('flakyCount').textContent = flakyCount;
+            document.getElementById('brokenCount').textContent = brokenCount;
+            document.getElementById('totalTests').textContent = totalTests;
+            document.getElementById('totalTestsBroken').textContent = totalTests;
+            document.getElementById('totalTestsDisplay').textContent = totalTests;
+            document.getElementById('totalRuns').textContent = totalRuns > 0 ? totalRuns : 1;
+            document.getElementById('dashboard').classList.remove('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+             document.getElementById('details').classList.remove('hidden');
+        }
+
+        function openFilter(event, column) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('filterDropdown');
+            dropdown.innerHTML = '';
+            
+            let options = [];
+            if (column === 'grade') {
+                options = ['All', 'A+', 'A', 'B', 'C', 'D', 'F'];
+            }
+
+            options.forEach(opt => {
+                const item = document.createElement('div');
+                item.className = 'dropdown-item';
+                item.textContent = opt;
+                if (columnFilters[column] === opt) {
+                    item.style.fontWeight = 'bold';
+                    item.style.color = '#C1A35F';
+                }
+                item.onclick = () => {
+                    columnFilters[column] = opt;
+                    currentPage = 1;
+                    renderTable();
+                    dropdown.style.display = 'none';
+                };
+                dropdown.appendChild(item);
+            });
+
+            const rect = event.currentTarget.getBoundingClientRect();
+            dropdown.style.top = (rect.bottom + window.scrollY) + 'px';
+            dropdown.style.left = rect.left + 'px';
+            dropdown.style.display = 'block';
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('filterDropdown');
+            if (dropdown.style.display === 'block' && !e.target.closest('.th-interactive')) {
+                dropdown.style.display = 'none';
+            }
+        });
+
+        function renderTable() {
+            const tbody = document.getElementById('testTableBody');
+            tbody.innerHTML = '';
+            const filterText = document.getElementById('searchInput').value.toLowerCase();
+            
+            // Load settings
+            const settings = JSON.parse(localStorage.getItem('testDashboardSettings')) || {
+                gradeThresholds: { 'A+': 98, 'A': 90, 'B': 80, 'C': 70, 'D': 60 }
+            };
+
+            let tests = Object.keys(globalTestHistory);
+
+            // Apply run filter first if active
+            if (activeRunFilter) {
+                const runTests = runToTestsMap[activeRunFilter] || new Set();
+                tests = tests.filter(name => runTests.has(name));
+            }
+
+            // Then apply search filter
+            tests = tests.filter(name => name.toLowerCase().includes(filterText));
+
+
+            // Apply Toolbar Filters
+            if (currentFilter === 'flaky') {
+                tests = tests.filter(name => 
+                    globalTestResults[name].has('passed') && globalTestResults[name].has('failed')
+                );
+            } else if (currentFilter === 'failing') {
+                tests = tests.filter(name => 
+                    globalTestResults[name].has('failed')
+                );
+            } else if (currentFilter === 'broken') {
+                tests = tests.filter(name => 
+                    !globalTestResults[name].has('passed') && globalTestResults[name].has('failed')
+                );
+            } else if (currentFilter === 'passed-only') {
+                tests = tests.filter(name =>
+                    globalTestResults[name].size === 1 && globalTestResults[name].has('passed')
+                );
+            } else if (currentFilter === 'skipped-any') {
+                tests = tests.filter(name =>
+                    globalTestResults[name].has('skipped')
+                );
+            }
+
+            // Pre-calculate metrics for filtering
+            const testMetrics = {};
+            tests.forEach(testName => {
+                const history = globalTestHistory[testName];
+                const totalRuns = history.length;
+                const passedCount = history.filter(s => s === 'passed').length;
+                const failedCount = history.filter(s => s === 'failed').length;
+                const skippedCount = totalRuns - passedCount - failedCount;
+                const passRate = totalRuns ? (passedCount / totalRuns) * 100 : 0;
+                const isFlaky = globalTestResults[testName].has('passed') && globalTestResults[testName].has('failed');
+                const isBroken = !isFlaky && failedCount > 0;
+                
+                let grade = 'F';
+                if (passRate >= settings.gradeThresholds['A+']) grade = 'A+';
+                else if (passRate >= settings.gradeThresholds['A']) grade = 'A';
+                else if (passRate >= settings.gradeThresholds['B']) grade = 'B';
+                else if (passRate >= settings.gradeThresholds['C']) grade = 'C';
+                else if (passRate >= settings.gradeThresholds['D']) grade = 'D';
+
+                let status = 'Passed'; // Default assumption if not broken/flaky
+                if (isFlaky) status = 'Flaky';
+                else if (isBroken) status = 'Broken';
+                else if (globalTestResults[testName].has('skipped') && !globalTestResults[testName].has('passed') && !globalTestResults[testName].has('failed')) status = 'Skipped';
+                else if (failedCount > 0) status = 'Failed'; // Catch-all
+
+                testMetrics[testName] = { grade, status, passRate, passedCount, failedCount, skippedCount, isFlaky, isBroken };
+            });
+
+            // Apply Column Filters
+            if (columnFilters.grade !== 'All') {
+                tests = tests.filter(name => testMetrics[name].grade === columnFilters.grade);
+            }
+
+            // Pagination Logic
+            const totalItems = tests.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const startIdx = (currentPage - 1) * itemsPerPage;
+            const endIdx = startIdx + itemsPerPage;
+            const paginatedTests = tests.slice(startIdx, endIdx);
+
+            // Update Pagination Controls
+            document.getElementById('pageStart').textContent = totalItems > 0 ? startIdx + 1 : 0;
+            document.getElementById('pageEnd').textContent = Math.min(endIdx, totalItems);
+            document.getElementById('totalItems').textContent = totalItems;
+            document.getElementById('btnPrev').disabled = currentPage <= 1;
+            document.getElementById('btnNext').disabled = currentPage >= totalPages;
+
+            for (const testName of paginatedTests) {
+                const row = document.createElement('tr');
+                
+                // Use pre-calculated metrics
+                const m = testMetrics[testName];
+                let { passRate, passedCount, failedCount, skippedCount, isFlaky, isBroken, grade } = m;
+
+                // Determine Status & Styles
+                let barColor = '';
+                let gradeColor = '';
+
+                if (passRate >= 90) {
+                    barColor = '#10b981'; // Green
+                } else if (passRate >= 60) {
+                    barColor = '#f59e0b'; // Yellow
+                } else {
+                    barColor = '#ef4444'; // Red
+                }
+
+                // Grade Logic
+                if (passRate >= settings.gradeThresholds['A+']) { grade = 'A+'; gradeColor = '#059669'; }
+                else if (passRate >= settings.gradeThresholds['A']) { grade = 'A'; gradeColor = '#059669'; }
+                else if (passRate >= settings.gradeThresholds['B']) { grade = 'B'; gradeColor = '#d97706'; }
+                else if (passRate >= settings.gradeThresholds['C']) { grade = 'C'; gradeColor = '#d97706'; }
+                else if (passRate >= settings.gradeThresholds['D']) { grade = 'D'; gradeColor = '#dc2626'; }
+                else { grade = 'F'; gradeColor = '#dc2626'; }
+
+                // 2. Test Name Column
+                const nameCell = document.createElement('td');
+                const nameLink = document.createElement('span');
+                nameLink.textContent = testName;
+                nameLink.className = 'test-name-link';
+                nameLink.onclick = () => openTestDetails(testName);
+                nameCell.appendChild(nameLink);
+                row.appendChild(nameCell);
+
+                // 3. Deviation Column
+                const deviationCell = document.createElement('td');
+                deviationCell.innerHTML = `
+                    <span class="text-green" style="font-weight: 500;">${passedCount}</span> / 
+                    <span class="text-red" style="font-weight: 500;">${failedCount}</span> / 
+                    <span style="color: #9ca3af; font-weight: 500;">${skippedCount}</span>
+                `;
+                row.appendChild(deviationCell);
+
+                // 4. Fail Count Column
+                const failCell = document.createElement('td');
+                failCell.className = 'text-right';
+                failCell.innerHTML = `<span style="font-weight: 700; color: #111827;">${failedCount}</span><span style="font-size: 0.75rem; color: #6b7280; margin-left: 0.25rem;">fails</span>`;
+                row.appendChild(failCell);
+
+                // 5. Grade Column
+                const gradeCell = document.createElement('td');
+                gradeCell.className = 'text-center';
+                gradeCell.innerHTML = `<span class="grade-badge" style="color: ${gradeColor};">${grade}</span>`;
+                row.appendChild(gradeCell);
+
+                tbody.appendChild(row);
+            }
+        }
+
+        function openTestDetails(testName) {
+            const details = globalTestDetails[testName];
+            if (!details) return;
+
+            document.getElementById('modalTitle').textContent = `History: ${testName}`;
+            const tbody = document.getElementById('modalTableBody');
+            tbody.innerHTML = '';
+
+            // Sort details by runId (assuming numeric or string sort works for ID)
+            details.sort((a, b) => (a.runId > b.runId) ? 1 : -1);
+
+            // Populate Table
+            details.forEach(d => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${d.runId}</td>
+                    <td>${d.date}</td>
+                    <td>${d.start} - ${d.end}</td>
+                    <td><span class="status-pill pill-${d.status}"></span>${d.status}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Draw Chart (SVG)
+            renderChart(details);
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function toggleRunFilter(runId) {
+            activeRunFilter = activeRunFilter === runId ? null : runId;
+            renderTable();
+            renderTrendChart('trendChartSmall', globalRunStats);
+            renderTrendChart('trendChartLarge', globalRunStats);
+        }
+
+        function renderTrendChart(containerId, data) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div style="width:100%; text-align:center; color:#9ca3af;">No run data available</div>';
+                return;
+            }
+
+            data.forEach(run => {
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                if (run.id === activeRunFilter) {
+                    bar.classList.add('active');
+                }
+                
+                const pPass = (run.passed / run.total) * 100;
+                const pFail = (run.failed / run.total) * 100;
+                const pSkip = (run.skipped / run.total) * 100;
+
+                bar.innerHTML = `
+                    <div class="chart-bar-segment bg-green" style="height: ${pPass}%"></div>
+                    <div class="chart-bar-segment bg-red" style="height: ${pFail}%"></div>
+                    <div class="chart-bar-segment bg-grey" style="height: ${pSkip}%"></div>
+                `;
+                
+                bar.title = `Run: ${run.id}\nDate: ${run.date || '-'}\nTime: ${run.startTime || '?'} - ${run.endTime || '?'}\n\nPassed: ${run.passed}\nFailed: ${run.failed}\nSkipped: ${run.skipped}`;
+                
+                bar.onclick = () => toggleRunFilter(run.id);
+                
+                container.appendChild(bar);
+            });
+        }
+
+        function openTrendModal() {
+            renderTrendChart('trendChartLarge', globalRunStats);
+            document.getElementById('trendModal').classList.remove('hidden');
+        }
+
+        function closeTrendModal() {
+            document.getElementById('trendModal').classList.add('hidden');
+        }
+
+        function renderChart(details) {
+            const container = document.getElementById('chartContainer');
+            container.innerHTML = '';
+            
+            if (details.length < 2) {
+                container.innerHTML = '<div style="padding:1rem; text-align:center; color:#666;">Not enough data for trend chart</div>';
+                return;
+            }
+
+            const width = container.clientWidth;
+            const height = 150;
+            const padding = 20;
+            
+            // Map status to Y coordinate (Pass = Top/Low Y, Fail = Bottom/High Y)
+            // SVG coords: 0 is top. Let's put Pass at 30% height, Fail at 70% height.
+            const yPass = height * 0.3;
+            const yFail = height * 0.7;
+            const ySkip = height * 0.5;
+
+            const points = details.map((d, index) => {
+                const x = padding + (index / (details.length - 1)) * (width - (padding * 2));
+                let y = ySkip;
+                if (d.status === 'passed') y = yPass;
+                if (d.status === 'failed') y = yFail;
+                return `${x},${y}`;
+            }).join(' ');
+
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "100%");
+            svg.setAttribute("height", "100%");
+            
+            // Draw Line
+            const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+            polyline.setAttribute("points", points);
+            polyline.setAttribute("fill", "none");
+            polyline.setAttribute("stroke", "#C1A35F");
+            polyline.setAttribute("stroke-width", "2");
+            svg.appendChild(polyline);
+
+            container.appendChild(svg);
+        }
+
+        function toggleInsights() {
+            const content = document.getElementById('insightsContent');
+            const summary = document.getElementById('insightsSummary');
+            const icon = document.getElementById('insightsToggleIcon');
+            
+            content.classList.toggle('collapsed');
+            
+            if (content.classList.contains('collapsed')) {
+                summary.classList.remove('hidden');
+                icon.textContent = 'expand_more';
+            } else {
+                summary.classList.add('hidden');
+                icon.textContent = 'expand_less';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+        
+        // Close modal on outside click
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        document.getElementById('trendModal').addEventListener('click', function(e) {
+            if (e.target === this) closeTrendModal();
+        });
+    </script>
+</body>
+</html>

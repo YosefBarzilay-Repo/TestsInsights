@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Test Automation Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        * { box-sizing: border-box; }
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.75rem 1.5rem;
+            background-color: white;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        .header-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #111827;
+        }
+        .main-content {
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #C1A35F;
+            box-shadow: 0 0 0 3px rgba(193, 163, 95, 0.2);
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        .btn-primary {
+            background-color: #C1A35F;
+            color: white;
+        }
+        .btn-primary:hover { background-color: #A38A4F; }
+        .btn-secondary {
+            background-color: #f3f4f6;
+            color: #4b5563;
+            margin-right: 1rem;
+        }
+        .btn-secondary:hover { background-color: #e5e7eb; }
+        .threshold-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .grade-label {
+            width: 3rem;
+            font-weight: 700;
+            font-size: 1.125rem;
+        }
+        .input-suffix {
+            color: #6b7280;
+            margin-left: -2rem;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <h2 class="header-title">Settings</h2>
+        <a href="index.html" class="btn btn-secondary">Back to Dashboard</a>
+    </header>
+
+    <div class="main-content">
+        <div class="card">
+            <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #111827;">Grade Thresholds</h3>
+            <p style="color: #6b7280; margin-bottom: 2rem; font-size: 0.875rem;">
+                Define the minimum pass rate percentage required to achieve each grade. 
+                Any score below the 'D' threshold will be graded as 'F'.
+            </p>
+
+            <form id="settingsForm">
+                <div id="thresholdsContainer">
+                    <!-- Injected via JS -->
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+                    <button type="submit" class="btn btn-primary">Save & Download JSON</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const defaultSettings = {
+            gradeThresholds: {
+                'A+': 98,
+                'A': 90,
+                'B': 80,
+                'C': 70,
+                'D': 60
+            }
+        };
+
+        function loadSettings() {
+            const stored = localStorage.getItem('testDashboardSettings');
+            return stored ? JSON.parse(stored) : defaultSettings;
+        }
+
+        const settings = loadSettings();
+        const container = document.getElementById('thresholdsContainer');
+        const grades = ['A+', 'A', 'B', 'C', 'D'];
+
+        grades.forEach(grade => {
+            const div = document.createElement('div');
+            div.className = 'threshold-row';
+            div.innerHTML = `
+                <span class="grade-label">${grade}</span>
+                <div style="flex: 1; display: flex; align-items: center;">
+                    <input type="number" id="grade-${grade}" class="form-input" value="${settings.gradeThresholds[grade]}" min="0" max="100" required>
+                    <span class="input-suffix">%</span>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+
+        document.getElementById('settingsForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newThresholds = {};
+            grades.forEach(grade => {
+                newThresholds[grade] = parseInt(document.getElementById(`grade-${grade}`).value, 10);
+            });
+
+            const newSettings = { gradeThresholds: newThresholds };
+            localStorage.setItem('testDashboardSettings', JSON.stringify(newSettings));
+
+            // Create JSON file for download
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(newSettings, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "settings.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+
+            alert('Settings saved successfully!');
+        });
+    </script>
+</body>
+</html>
