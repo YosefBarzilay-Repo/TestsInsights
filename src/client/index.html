@@ -91,15 +91,16 @@
         display: flex;
         flex-direction: column;
             flex-shrink: 0;
+            overflow-y: auto;
         }
     .insights-grid {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 1.5rem;
+        gap: 1rem;
     }
         .card {
             background: white;
-            padding: 1.5rem;
+            padding: 1rem;
             border-radius: 0.5rem;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
         }
@@ -126,15 +127,15 @@
             color: #6b7280;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
         }
         .card-value {
-            font-size: 2.5rem;
+            font-size: 1.75rem;
             font-weight: 700;
             color: #111827;
         }
         .card-subtext {
-            font-size: 0.875rem;
+            font-size: 0.75rem;
             color: #6b7280;
             margin-top: 0.25rem;
         }
@@ -146,7 +147,7 @@
             padding: 0;
             border-radius: 0.5rem;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-            margin-top: 2rem;
+            margin-top: 0;
             display: flex;
             flex-direction: column;
             flex: 1;
@@ -463,7 +464,7 @@
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
+            gap: 1rem;
             margin-top: 0.5rem;
         }
         .stat-item {
@@ -471,8 +472,8 @@
             align-items: center;
         }
         .stat-icon {
-            width: 3rem;
-            height: 3rem;
+            width: 2.25rem;
+            height: 2.25rem;
             background-color: #F4EFE2;
             color: #C1A35F;
             border-radius: 50%;
@@ -487,7 +488,7 @@
             flex-direction: column;
         }
         .stat-value-small {
-            font-size: 1.5rem;
+            font-size: 1.125rem;
             font-weight: 700;
             color: #111827;
             line-height: 1.2;
@@ -787,7 +788,7 @@
                             <span class="material-symbols-outlined">open_in_full</span>
                         </button>
                     </div>
-                    <div id="trendChartSmall" style="width: 100%; height: 150px; display: flex; align-items: flex-end; padding-top: 10px;"></div>
+                    <div id="trendChartSmall" style="width: 100%; height: 100px; display: flex; align-items: flex-end; padding-top: 10px;"></div>
                 </div>
                 </div>
             </div>
@@ -814,6 +815,7 @@
                     </button>
                     <div class="separator"></div>
                     <button class="btn-icon" title="Export CSV">
+                    <button class="btn-icon" id="btnExportCsv" title="Export CSV">
                         <span class="material-symbols-outlined">download</span>
                     </button>
                 </div>
@@ -942,6 +944,7 @@
         document.getElementById('btnAllTests').addEventListener('click', () => setFilter('all'));
         document.getElementById('btnShowFlaky').addEventListener('click', () => setFilter('flaky'));
         document.getElementById('btnShowFailing').addEventListener('click', () => setFilter('failing'));
+        document.getElementById('btnExportCsv').addEventListener('click', exportDataToCsv);
 
         document.getElementById('btnPrev').addEventListener('click', () => {
             if (currentPage > 1) {
@@ -1426,7 +1429,7 @@
                     <div class="chart-bar-segment bg-grey" style="height: ${pSkip}%"></div>
                 `;
                 
-                bar.title = `Run: ${run.id}\nDate: ${run.date || '-'}\nTime: ${run.startTime || '?'} - ${run.endTime || '?'}\n\nPassed: ${run.passed}\nFailed: ${run.failed}\nSkipped: ${run.skipped}`;
+                bar.title = `Run: ${run.id}\nDate: ${run.date || '-'}\nTime: ${run.startTime || '?'} - ${run.endTime || '?'}\n\nTotal: ${run.total}\nPassed: ${run.passed}\nFailed: ${run.failed}\nSkipped: ${run.skipped}`;
                 
                 bar.onclick = () => toggleRunFilter(run.id);
                 
@@ -1512,6 +1515,95 @@
         document.getElementById('trendModal').addEventListener('click', function(e) {
             if (e.target === this) closeTrendModal();
         });
+    </script>
+    <script>
+        function exportDataToCsv() {
+            // 1. Gather Insights
+            const insights = [
+                ['Insight', 'Value'],
+                ['Total Runs', document.getElementById('totalRuns').textContent],
+                ['Total Unique Tests', document.getElementById('totalTestsDisplay').textContent],
+                ['Total Executions', document.getElementById('totalExecutions').textContent],
+                [],
+                ['Status', 'Count'],
+                ['Passed', document.getElementById('countPassed').textContent],
+                ['Failed', document.getElementById('countFailed').textContent],
+                ['Skipped', document.getElementById('countSkipped').textContent],
+                [],
+                ['Metric', 'Count', 'Rate'],
+                ['Flaky Tests', document.getElementById('flakyCount').textContent, document.getElementById('flakyRate').textContent],
+                ['Continuous Failing', document.getElementById('brokenCount').textContent, document.getElementById('brokenRate').textContent],
+                [],
+                []
+            ];
+
+            // 2. Gather Table Data (re-implementing filtering logic from renderTable)
+            const tableHeader = ['Test Name', 'Passed', 'Failed', 'Skipped', 'Fail Count', 'Grade'];
+            const tableRows = [];
+
+            const filterText = document.getElementById('searchInput').value.toLowerCase();
+            const settings = JSON.parse(localStorage.getItem('testDashboardSettings')) || {
+                gradeThresholds: { 'A+': 98, 'A': 90, 'B': 80, 'C': 70, 'D': 60 }
+            };
+
+            let tests = Object.keys(globalTestHistory);
+
+            if (activeRunFilter) {
+                const runTests = runToTestsMap[activeRunFilter] || new Set();
+                tests = tests.filter(name => runTests.has(name));
+            }
+
+            tests = tests.filter(name => name.toLowerCase().includes(filterText));
+
+            if (currentFilter === 'flaky') {
+                tests = tests.filter(name => globalTestResults[name].has('passed') && globalTestResults[name].has('failed'));
+            } else if (currentFilter === 'failing') {
+                tests = tests.filter(name => globalTestResults[name].has('failed'));
+            } else if (currentFilter === 'broken') {
+                tests = tests.filter(name => !globalTestResults[name].has('passed') && globalTestResults[name].has('failed'));
+            } else if (currentFilter === 'passed-only') {
+                tests = tests.filter(name => globalTestResults[name].size === 1 && globalTestResults[name].has('passed'));
+            } else if (currentFilter === 'skipped-any') {
+                tests = tests.filter(name => globalTestResults[name].has('skipped'));
+            }
+
+            tests.forEach(testName => {
+                const history = globalTestHistory[testName];
+                const totalRuns = history.length;
+                const passedCount = history.filter(s => s === 'passed').length;
+                const failedCount = history.filter(s => s === 'failed').length;
+                const skippedCount = totalRuns - passedCount - failedCount;
+                const passRate = totalRuns ? (passedCount / totalRuns) * 100 : 0;
+                
+                let grade = 'F';
+                if (passRate >= settings.gradeThresholds['A+']) grade = 'A+';
+                else if (passRate >= settings.gradeThresholds['A']) grade = 'A';
+                else if (passRate >= settings.gradeThresholds['B']) grade = 'B';
+                else if (passRate >= settings.gradeThresholds['C']) grade = 'C';
+                else if (passRate >= settings.gradeThresholds['D']) grade = 'D';
+
+                if (columnFilters.grade !== 'All' && grade !== columnFilters.grade) return;
+
+                tableRows.push([testName, passedCount, failedCount, skippedCount, failedCount, grade]);
+            });
+
+            // 3. Construct CSV String
+            const escapeCsvCell = (cell) => `"${String(cell).replace(/"/g, '""')}"`;
+            let csvContent = insights.map(rowArray => rowArray.map(escapeCsvCell).join(',')).join('\r\n');
+            csvContent += '\r\n' + tableHeader.map(escapeCsvCell).join(',') + '\r\n';
+            csvContent += tableRows.map(rowArray => rowArray.map(escapeCsvCell).join(',')).join('\r\n');
+
+            // 4. Trigger Download
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "tests_insights_export.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     </script>
 </body>
 </html>
