@@ -63,11 +63,11 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            font-size: 0.875rem;
+            font-size: 0.8125rem;
             font-weight: 500;
             color: white;
             background-color: #C1A35F;
-            padding: 0.5rem 1rem;
+            padding: 0.375rem 0.75rem;
             border-radius: 0.5rem;
             border: none;
             cursor: pointer;
@@ -260,9 +260,9 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.5rem 0.75rem;
+            padding: 0.375rem 0.625rem;
             border-radius: 0.5rem;
-            font-size: 0.875rem;
+            font-size: 0.8125rem;
             font-weight: 500;
             border: none;
             cursor: pointer;
@@ -548,7 +548,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0.5rem;
+            padding: 0.375rem;
             border-radius: 0.5rem;
             background-color: #f3f4f6;
             color: #6b7280;
@@ -556,6 +556,10 @@
             cursor: pointer;
         }
         .btn-icon:hover { background-color: #e5e7eb; }
+        .btn-icon:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
 
         /* Modal Styles */
         .modal-overlay {
@@ -625,7 +629,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0.5rem;
+            padding: 0.375rem;
             color: #6b7280;
             text-decoration: none;
             border-radius: 0.5rem;
@@ -673,13 +677,16 @@
     <div class="main-content">
 
         <div id="emptyState" class="empty-state">
-            <span class="material-symbols-outlined empty-icon">upload_file</span>
-            <h3 style="font-size: 1.5rem; font-weight: 600; color: #111827; margin-bottom: 0.5rem;">No Data Loaded</h3>
-            <p style="margin-bottom: 2rem; max-width: 400px;">Upload a test execution CSV file to analyze stability, detect flakiness, and view execution trends.</p>
-            <button class="import-btn" style="font-size: 1rem; padding: 0.75rem 1.5rem;" onclick="document.getElementById('csvInput').click()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                <span>Import CSV File</span>
-            </button>
+            <div style="background: white; padding: 4rem; border-radius: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); display: flex; flex-direction: column; align-items: center; max-width: 500px; width: 100%; border: 1px solid #f3f4f6;">
+                <div style="width: 6rem; height: 6rem; background: #F4EFE2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; color: #C1A35F;">
+                    <span class="material-symbols-outlined" style="font-size: 3rem;">analytics</span>
+                </div>
+                <h3 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0 0 0.75rem 0; letter-spacing: -0.025em;">Import Test Results</h3>
+                <p style="color: #6b7280; margin: 0 0 2.5rem 0; font-size: 1.1rem;">Start analyzing your test stability and trends.</p>
+                <button class="import-btn" style="font-size: 1rem; padding: 0.875rem 2.5rem; box-shadow: 0 4px 6px -1px rgba(193, 163, 95, 0.3);" onclick="document.getElementById('csvInput').click()">
+                    <span>Select CSV File</span>
+                </button>
+            </div>
         </div>
 
         <div id="dashboard" class="dashboard hidden">
@@ -716,6 +723,9 @@
                     <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
                         <span>Execution Trends</span>
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <button id="compareRunsBtn" class="btn-icon hidden" onclick="toggleComparisonMode()" title="Compare Selected Runs">
+                                <span class="material-symbols-outlined">compare_arrows</span>
+                            </button>
                             <button id="clearRunFilterBtn" class="btn-icon hidden" onclick="setFilter('all')" title="Clear Selection">
                                 <span class="material-symbols-outlined">clear</span>
                             </button>
@@ -911,6 +921,7 @@
         let columnFilters = { grade: 'All' };
         let activeRunFilter = null;
         let activeRunFilters = []; // Use an array for multi-select
+        let isComparisonMode = false;
         let currentPage = 1;
         const itemsPerPage = 15;
 
@@ -972,6 +983,7 @@
             currentFilter = filter;
             activeRunFilter = null; // Main filters clear the run filter
             activeRunFilters = []; // Main filters clear the run filter
+            isComparisonMode = false;
             
             // Update button states
             document.getElementById('btnShowFlaky').classList.toggle('active', filter === 'flaky');
@@ -990,6 +1002,7 @@
             
             currentPage = 1;
             updateInsights(); // Update cards to "all" state
+            document.getElementById('compareRunsBtn').classList.add('hidden');
             document.getElementById('clearRunFilterBtn').classList.add('hidden');
             renderTable();
             renderTrendChart('trendChartSmall', globalRunStats);
@@ -1158,6 +1171,7 @@
         });
 
         function renderTable() {
+            const thead = document.querySelector('#details table thead');
             const tbody = document.getElementById('testTableBody');
             tbody.innerHTML = '';
             const filterText = document.getElementById('searchInput').value.toLowerCase();
@@ -1256,6 +1270,58 @@
             document.getElementById('totalItems').textContent = totalItems;
             document.getElementById('btnPrev').disabled = currentPage <= 1;
             document.getElementById('btnNext').disabled = currentPage >= totalPages;
+
+            if (isComparisonMode && activeRunFilters.length >= 2 && activeRunFilters.length <= 3) {
+                // Render Comparison Headers
+                const sortedRuns = [...activeRunFilters].sort((a, b) => {
+                    const numA = parseFloat(a);
+                    const numB = parseFloat(b);
+                    if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+                    return a.localeCompare(b);
+                });
+
+                let headerHtml = '<tr><th>Test Name</th>';
+                sortedRuns.forEach(runId => {
+                    headerHtml += `<th class="text-center">Run ${runId}</th>`;
+                });
+                headerHtml += '</tr>';
+                thead.innerHTML = headerHtml;
+
+                for (const testName of paginatedTests) {
+                    const row = document.createElement('tr');
+                    const nameCell = document.createElement('td');
+                    const nameLink = document.createElement('span');
+                    nameLink.textContent = testName;
+                    nameLink.className = 'test-name-link';
+                    nameLink.onclick = () => openTestDetails(testName);
+                    nameCell.appendChild(nameLink);
+                    row.appendChild(nameCell);
+
+                    sortedRuns.forEach(runId => {
+                        const cell = document.createElement('td');
+                        cell.className = 'text-center';
+                        const runDetail = globalTestDetails[testName].find(d => d.runId === runId);
+                        if (runDetail) {
+                            cell.innerHTML = `<span class="status-pill pill-${runDetail.status}"></span>${runDetail.status}`;
+                        } else {
+                            cell.innerHTML = '<span style="color:#ccc">-</span>';
+                        }
+                        row.appendChild(cell);
+                    });
+                    tbody.appendChild(row);
+                }
+                return;
+            }
+
+            // Standard Headers
+            thead.innerHTML = `
+                <tr>
+                    <th>Test Name</th>
+                    <th style="width: 10rem;">Deviation (P/F/S)</th>
+                    <th class="text-right" style="width: 8rem;">Fail Count</th>
+                    <th class="text-center th-interactive" style="width: 6rem;" onclick="openFilter(event, 'grade')">Grade <span class="material-symbols-outlined filter-icon">filter_alt</span></th>
+                </tr>
+            `;
 
             for (const testName of paginatedTests) {
                 const row = document.createElement('tr');
@@ -1474,6 +1540,19 @@
             document.getElementById('totalExecutionsClickable').classList.remove('filter-active');
 
             updateInsights(activeRunFilter);
+            
+            const compareBtn = document.getElementById('compareRunsBtn');
+            if (activeRunFilters.length >= 2) {
+                compareBtn.classList.remove('hidden');
+                compareBtn.disabled = activeRunFilters.length > 3;
+                compareBtn.title = activeRunFilters.length > 3 ? "Select max 3 runs to compare" : "Compare Selected Runs";
+            } else {
+                compareBtn.classList.add('hidden');
+                if (isComparisonMode) {
+                    isComparisonMode = false;
+                }
+            }
+
             document.getElementById('clearRunFilterBtn').classList.toggle('hidden', !activeRunFilter);
             updateInsights(activeRunFilters);
             document.getElementById('clearRunFilterBtn').classList.toggle('hidden', activeRunFilters.length === 0);
@@ -1481,6 +1560,11 @@
             renderTable();
             renderTrendChart('trendChartSmall', globalRunStats);
             renderTrendChart('trendChartLarge', globalRunStats);
+        }
+
+        function toggleComparisonMode() {
+            isComparisonMode = !isComparisonMode;
+            renderTable();
         }
 
         function renderTrendChart(containerId, data) {
