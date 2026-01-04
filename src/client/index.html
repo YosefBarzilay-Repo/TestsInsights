@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TestsInsights</title>
+    <title>TestsInsight</title>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
     <style>
         body {
@@ -81,7 +81,8 @@
             padding: 2rem;
             max-width: 1600px;
             margin: 0 auto;
-            height: 100%;
+            flex: 1;
+            min-height: 0;
             width: 100%;
             display: flex;
             flex-direction: column;
@@ -649,12 +650,13 @@
     </style>
 </head>
 <body>
+    <!-- Created by Yosef Barzilay -->
     <header class="app-header">
         <div class="header-left">
             <div class="logo-box">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
             </div>
-        <h2 class="header-title">TestsInsights</h2>
+        <h2 class="header-title">TestsInsight</h2>
         </div>
         <div style="display: flex; align-items: center; gap: 0.5rem;">
             <a href="settings.html" class="btn-icon-header" title="Settings">
@@ -709,6 +711,21 @@
                     </button>
                 </div>
             <div id="insightsContent" class="insights-grid">
+                <!-- Execution Trend Card -->
+                <div class="card span-full">
+                    <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Execution Trends</span>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <button id="clearRunFilterBtn" class="btn-icon hidden" onclick="setFilter('all')" title="Clear Selection">
+                                <span class="material-symbols-outlined">clear</span>
+                            </button>
+                            <button class="btn-icon" onclick="openTrendModal()" title="Enlarge">
+                                <span class="material-symbols-outlined">open_in_full</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="trendChartSmall" style="width: 100%; height: 100px; display: flex; align-items: flex-end; padding-top: 10px;"></div>
+                </div>
                 <!-- Status Distribution Card -->
                 <div class="card">
                     <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
@@ -779,17 +796,6 @@
                     <div class="card-subtext">
                         <span id="brokenCount" class="clickable-count">-</span> failing tests of <span id="totalTestsBroken">-</span> total
                     </div>
-                </div>
-
-                <!-- Execution Trend Card -->
-                <div class="card span-full">
-                    <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>Execution Trends (Pass/Fail Rate)</span>
-                        <button class="btn-icon" onclick="openTrendModal()" title="Enlarge">
-                            <span class="material-symbols-outlined">open_in_full</span>
-                        </button>
-                    </div>
-                    <div id="trendChartSmall" style="width: 100%; height: 100px; display: flex; align-items: flex-end; padding-top: 10px;"></div>
                 </div>
                 </div>
             </div>
@@ -891,6 +897,10 @@
         <div id="filterDropdown" class="dropdown-menu"></div>
     </div>
 
+    <footer style="text-align: center; padding: 1rem; font-size: 0.75rem; color: #9ca3af; flex-shrink: 0;">
+        Created by Yosef Barzilay
+    </footer>
+
     <script>
         let globalTestHistory = {};
         let globalTestResults = {};
@@ -900,6 +910,7 @@
         let currentFilter = 'all'; // 'all', 'flaky', 'failing'
         let columnFilters = { grade: 'All' };
         let activeRunFilter = null;
+        let activeRunFilters = []; // Use an array for multi-select
         let currentPage = 1;
         const itemsPerPage = 15;
 
@@ -960,6 +971,7 @@
         function setFilter(filter) {
             currentFilter = filter;
             activeRunFilter = null; // Main filters clear the run filter
+            activeRunFilters = []; // Main filters clear the run filter
             
             // Update button states
             document.getElementById('btnShowFlaky').classList.toggle('active', filter === 'flaky');
@@ -977,6 +989,8 @@
             document.getElementById('totalExecutionsClickable').classList.toggle('filter-active', filter === 'all');
             
             currentPage = 1;
+            updateInsights(); // Update cards to "all" state
+            document.getElementById('clearRunFilterBtn').classList.add('hidden');
             renderTable();
             renderTrendChart('trendChartSmall', globalRunStats);
             renderTrendChart('trendChartLarge', globalRunStats);
@@ -1091,83 +1105,12 @@
                 if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
                 return a.id.localeCompare(b.id);
             });
-            renderTrendChart('trendChartSmall', globalRunStats);
             
             columnFilters = { grade: 'All' };
 
             setFilter('all');
+            updateInsights();
 
-            let flakyCount = 0;
-            let brokenCount = 0;
-            const totalTests = Object.keys(testResults).length;
-            const totalRuns = runIds.size;
-
-            const totalExecutions = totalPassed + totalFailed + totalSkipped;
-            const pctPassed = totalExecutions ? (totalPassed / totalExecutions) * 100 : 0;
-            const pctFailed = totalExecutions ? (totalFailed / totalExecutions) * 100 : 0;
-            const pctSkipped = totalExecutions ? (totalSkipped / totalExecutions) * 100 : 0;
-
-            document.getElementById('countPassed').textContent = totalPassed;
-            document.getElementById('countFailed').textContent = totalFailed;
-            document.getElementById('countSkipped').textContent = totalSkipped;
-            document.getElementById('totalExecutions').textContent = totalExecutions;
-            document.getElementById('barPassed').style.width = pctPassed + '%';
-            document.getElementById('barFailed').style.width = pctFailed + '%';
-            document.getElementById('barSkipped').style.width = pctSkipped + '%';
-
-            for (const testName in testResults) {
-                const statuses = testResults[testName];
-                if (statuses.has('passed') && statuses.has('failed')) {
-                    flakyCount++;
-                }
-                if (!statuses.has('passed') && statuses.has('failed')) {
-                    brokenCount++;
-                }
-            }
-
-            renderTable();
-
-            const flakyRateNum = totalTests ? (flakyCount / totalTests) * 100 : 0;
-            const flakyRateText = flakyRateNum.toFixed(1) + '%';
-            
-            const rateEl = document.getElementById('flakyRate');
-            rateEl.textContent = flakyRateText;
-            rateEl.className = 'card-value'; // Reset classes
-            
-            if (flakyRateNum > 5) {
-                rateEl.classList.add('text-red');
-            } else if (flakyRateNum > 0) {
-                rateEl.classList.add('text-yellow');
-            } else {
-                rateEl.classList.add('text-green');
-            }
-
-            const brokenRateNum = totalTests ? (brokenCount / totalTests) * 100 : 0;
-            const brokenRateText = brokenRateNum.toFixed(1) + '%';
-            
-            const brokenRateEl = document.getElementById('brokenRate');
-            brokenRateEl.textContent = brokenRateText;
-            brokenRateEl.className = 'card-value';
-            
-            if (brokenRateNum > 5) {
-                brokenRateEl.classList.add('text-red');
-            } else if (brokenRateNum > 0) {
-                brokenRateEl.classList.add('text-yellow');
-            } else {
-                brokenRateEl.classList.add('text-green');
-            }
-            
-            document.getElementById('summaryRuns').textContent = totalRuns > 0 ? totalRuns : 1;
-            document.getElementById('summaryTests').textContent = totalTests;
-            document.getElementById('summaryFlaky').textContent = flakyRateText;
-            document.getElementById('summaryBroken').textContent = brokenRateText;
-
-            document.getElementById('flakyCount').textContent = flakyCount;
-            document.getElementById('brokenCount').textContent = brokenCount;
-            document.getElementById('totalTests').textContent = totalTests;
-            document.getElementById('totalTestsBroken').textContent = totalTests;
-            document.getElementById('totalTestsDisplay').textContent = totalTests;
-            document.getElementById('totalRuns').textContent = totalRuns > 0 ? totalRuns : 1;
             document.getElementById('dashboard').classList.remove('hidden');
             document.getElementById('emptyState').classList.add('hidden');
              document.getElementById('details').classList.remove('hidden');
@@ -1230,6 +1173,14 @@
             if (activeRunFilter) {
                 const runTests = runToTestsMap[activeRunFilter] || new Set();
                 tests = tests.filter(name => runTests.has(name));
+            }
+            if (activeRunFilters.length > 0) {
+                const testsInSelectedRuns = new Set();
+                activeRunFilters.forEach(runId => {
+                    const runTests = runToTestsMap[runId] || new Set();
+                    runTests.forEach(testName => testsInSelectedRuns.add(testName));
+                });
+                tests = tests.filter(name => testsInSelectedRuns.has(name));
             }
 
             // Then apply search filter
@@ -1396,8 +1347,137 @@
             document.getElementById('detailModal').classList.remove('hidden');
         }
 
-        function toggleRunFilter(runId) {
-            activeRunFilter = activeRunFilter === runId ? null : runId;
+        function updateInsights(runIds = []) {
+            let totalRuns, totalTests, totalPassed = 0, totalFailed = 0, totalSkipped = 0, flakyCount = 0, brokenCount = 0;
+
+            if (runIds && runIds.length > 0) {
+                const selectedRunData = globalRunStats.filter(r => runIds.includes(r.id));
+                const testsInRuns = new Set();
+
+                selectedRunData.forEach(runData => {
+                    totalPassed += runData.passed;
+                    totalFailed += runData.failed;
+                    totalSkipped += runData.skipped;
+                    const testsForThisRun = runToTestsMap[runData.id] || new Set();
+                    testsForThisRun.forEach(t => testsInRuns.add(t));
+                });
+                
+                totalRuns = selectedRunData.length;
+                totalTests = testsInRuns.size;
+
+                testsInRuns.forEach(testName => {
+                    const statuses = globalTestResults[testName];
+                    if (statuses.has('passed') && statuses.has('failed')) {
+                        flakyCount++;
+                    }
+                    if (!statuses.has('passed') && statuses.has('failed')) {
+                        brokenCount++;
+                    }
+                });
+
+            } else { // Global stats
+                totalRuns = globalRunStats.length;
+                totalTests = Object.keys(globalTestHistory).length;
+
+                globalRunStats.forEach(run => {
+                    totalPassed += run.passed;
+                    totalFailed += run.failed;
+                    totalSkipped += run.skipped;
+                });
+
+                for (const testName in globalTestResults) {
+                    const statuses = globalTestResults[testName];
+                    if (statuses.has('passed') && statuses.has('failed')) {
+                        flakyCount++;
+                    }
+                    if (!statuses.has('passed') && statuses.has('failed')) {
+                        brokenCount++;
+                    }
+                }
+            }
+
+            // Update all the DOM elements
+            const totalExecutions = totalPassed + totalFailed + totalSkipped;
+            const pctPassed = totalExecutions ? (totalPassed / totalExecutions) * 100 : 0;
+            const pctFailed = totalExecutions ? (totalFailed / totalExecutions) * 100 : 0;
+            const pctSkipped = totalExecutions ? (totalSkipped / totalExecutions) * 100 : 0;
+
+            document.getElementById('countPassed').textContent = totalPassed;
+            document.getElementById('countFailed').textContent = totalFailed;
+            document.getElementById('countSkipped').textContent = totalSkipped;
+            document.getElementById('totalExecutions').textContent = totalExecutions;
+            document.getElementById('barPassed').style.width = pctPassed + '%';
+            document.getElementById('barFailed').style.width = pctFailed + '%';
+            document.getElementById('barSkipped').style.width = pctSkipped + '%';
+
+            const flakyRateNum = totalTests ? (flakyCount / totalTests) * 100 : 0;
+            const flakyRateText = flakyRateNum.toFixed(1) + '%';
+            const rateEl = document.getElementById('flakyRate');
+            rateEl.textContent = flakyRateText;
+            rateEl.className = 'card-value';
+            if (flakyRateNum > 5) rateEl.classList.add('text-red');
+            else if (flakyRateNum > 0) rateEl.classList.add('text-yellow');
+            else rateEl.classList.add('text-green');
+
+            const brokenRateNum = totalTests ? (brokenCount / totalTests) * 100 : 0;
+            const brokenRateText = brokenRateNum.toFixed(1) + '%';
+            const brokenRateEl = document.getElementById('brokenRate');
+            brokenRateEl.textContent = brokenRateText;
+            brokenRateEl.className = 'card-value';
+            if (brokenRateNum > 5) brokenRateEl.classList.add('text-red');
+            else if (brokenRateNum > 0) brokenRateEl.classList.add('text-yellow');
+            else brokenRateEl.classList.add('text-green');
+
+            document.getElementById('summaryRuns').textContent = totalRuns > 0 ? totalRuns : 1;
+            document.getElementById('summaryTests').textContent = totalTests;
+            document.getElementById('summaryFlaky').textContent = flakyRateText;
+            document.getElementById('summaryBroken').textContent = brokenRateText;
+
+            document.getElementById('flakyCount').textContent = flakyCount;
+            document.getElementById('brokenCount').textContent = brokenCount;
+            document.getElementById('totalTests').textContent = totalTests;
+            document.getElementById('totalTestsBroken').textContent = totalTests;
+            document.getElementById('totalTestsDisplay').textContent = totalTests;
+            document.getElementById('totalRuns').textContent = totalRuns > 0 ? totalRuns : 1;
+        }
+
+        function toggleRunFilter(runId, event) {
+            const isMultiSelect = event.ctrlKey || event.metaKey || event.shiftKey;
+            const index = activeRunFilters.indexOf(runId);
+
+            if (isMultiSelect) {
+                if (index > -1) {
+                    activeRunFilters.splice(index, 1); // Deselect if already selected
+                } else {
+                    activeRunFilters.push(runId); // Add to selection
+                }
+            } else {
+                // Standard click without modifier
+                if (activeRunFilters.length === 1 && index === 0) {
+                    // If the only selected item is clicked again, deselect it
+                    activeRunFilters = [];
+                } else {
+                    // Otherwise, select only this one
+                    activeRunFilters = [runId];
+                }
+            }
+
+            // Clear main filters when a run is selected/deselected to avoid confusion
+            currentFilter = 'all';
+            document.getElementById('btnShowFlaky').classList.remove('active');
+            document.getElementById('btnShowFailing').classList.remove('active');
+            document.getElementById('flakyCount').classList.remove('filter-active');
+            document.getElementById('brokenCount').classList.remove('filter-active');
+            document.getElementById('passedFilterClickable').classList.remove('filter-active');
+            document.getElementById('failedFilterClickable').classList.remove('filter-active');
+            document.getElementById('skippedFilterClickable').classList.remove('filter-active');
+            document.getElementById('totalExecutionsClickable').classList.remove('filter-active');
+
+            updateInsights(activeRunFilter);
+            document.getElementById('clearRunFilterBtn').classList.toggle('hidden', !activeRunFilter);
+            updateInsights(activeRunFilters);
+            document.getElementById('clearRunFilterBtn').classList.toggle('hidden', activeRunFilters.length === 0);
+
             renderTable();
             renderTrendChart('trendChartSmall', globalRunStats);
             renderTrendChart('trendChartLarge', globalRunStats);
@@ -1415,7 +1495,7 @@
             data.forEach(run => {
                 const bar = document.createElement('div');
                 bar.className = 'chart-bar';
-                if (run.id === activeRunFilter) {
+                if (activeRunFilters.includes(run.id)) {
                     bar.classList.add('active');
                 }
                 
@@ -1431,7 +1511,7 @@
                 
                 bar.title = `Run: ${run.id}\nDate: ${run.date || '-'}\nTime: ${run.startTime || '?'} - ${run.endTime || '?'}\n\nTotal: ${run.total}\nPassed: ${run.passed}\nFailed: ${run.failed}\nSkipped: ${run.skipped}`;
                 
-                bar.onclick = () => toggleRunFilter(run.id);
+                bar.onclick = (event) => toggleRunFilter(run.id, event);
                 
                 container.appendChild(bar);
             });
@@ -1554,6 +1634,14 @@
             if (activeRunFilter) {
                 const runTests = runToTestsMap[activeRunFilter] || new Set();
                 tests = tests.filter(name => runTests.has(name));
+            }
+            if (activeRunFilters.length > 0) {
+                const testsInSelectedRuns = new Set();
+                activeRunFilters.forEach(runId => {
+                    const runTests = runToTestsMap[runId] || new Set();
+                    runTests.forEach(testName => testsInSelectedRuns.add(testName));
+                });
+                tests = tests.filter(name => testsInSelectedRuns.has(name));
             }
 
     
