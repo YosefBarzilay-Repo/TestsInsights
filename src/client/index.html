@@ -148,6 +148,7 @@
             border-radius: 0.5rem;
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
             margin-top: 0;
+            margin-top: 2rem;
             display: flex;
             flex-direction: column;
             flex: 1;
@@ -814,7 +815,6 @@
                         Show Failing
                     </button>
                     <div class="separator"></div>
-                    <button class="btn-icon" title="Export CSV">
                     <button class="btn-icon" id="btnExportCsv" title="Export CSV">
                         <span class="material-symbols-outlined">download</span>
                     </button>
@@ -1515,8 +1515,7 @@
         document.getElementById('trendModal').addEventListener('click', function(e) {
             if (e.target === this) closeTrendModal();
         });
-    </script>
-    <script>
+
         function exportDataToCsv() {
             // 1. Gather Insights
             const insights = [
@@ -1537,24 +1536,30 @@
                 []
             ];
 
+    
             // 2. Gather Table Data (re-implementing filtering logic from renderTable)
             const tableHeader = ['Test Name', 'Passed', 'Failed', 'Skipped', 'Fail Count', 'Grade'];
             const tableRows = [];
 
+    
             const filterText = document.getElementById('searchInput').value.toLowerCase();
             const settings = JSON.parse(localStorage.getItem('testDashboardSettings')) || {
                 gradeThresholds: { 'A+': 98, 'A': 90, 'B': 80, 'C': 70, 'D': 60 }
             };
 
+    
             let tests = Object.keys(globalTestHistory);
 
+    
             if (activeRunFilter) {
                 const runTests = runToTestsMap[activeRunFilter] || new Set();
                 tests = tests.filter(name => runTests.has(name));
             }
 
+    
             tests = tests.filter(name => name.toLowerCase().includes(filterText));
 
+    
             if (currentFilter === 'flaky') {
                 tests = tests.filter(name => globalTestResults[name].has('passed') && globalTestResults[name].has('failed'));
             } else if (currentFilter === 'failing') {
@@ -1567,6 +1572,7 @@
                 tests = tests.filter(name => globalTestResults[name].has('skipped'));
             }
 
+    
             tests.forEach(testName => {
                 const history = globalTestHistory[testName];
                 const totalRuns = history.length;
@@ -1582,17 +1588,21 @@
                 else if (passRate >= settings.gradeThresholds['C']) grade = 'C';
                 else if (passRate >= settings.gradeThresholds['D']) grade = 'D';
 
+    
                 if (columnFilters.grade !== 'All' && grade !== columnFilters.grade) return;
 
+    
                 tableRows.push([testName, passedCount, failedCount, skippedCount, failedCount, grade]);
             });
 
+    
             // 3. Construct CSV String
             const escapeCsvCell = (cell) => `"${String(cell).replace(/"/g, '""')}"`;
             let csvContent = insights.map(rowArray => rowArray.map(escapeCsvCell).join(',')).join('\r\n');
             csvContent += '\r\n' + tableHeader.map(escapeCsvCell).join(',') + '\r\n';
             csvContent += tableRows.map(rowArray => rowArray.map(escapeCsvCell).join(',')).join('\r\n');
 
+    
             // 4. Trigger Download
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
