@@ -778,6 +778,14 @@
             </div>
         </div>
 
+        <div id="loadingState" class="empty-state hidden">
+            <div style="background: white; padding: 4rem; border-radius: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); display: flex; flex-direction: column; align-items: center; max-width: 500px; width: 100%; border: 1px solid #f3f4f6;">
+                <div class="spin" style="width: 4rem; height: 4rem; border: 4px solid #f3f4f6; border-top-color: #C1A35F; border-radius: 50%; margin-bottom: 2rem;"></div>
+                <h3 style="font-size: 1.5rem; font-weight: 700; color: #111827; margin: 0 0 0.5rem 0;">Analyzing Test Results...</h3>
+                <p style="color: #6b7280; margin: 0; font-size: 1.1rem;">Please wait while we process your data.</p>
+            </div>
+        </div>
+
         <div id="dashboard" class="dashboard hidden">
             <div class="card">
                 <div style="border-bottom: 1px solid #e5e7eb; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
@@ -1465,10 +1473,25 @@
                 return;
             }
 
+            // Show loading state
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('loadingState').classList.remove('hidden');
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 const text = e.target.result;
-                processCSV(text);
+                
+                setTimeout(() => {
+                    try {
+                        processCSV(text);
+                    } catch (err) {
+                        console.error(err);
+                    }
+                    document.getElementById('loadingState').classList.add('hidden');
+                    if (document.getElementById('dashboard').classList.contains('hidden')) {
+                        document.getElementById('emptyState').classList.remove('hidden');
+                    }
+                }, 2000);
             };
             reader.readAsText(file);
         });
