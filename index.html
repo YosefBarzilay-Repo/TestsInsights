@@ -1514,8 +1514,6 @@
 
         function setFilter(filter) {
             currentFilter = filter;
-            activeRunFilter = null; // Main filters clear the run filter
-            activeRunFilters = []; // Main filters clear the run filter
             isComparisonMode = false;
             
             // Update flaky count link style
@@ -1530,9 +1528,10 @@
             document.getElementById('totalExecutionsClickable').classList.toggle('filter-active', filter === 'all');
             
             currentPage = 1;
-            updateInsights(); // Update cards to "all" state
-            document.getElementById('compareRunsBtn').disabled = true;
-            document.getElementById('clearRunFilterBtn').disabled = true;
+            updateInsights(activeRunFilters);
+            
+            document.getElementById('compareRunsBtn').disabled = !(activeRunFilters.length >= 2 && activeRunFilters.length <= 3);
+            document.getElementById('clearRunFilterBtn').disabled = activeRunFilters.length === 0;
             renderTable();
             renderTrendChart('trendChartSmall', globalRunStats);
             renderTrendChart('trendChartLarge', globalRunStats);
@@ -1824,26 +1823,34 @@
 
 
             // Apply Toolbar Filters
-            if (currentFilter === 'flaky') {
-                tests = tests.filter(name => 
-                    globalTestResults[name].has('passed') && globalTestResults[name].has('failed')
-                );
-            } else if (currentFilter === 'failing') {
-                tests = tests.filter(name => 
-                    globalTestResults[name].has('failed')
-                );
-            } else if (currentFilter === 'broken') {
-                tests = tests.filter(name => 
-                    !globalTestResults[name].has('passed') && globalTestResults[name].has('failed')
-                );
-            } else if (currentFilter === 'passed-only') {
-                tests = tests.filter(name =>
-                    globalTestResults[name].size === 1 && globalTestResults[name].has('passed')
-                );
-            } else if (currentFilter === 'skipped-any') {
-                tests = tests.filter(name =>
-                    globalTestResults[name].has('skipped')
-                );
+            if (currentFilter !== 'all') {
+                tests = tests.filter(name => {
+                    let statuses;
+                    if (activeRunFilters.length > 0) {
+                        statuses = new Set();
+                        const details = globalTestDetails[name] || [];
+                        details.forEach(d => {
+                            if (activeRunFilters.includes(d.runId)) {
+                                statuses.add(d.status);
+                            }
+                        });
+                    } else {
+                        statuses = globalTestResults[name];
+                    }
+
+                    if (currentFilter === 'flaky') {
+                        return statuses.has('passed') && statuses.has('failed');
+                    } else if (currentFilter === 'failing') {
+                        return statuses.has('failed');
+                    } else if (currentFilter === 'broken') {
+                        return !statuses.has('passed') && statuses.has('failed');
+                    } else if (currentFilter === 'passed-only') {
+                        return statuses.size === 1 && statuses.has('passed');
+                    } else if (currentFilter === 'skipped-any') {
+                        return statuses.has('skipped');
+                    }
+                    return true;
+                });
             }
 
             // Apply Advanced Filters
@@ -2116,10 +2123,10 @@
                 tbody.appendChild(row);
             });
 
+            document.getElementById('detailModal').classList.remove('hidden');
+
             // Draw Chart (SVG)
             renderChart(details);
-
-            document.getElementById('detailModal').classList.remove('hidden');
         }
 
         function updateInsights(runIds = []) {
@@ -2600,16 +2607,34 @@
             tests = tests.filter(name => name.toLowerCase().includes(filterText));
 
     
-            if (currentFilter === 'flaky') {
-                tests = tests.filter(name => globalTestResults[name].has('passed') && globalTestResults[name].has('failed'));
-            } else if (currentFilter === 'failing') {
-                tests = tests.filter(name => globalTestResults[name].has('failed'));
-            } else if (currentFilter === 'broken') {
-                tests = tests.filter(name => !globalTestResults[name].has('passed') && globalTestResults[name].has('failed'));
-            } else if (currentFilter === 'passed-only') {
-                tests = tests.filter(name => globalTestResults[name].size === 1 && globalTestResults[name].has('passed'));
-            } else if (currentFilter === 'skipped-any') {
-                tests = tests.filter(name => globalTestResults[name].has('skipped'));
+            if (currentFilter !== 'all') {
+                tests = tests.filter(name => {
+                    let statuses;
+                    if (activeRunFilters.length > 0) {
+                        statuses = new Set();
+                        const details = globalTestDetails[name] || [];
+                        details.forEach(d => {
+                            if (activeRunFilters.includes(d.runId)) {
+                                statuses.add(d.status);
+                            }
+                        });
+                    } else {
+                        statuses = globalTestResults[name];
+                    }
+
+                    if (currentFilter === 'flaky') {
+                        return statuses.has('passed') && statuses.has('failed');
+                    } else if (currentFilter === 'failing') {
+                        return statuses.has('failed');
+                    } else if (currentFilter === 'broken') {
+                        return !statuses.has('passed') && statuses.has('failed');
+                    } else if (currentFilter === 'passed-only') {
+                        return statuses.size === 1 && statuses.has('passed');
+                    } else if (currentFilter === 'skipped-any') {
+                        return statuses.has('skipped');
+                    }
+                    return true;
+                });
             }
 
     
