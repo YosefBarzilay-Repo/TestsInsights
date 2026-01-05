@@ -772,8 +772,8 @@
                 <div style="margin-top: 2rem; width: 100%;">
                     <details style="text-align: center; font-size: 0.875rem; color: #6b7280;">
                         <summary style="cursor: pointer; list-style: none; user-select: none; display: inline-flex; align-items: center; gap: 0.25rem; color: #C1A35F; font-weight: 500;">
-                            <span class="material-symbols-outlined" style="font-size: 1.1rem;">help</span>
-                            <span style="text-decoration: underline; text-underline-offset: 2px;">CSV Format Example</span>
+                            <span style="text-decoration: underline; text-underline-offset: 2px;">First time</span>
+                                                        <span class="material-symbols-outlined" style="font-size: 1.1rem;">help</span>
                         </summary>
                         <div style="margin-top: 1rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; text-align: left;">
                             <p style="font-size: 0.75rem; color: #6b7280; margin: 0 0 0.5rem 0;">
@@ -1623,6 +1623,19 @@
                 if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
                 return a.id.localeCompare(b.id);
             });
+
+            // Calculate run durations
+            globalRunStats.forEach(run => {
+                if (run.startTime && run.endTime) {
+                    let start = parseTimeSeconds(run.startTime);
+                    let end = parseTimeSeconds(run.endTime);
+                    let duration = end - start;
+                    if (duration < 0) duration += 86400;
+                    run.durationSeconds = duration;
+                } else {
+                    run.durationSeconds = 0;
+                }
+            });
             
             columnFilters = {};
 
@@ -2156,22 +2169,37 @@
         function renderTrendChart(containerId, data) {
             const container = document.getElementById(containerId);
             container.innerHTML = '';
+            container.style.position = 'relative';
+            container.style.display = 'block';
+            container.style.padding = '0';
             
             if (!data || data.length === 0) {
-                container.innerHTML = '<div style="width:100%; text-align:center; color:#9ca3af;">No run data available</div>';
+                container.innerHTML = '<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#9ca3af;">No run data available</div>';
                 return;
             }
 
-            data.forEach(run => {
+            // Bars Container
+            const barsContainer = document.createElement('div');
+            barsContainer.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: flex-end; gap: 1px;';
+
+            // SVG Overlay for Trend Line
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", "100%");
+            svg.setAttribute("height", "100%");
+            svg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;';
+
+            const maxDuration = Math.max(...data.map(r => r.durationSeconds || 0), 1);
+
+            data.forEach((run, index) => {
                 const bar = document.createElement('div');
                 bar.className = 'chart-bar';
                 if (activeRunFilters.includes(run.id)) {
                     bar.classList.add('active');
                 }
                 
-                const pPass = (run.passed / run.total) * 100;
-                const pFail = (run.failed / run.total) * 100;
-                const pSkip = (run.skipped / run.total) * 100;
+                const pPass = run.total ? (run.passed / run.total) * 100 : 0;
+                const pFail = run.total ? (run.failed / run.total) * 100 : 0;
+                const pSkip = run.total ? (run.skipped / run.total) * 100 : 0;
 
                 bar.innerHTML = `
                     <div class="chart-bar-segment bg-green" style="height: ${pPass}%"></div>
@@ -2180,10 +2208,53 @@
                 `;
                 
                 bar.title = `Run: ${run.id}\nDate: ${run.date || '-'}\nTime: ${run.startTime || '?'} - ${run.endTime || '?'}\n\nTotal: ${run.total}\nPassed: ${run.passed}\nFailed: ${run.failed}\nSkipped: ${run.skipped}`;
+                // Format Duration
+                const d = run.durationSeconds || 0;
+                let durStr = d.toFixed(1) + 's';
+                if (d > 60) {
+                    const m = Math.floor(d / 60);
+                    const s = (d % 60).toFixed(0);
+                    durStr = `${m}m ${s}s`;
+                }
+
+                bar.title = `Run: ${run.id}\nDate: ${run.date || '-'}\nTime: ${run.startTime || '?'} - ${run.endTime || '?'}\nDuration: ${durStr}\n\nTotal: ${run.total}\nPassed: ${run.passed}\nFailed: ${run.failed}\nSkipped: ${run.skipped}`;
                 
                 bar.onclick = (event) => toggleRunFilter(run.id, event);
                 
                 container.appendChild(bar);
+                barsContainer.appendChild(bar);
+            });
+
+            container.appendChild(barsContainer);
+            container.appendChild(svg);
+
+            // Draw Trend Line
+            const points = data.map((run, index) => {
+                const xPercent = ((index + 0.5) / data.length) * 100;
+                // Scale duration to 90% height (leaving 10% top padding)
+                const scaledY = 100 - ((run.durationSeconds || 0) / maxDuration) * 90;
+                return `${xPercent}%,${scaledY}%`;
+            }).join(' ');
+
+            const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+            polyline.setAttribute("points", points);
+            polyline.setAttribute("fill", "none");
+            polyline.setAttribute("stroke", "#1f2937");
+            polyline.setAttribute("stroke-width", "2");
+            polyline.setAttribute("stroke-opacity", "0.7");
+            svg.appendChild(polyline);
+
+            // Add dots
+            data.forEach((run, index) => {
+                const xPercent = ((index + 0.5) / data.length) * 100;
+                const scaledY = 100 - ((run.durationSeconds || 0) / maxDuration) * 90;
+                
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute("cx", `${xPercent}%`);
+                circle.setAttribute("cy", `${scaledY}%`);
+                circle.setAttribute("r", "3");
+                circle.setAttribute("fill", "#1f2937");
+                svg.appendChild(circle);
             });
         }
 
