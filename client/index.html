@@ -57,6 +57,11 @@
             transform: translateY(-2px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
+        .recommendation-card.dismissed {
+            opacity: 0.5;
+            filter: grayscale(100%);
+            background-color: #f9fafb;
+        }
         .recommendation-header {
             display: flex;
             align-items: center;
@@ -936,18 +941,6 @@
                     <input type="text" id="searchInput" class="search-input" placeholder="Search by test name..." />
                 </div>
                 <div class="actions-container">
-                    <button class="btn btn-primary" id="btnAllTests">
-                        <span class="material-symbols-outlined text-[18px]">filter_list</span>
-                        All Tests
-                    </button>
-                    <button class="btn btn-secondary" id="btnShowFlaky">
-                        <span class="material-symbols-outlined text-[18px] text-warning">warning</span>
-                        Show Flaky
-                    </button>
-                    <button class="btn btn-secondary" id="btnShowFailing">
-                        <span class="material-symbols-outlined text-[18px] text-danger">cancel</span>
-                        Show Failing
-                    </button>
                     <button class="btn btn-secondary" onclick="openAdvancedFilter()">
                         <span class="material-symbols-outlined text-[18px]">filter_alt</span>
                         Filter
@@ -1140,16 +1133,11 @@
         }
 
         function dismissCard(checkbox) {
+            const card = checkbox.closest('.recommendation-card');
             if (checkbox.checked) {
-                const card = checkbox.closest('.recommendation-card');
-                card.style.transition = 'all 0.4s ease';
-                card.style.opacity = '0';
-                card.style.transform = 'scale(0.95)';
-                card.style.pointerEvents = 'none';
-                
-                setTimeout(() => {
-                    card.remove();
-                }, 400);
+                card.classList.add('dismissed');
+            } else {
+                card.classList.remove('dismissed');
             }
         }
 
@@ -1434,9 +1422,6 @@
             setFilter('all');
         });
 
-        document.getElementById('btnAllTests').addEventListener('click', () => setFilter('all'));
-        document.getElementById('btnShowFlaky').addEventListener('click', () => setFilter('flaky'));
-        document.getElementById('btnShowFailing').addEventListener('click', () => setFilter('failing'));
         document.getElementById('btnExportCsv').addEventListener('click', exportDataToCsv);
 
         document.getElementById('btnPrev').addEventListener('click', () => {
@@ -1455,10 +1440,6 @@
             activeRunFilter = null; // Main filters clear the run filter
             activeRunFilters = []; // Main filters clear the run filter
             isComparisonMode = false;
-            
-            // Update button states
-            document.getElementById('btnShowFlaky').classList.toggle('active', filter === 'flaky');
-            document.getElementById('btnShowFailing').classList.toggle('active', filter === 'failing');
             
             // Update flaky count link style
             document.getElementById('flakyCount').classList.toggle('filter-active', filter === 'flaky');
@@ -2140,8 +2121,6 @@
 
             // Clear main filters when a run is selected/deselected to avoid confusion
             currentFilter = 'all';
-            document.getElementById('btnShowFlaky').classList.remove('active');
-            document.getElementById('btnShowFailing').classList.remove('active');
             document.getElementById('flakyCount').classList.remove('filter-active');
             document.getElementById('brokenCount').classList.remove('filter-active');
             document.getElementById('passedFilterClickable').classList.remove('filter-active');
