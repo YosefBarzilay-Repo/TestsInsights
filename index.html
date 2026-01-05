@@ -941,9 +941,13 @@
                     <input type="text" id="searchInput" class="search-input" placeholder="Search by test name..." />
                 </div>
                 <div class="actions-container">
+                    <button id="btnClearFilters" class="btn btn-secondary hidden" onclick="clearAllFilters()">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">filter_alt_off</span>
+                        <span>Clear</span>
+                    </button>
                     <button class="btn btn-secondary" onclick="openAdvancedFilter()">
-                        <span class="material-symbols-outlined text-[18px]">filter_alt</span>
-                        Filter
+                        <span class="material-symbols-outlined" style="font-size: 18px;">filter_alt</span>
+                        <span>Filter</span>
                     </button>
                     <div class="separator"></div>
                     <button class="btn-icon" id="btnExportCsv" title="Export CSV">
@@ -1043,6 +1047,15 @@
                         <datalist id="runIdOptions"></datalist>
                     </div>
                     <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select id="filterStatus" class="form-input">
+                            <option value="">All</option>
+                            <option value="passed">Passed</option>
+                            <option value="failed">Failed</option>
+                            <option value="skipped">Skipped</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
                         <label class="form-label">Start Time Range</label>
                         <div class="form-row">
                             <input type="time" id="filterStartTimeMin" class="form-input">
@@ -1089,6 +1102,7 @@
             testName: '',
             testGroup: '',
             runId: '',
+            status: '',
             startTimeMin: '',
             startTimeMax: '',
             durationMin: '',
@@ -1691,7 +1705,7 @@
                 details = details.filter(d => activeRunFilters.includes(d.runId));
             }
             
-            if (details.length === 0) return { runId: '-', start: '-', end: '-', duration: 0, group: globalTestGroups[testName] || '--' };
+            if (details.length === 0) return { runId: '-', start: '-', end: '-', duration: 0, group: globalTestGroups[testName] || '--', status: '-' };
 
             const latest = details.reduce((prev, current) => {
                 const numA = parseFloat(prev.runId);
@@ -1708,7 +1722,7 @@
                 if (duration < 0) duration += 86400;
             }
 
-            return { runId: latest.runId, start: latest.start, end: latest.end, duration: duration, group: globalTestGroups[testName] || '--' };
+            return { runId: latest.runId, start: latest.start, end: latest.end, duration: duration, group: globalTestGroups[testName] || '--', status: latest.status };
         }
 
         function renderTable() {
@@ -1716,6 +1730,19 @@
             const tbody = document.getElementById('testTableBody');
             tbody.innerHTML = '';
             const filterText = document.getElementById('searchInput').value.toLowerCase();
+
+            // Check if any filter is active
+            const isSearchActive = filterText !== '';
+            const isAdvancedActive = Object.values(advancedFilters).some(v => v !== '');
+            
+            const clearBtn = document.getElementById('btnClearFilters');
+            if (clearBtn) {
+                if (isSearchActive || isAdvancedActive) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                }
+            }
             
 
             let tests = Object.keys(globalTestHistory);
@@ -1764,6 +1791,7 @@
                     if (advancedFilters.testName && !testName.toLowerCase().includes(advancedFilters.testName.toLowerCase())) return false;
                     if (advancedFilters.testGroup && !details.group.toLowerCase().includes(advancedFilters.testGroup.toLowerCase())) return false;
                     if (advancedFilters.runId && !String(details.runId).includes(advancedFilters.runId)) return false;
+                    if (advancedFilters.status && details.status.toLowerCase() !== advancedFilters.status.toLowerCase()) return false;
                     
                     if (advancedFilters.startTimeMin) {
                         if (details.start === '-') return false;
@@ -1869,6 +1897,7 @@
                 <tr>
                     <th>Test Name</th>
                     <th>Test Group</th>
+                    <th>Status</th>
                     <th>Run ID</th>
                     <th>Start Time</th>
                     <th>End Time</th>
@@ -1901,6 +1930,7 @@
                 let endTime = '-';
                 let durationStr = '-';
                 let runId = '-';
+                let currentStatus = '-';
                 
                 let details = globalTestDetails[testName] || [];
                 if (activeRunFilters.length > 0) {
@@ -1918,6 +1948,7 @@
                     runId = latest.runId || '-';
                     startTime = latest.start || '-';
                     endTime = latest.end || '-';
+                    currentStatus = latest.status || '-';
                     
                     if (startTime !== '-' && endTime !== '-') {
                         const s = parseTimeSeconds(startTime);
@@ -1947,6 +1978,17 @@
                 const groupCell = document.createElement('td');
                 groupCell.textContent = globalTestGroups[testName] || '--';
                 row.appendChild(groupCell);
+
+                // Status
+                const statusCell = document.createElement('td');
+                if (currentStatus !== '-') {
+                    statusCell.innerHTML = `<span class="status-pill pill-${currentStatus}"></span>${currentStatus}`;
+                    statusCell.style.textTransform = 'capitalize';
+                } else {
+                    statusCell.textContent = '-';
+                    statusCell.style.color = '#9ca3af';
+                }
+                row.appendChild(statusCell);
 
                 // Run ID
                 const runIdCell = document.createElement('td');
@@ -2186,6 +2228,8 @@
             const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
             svg.setAttribute("width", "100%");
             svg.setAttribute("height", "100%");
+            svg.setAttribute("viewBox", "0 0 100 100");
+            svg.setAttribute("preserveAspectRatio", "none");
             svg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;';
 
             const maxDuration = Math.max(...data.map(r => r.durationSeconds || 0), 1);
@@ -2233,7 +2277,7 @@
                 const xPercent = ((index + 0.5) / data.length) * 100;
                 // Scale duration to 90% height (leaving 10% top padding)
                 const scaledY = 100 - ((run.durationSeconds || 0) / maxDuration) * 90;
-                return `${xPercent}%,${scaledY}%`;
+                return `${xPercent},${scaledY}`;
             }).join(' ');
 
             const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
@@ -2241,6 +2285,7 @@
             polyline.setAttribute("fill", "none");
             polyline.setAttribute("stroke", "#1f2937");
             polyline.setAttribute("stroke-width", "2");
+            polyline.setAttribute("vector-effect", "non-scaling-stroke");
             polyline.setAttribute("stroke-opacity", "0.7");
             svg.appendChild(polyline);
 
@@ -2249,12 +2294,9 @@
                 const xPercent = ((index + 0.5) / data.length) * 100;
                 const scaledY = 100 - ((run.durationSeconds || 0) / maxDuration) * 90;
                 
-                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                circle.setAttribute("cx", `${xPercent}%`);
-                circle.setAttribute("cy", `${scaledY}%`);
-                circle.setAttribute("r", "3");
-                circle.setAttribute("fill", "#1f2937");
-                svg.appendChild(circle);
+                const dot = document.createElement('div');
+                dot.style.cssText = `position: absolute; left: ${xPercent}%; top: ${scaledY}%; width: 6px; height: 6px; background-color: #1f2937; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 11;`;
+                container.appendChild(dot);
             });
         }
 
@@ -2271,6 +2313,7 @@
             document.getElementById('filterTestName').value = advancedFilters.testName;
             document.getElementById('filterTestGroup').value = advancedFilters.testGroup;
             document.getElementById('filterRunId').value = advancedFilters.runId;
+            document.getElementById('filterStatus').value = advancedFilters.status;
             document.getElementById('filterStartTimeMin').value = advancedFilters.startTimeMin;
             document.getElementById('filterStartTimeMax').value = advancedFilters.startTimeMax;
             document.getElementById('filterDurationMin').value = advancedFilters.durationMin;
@@ -2287,6 +2330,7 @@
             advancedFilters.testName = document.getElementById('filterTestName').value;
             advancedFilters.testGroup = document.getElementById('filterTestGroup').value;
             advancedFilters.runId = document.getElementById('filterRunId').value;
+            advancedFilters.status = document.getElementById('filterStatus').value;
             advancedFilters.startTimeMin = document.getElementById('filterStartTimeMin').value;
             advancedFilters.startTimeMax = document.getElementById('filterStartTimeMax').value;
             advancedFilters.durationMin = document.getElementById('filterDurationMin').value;
@@ -2301,11 +2345,34 @@
             document.getElementById('filterTestName').value = '';
             document.getElementById('filterTestGroup').value = '';
             document.getElementById('filterRunId').value = '';
+            document.getElementById('filterStatus').value = '';
             document.getElementById('filterStartTimeMin').value = '';
             document.getElementById('filterStartTimeMax').value = '';
             document.getElementById('filterDurationMin').value = '';
             document.getElementById('filterDurationMax').value = '';
             applyAdvancedFilters();
+        }
+
+        function clearAllFilters() {
+            document.getElementById('searchInput').value = '';
+            
+            // Reset Advanced Filters inputs
+            document.getElementById('filterTestName').value = '';
+            document.getElementById('filterTestGroup').value = '';
+            document.getElementById('filterRunId').value = '';
+            document.getElementById('filterStatus').value = '';
+            document.getElementById('filterStartTimeMin').value = '';
+            document.getElementById('filterStartTimeMax').value = '';
+            document.getElementById('filterDurationMin').value = '';
+            document.getElementById('filterDurationMax').value = '';
+            
+            // Reset Advanced Filters state
+            advancedFilters = {
+                testName: '', testGroup: '', runId: '', status: '',
+                startTimeMin: '', startTimeMax: '', durationMin: '', durationMax: ''
+            };
+
+            setFilter('all'); // Triggers renderTable
         }
 
         function renderChart(details) {
