@@ -683,10 +683,28 @@
                     <span class="material-symbols-outlined" style="font-size: 3rem;">analytics</span>
                 </div>
                 <h3 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0 0 0.75rem 0; letter-spacing: -0.025em;">Import Test Results</h3>
-                <p style="color: #6b7280; margin: 0 0 2.5rem 0; font-size: 1.1rem;">Start analyzing your test stability and trends.</p>
+                <p style="color: #6b7280; margin: 0 0 2.5rem 0; font-size: 1.1rem;">and start analyzing your test stability & trends.</p>
                 <button class="import-btn" style="font-size: 1rem; padding: 0.875rem 2.5rem; box-shadow: 0 4px 6px -1px rgba(193, 163, 95, 0.3);" onclick="document.getElementById('csvInput').click()">
                     <span>Select CSV File</span>
                 </button>
+                <div style="margin-top: 2rem; width: 100%;">
+                    <details style="text-align: center; font-size: 0.875rem; color: #6b7280;">
+                        <summary style="cursor: pointer; list-style: none; user-select: none; display: inline-flex; align-items: center; gap: 0.25rem; color: #C1A35F; font-weight: 500;">
+                            <span class="material-symbols-outlined" style="font-size: 1.1rem;">help</span>
+                            <span style="text-decoration: underline; text-underline-offset: 2px;">CSV Format Example</span>
+                        </summary>
+                        <div style="margin-top: 1rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; text-align: left;">
+                            <p style="font-size: 0.75rem; color: #6b7280; margin: 0 0 0.5rem 0;">
+                                Required columns (comma-separated). <span style="font-style: italic; color: #9ca3af;">* test_group_name is optional</span>
+                            </p>
+                            <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.75rem; color: #4b5563; line-height: 1.6; overflow-x: auto;">
+                                <div style="font-weight: 600; color: #111827; border-bottom: 1px dashed #d1d5db; padding-bottom: 0.25rem; margin-bottom: 0.25rem; white-space: nowrap;">run_id, test_name, test_group_name*, status, run_date, start_time, end_time</div>
+                                <div style="color: #6b7280; white-space: nowrap;">101, login_test, Auth, Passed, 2023-10-01, 10:00:00, 10:00:05</div>
+                                <div style="color: #6b7280; white-space: nowrap;">101, checkout_test, , Failed, 2023-10-01, 10:00:06, 10:00:10</div>
+                            </div>
+                        </div>
+                    </details>
+                </div>
             </div>
         </div>
 
@@ -932,6 +950,13 @@
             const file = e.target.files[0];
             if (!file) return;
 
+            if (!file.name.toLowerCase().endsWith('.csv')) {
+                alert('Invalid file format. Please upload a .csv file.');
+                showError('Invalid File', 'Invalid file format. Please upload a .csv file.');
+                this.value = '';
+                return;
+            }
+
             const reader = new FileReader();
             reader.onload = function(e) {
                 const text = e.target.result;
@@ -1013,15 +1038,43 @@
         }
 
         function processCSV(csvText) {
+                        if (!csvText || !csvText.trim()) {
+                alert('The uploaded CSV file is empty.');
+                showError('Empty File', 'The uploaded CSV file is empty.');
+                return;
+            }
+
             const lines = csvText.split(/\r\n|\n/).filter(line => line.trim() !== '');
-            if (lines.length < 2) return;
+            if (lines.length < 2) {
+                alert('The CSV file must contain a header row and at least one data row.');
+                showError('Invalid Data', 'The CSV file must contain a header row and at least one data row.');
+                return;
+            }
 
             let headerLine = lines[0];
+
             if (headerLine.charCodeAt(0) === 0xFEFF) {
                 headerLine = headerLine.slice(1);
             }
 
             const headers = headerLine.split(',').map(h => h.trim().toLowerCase());
+            
+            const requiredCols = ['run_id', 'test_name', 'status', 'run_date', 'start_time', 'end_time'];
+            const allowedCols = [...requiredCols, 'test_group_name'];
+
+            const missing = requiredCols.filter(col => !headers.includes(col));
+            if (missing.length > 0) {
+                alert(`Invalid CSV Format.\nMissing required columns: ${missing.join(', ')}`);
+                showError('Missing Columns', `Invalid CSV Format.\nMissing required columns:\n${missing.join(', ')}`);
+                return;
+            }
+
+            const unknown = headers.filter(col => !allowedCols.includes(col));
+            if (unknown.length > 0) {
+                alert(`Invalid CSV Format.\nUnknown columns detected: ${unknown.join(', ')}\n\nPlease ensure only the following columns are present:\n${allowedCols.join(', ')}`);
+                showError('Unknown Columns', `Invalid CSV Format.\nUnknown columns detected: ${unknown.join(', ')}\n\nPlease ensure only the following columns are present:\n${allowedCols.join(', ')}`);
+                return;
+            }
             const testNameIdx = headers.indexOf('test_name');
             const statusIdx = headers.indexOf('status');
             const runIdIdx = headers.indexOf('run_id');
@@ -1029,11 +1082,6 @@
             const startIdx = headers.indexOf('start_time');
             const endIdx = headers.indexOf('end_time');
             const groupNameIdx = headers.indexOf('test_group_name');
-
-            if (testNameIdx === -1 || statusIdx === -1) {
-                alert('CSV must contain "test_name" and "status" columns.');
-                return;
-            }
 
             const testResults = {};
             const testGroups = {};
