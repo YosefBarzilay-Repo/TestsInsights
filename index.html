@@ -912,10 +912,16 @@
                     </div>
                     <div id="deepThinkResults" style="text-align: left; display: none; margin-bottom: 2rem;"></div>
                     
-                    <button id="btnGenerateAnalysis" class="btn btn-primary" onclick="generateDeepAnalysis()" style="margin: 0 auto; width: fit-content;">
-                        <span class="material-symbols-outlined">auto_awesome</span>
-                        Generate Analysis
-                    </button>
+                    <div style="display: flex; justify-content: center; gap: 1rem;">
+                        <button id="btnGenerateAnalysis" class="btn btn-primary" onclick="generateDeepAnalysis()" style="width: fit-content;">
+                            <span class="material-symbols-outlined">auto_awesome</span>
+                            Generate Analysis
+                        </button>
+                        <button id="btnExportDeepThink" class="btn btn-secondary hidden" onclick="exportDeepThinkToCsv()">
+                            <span class="material-symbols-outlined">download</span>
+                            Export Recommendations
+                        </button>
+                    </div>
                 </div>
             </div>
             </div>
@@ -1123,6 +1129,7 @@
         let globalRunStats = [];
         let globalTestDetails = {}; // Stores full row data per test
         let currentFilter = 'all'; // 'all', 'flaky', 'failing'
+        let lastDeepAnalysisData = null;
         let columnFilters = {};
         let activeRunFilter = null;
         let activeRunFilters = []; // Use an array for multi-select
@@ -1189,6 +1196,7 @@
             const container = document.getElementById('deepThinkResults');
             const intro = document.getElementById('deepThinkIntro');
             const btn = document.getElementById('btnGenerateAnalysis');
+            const exportBtn = document.getElementById('btnExportDeepThink');
             
             btn.innerHTML = '<span class="material-symbols-outlined spin">sync</span> Analyzing...';
             btn.disabled = true;
@@ -1254,10 +1262,20 @@
                 // Analyze Tests Without Group
                 const testsWithoutGroup = Object.keys(globalTestGroups).filter(t => !globalTestGroups[t] || globalTestGroups[t] === '--');
                 
-                let html = '';
-
                 // Stability Score
                 const stabilityScore = Math.max(0, 100 - ((flakyTests.length + brokenTests.length) / totalTests * 100)).toFixed(1);
+
+                lastDeepAnalysisData = {
+                    stabilityScore,
+                    brokenTests,
+                    flakyTests,
+                    slowTests,
+                    slowRuns,
+                    testsWithoutGroup
+                };
+
+                let html = '';
+
                 let scoreColor = stabilityScore > 80 ? 'text-green' : (stabilityScore > 50 ? 'text-yellow' : 'text-red');
                 
                 html += `
@@ -1273,7 +1291,13 @@
                             <div class="card-subtext">Tests consistently failing</div>
                         </div>
                     </div>
-                    <h4 style="margin-bottom: 1rem;">AI Recommendations</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h4 style="margin: 0;">AI Recommendations</h4>
+                        <button class="btn btn-secondary" onclick="exportDeepThinkToCsv()" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">
+                            <span class="material-symbols-outlined" style="font-size: 1.1rem;">download</span>
+                            Export
+                        </button>
+                    </div>
                 `;
 
                 if (brokenTests.length > 0) {
@@ -1418,6 +1442,7 @@
                 if (intro) intro.style.display = 'none';
                 btn.innerHTML = '<span class="material-symbols-outlined">refresh</span> Regenerate Analysis';
                 btn.disabled = false;
+                if (exportBtn) exportBtn.classList.remove('hidden');
             }, 800);
         }
 
@@ -2472,6 +2497,56 @@
         document.getElementById('helpModal').addEventListener('click', function(e) {
             if (e.target === this) closeHelpModal();
         });
+
+        function exportDeepThinkToCsv() {
+            if (!lastDeepAnalysisData) return;
+
+            const headers = ['Category', 'Issue', 'Count', 'Recommendation', 'Details'];
+            const rows = [];
+
+            // Stability Score
+            rows.push(['Score', 'Overall Stability Score', lastDeepAnalysisData.stabilityScore + '/100', 'Based on flaky and broken test rates', '']);
+
+            // Broken Tests
+            if (lastDeepAnalysisData.brokenTests.length > 0) {
+                rows.push(['Critical', 'Broken Tests', lastDeepAnalysisData.brokenTests.length, 'Quarantine or fix immediately', lastDeepAnalysisData.brokenTests.join('; ')]);
+            }
+
+            // Flaky Tests
+            if (lastDeepAnalysisData.flakyTests.length > 0) {
+                rows.push(['Warning', 'Flaky Tests', lastDeepAnalysisData.flakyTests.length, 'Review test isolation', lastDeepAnalysisData.flakyTests.join('; ')]);
+            }
+
+            // Slow Tests
+            if (lastDeepAnalysisData.slowTests.length > 0) {
+                const details = lastDeepAnalysisData.slowTests.map(t => `${t.name} (${t.duration}m)`).join('; ');
+                rows.push(['Performance', 'Slow Tests (>10m)', lastDeepAnalysisData.slowTests.length, 'Optimize performance', details]);
+            }
+
+            // Slow Runs
+            if (lastDeepAnalysisData.slowRuns.length > 0) {
+                const details = lastDeepAnalysisData.slowRuns.map(r => `Run ${r.id} (${r.duration}m)`).join('; ');
+                rows.push(['Performance', 'Slow Pipeline Runs', lastDeepAnalysisData.slowRuns.length, 'Check infrastructure/retries', details]);
+            }
+
+            // Missing Group
+            if (lastDeepAnalysisData.testsWithoutGroup.length > 0) {
+                rows.push(['Organization', 'Missing Test Group', lastDeepAnalysisData.testsWithoutGroup.length, 'Assign test_group_name', lastDeepAnalysisData.testsWithoutGroup.join('; ')]);
+            }
+
+            const escapeCsv = (txt) => `"${String(txt).replace(/"/g, '""')}"`;
+            let csvContent = headers.map(escapeCsv).join(',') + '\r\n';
+            csvContent += rows.map(row => row.map(escapeCsv).join(',')).join('\r\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "deep_think_recommendations.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
 
         function exportDataToCsv() {
             // 1. Gather Insights
