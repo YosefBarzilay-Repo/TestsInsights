@@ -23,6 +23,40 @@
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
+        /* Tab Styles */
+        .tab-btn {
+            padding: 0 0 0.75rem 0;
+            background: none;
+            border: none;
+            border-bottom: 2px solid transparent;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { color: #111827; }
+        .tab-btn.active {
+            color: #C1A35F;
+            border-bottom-color: #C1A35F;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .spin { animation: spin 1s linear infinite; }
+        .recommendation-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .recommendation-title {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
         /* Header Styles */
         .app-header {
             display: flex;
@@ -641,16 +675,22 @@
             flex: 1;
             overflow: auto;
         }
-        #insightsContent {
+        #tabContentContainer {
             transition: all 0.3s ease-in-out;
             max-height: 2000px;
             opacity: 1;
             overflow: hidden;
         }
-        #insightsContent.collapsed {
+        #tabContentContainer.collapsed {
             max-height: 0;
             opacity: 0;
             margin-top: 0;
+        }
+        .deep-think-scroll {
+            padding: 1rem;
+            text-align: center;
+            max-height: 600px;
+            overflow-y: auto;
         }
     </style>
 </head>
@@ -710,32 +750,35 @@
 
         <div id="dashboard" class="dashboard hidden">
             <div class="card">
-                <div class="card-header-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                        <div class="card-title" style="font-size: 1.1rem; margin-bottom: 0; color: #111827;">Insights</div>
-                        <div id="insightsSummary" class="insights-summary hidden">
-                            <div class="summary-item">
-                                <span class="summary-label">Runs:</span>
-                                <span class="summary-value" id="summaryRuns">-</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">Tests:</span>
-                                <span class="summary-value" id="summaryTests">-</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">Flaky Rate:</span>
-                                <span class="summary-value" id="summaryFlaky">-</span>
-                            </div>
-                            <div class="summary-item">
-                                <span class="summary-label">Broken Rate:</span>
-                                <span class="summary-value" id="summaryBroken">-</span>
-                            </div>
+                <div style="border-bottom: 1px solid #e5e7eb; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; gap: 1.5rem;">
+                        <button id="tab-insights" class="tab-btn active" onclick="switchTab('insights')">Insights</button>
+                        <button id="tab-deepThink" class="tab-btn" onclick="switchTab('deepThink')">Deep Think</button>
+                    </div>
+                    <div id="insightsSummary" class="insights-summary hidden">
+                        <div class="summary-item">
+                            <span class="summary-label">Runs:</span>
+                            <span class="summary-value" id="summaryRuns">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Tests:</span>
+                            <span class="summary-value" id="summaryTests">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Flaky Rate:</span>
+                            <span class="summary-value" id="summaryFlaky">-</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="summary-label">Broken Rate:</span>
+                            <span class="summary-value" id="summaryBroken">-</span>
                         </div>
                     </div>
-                    <button class="btn-icon" onclick="toggleInsights()" title="Toggle Insights">
+                    <button class="btn-icon" onclick="toggleInsights()" title="Toggle View">
                         <span id="insightsToggleIcon" class="material-symbols-outlined">expand_less</span>
                     </button>
                 </div>
+            <div id="tabContentContainer">
+            <div id="content-insights">
             <div id="insightsContent" class="insights-grid">
                 <!-- Execution Trend Card -->
                 <div class="card span-full">
@@ -828,6 +871,25 @@
                 </div>
                 </div>
             </div>
+            <div id="content-deepThink" class="hidden">
+                <div class="deep-think-scroll">
+                    <div id="deepThinkIntro" style="margin-bottom: 1.5rem;">
+                        <span class="material-symbols-outlined" style="font-size: 48px; color: #C1A35F;">psychology</span>
+                        <h3 style="margin: 0.5rem 0; color: #111827;">Deep Analysis & Recommendations</h3>
+                        <p style="color: #6b7280; max-width: 600px; margin: 0 auto;">
+                            Analyze patterns in your test execution history to identify root causes of instability and get actionable recommendations.
+                        </p>
+                    </div>
+                    <div id="deepThinkResults" style="text-align: left; display: none; margin-bottom: 2rem;"></div>
+                    
+                    <button id="btnGenerateAnalysis" class="btn btn-primary" onclick="generateDeepAnalysis()" style="margin: 0 auto; width: fit-content;">
+                        <span class="material-symbols-outlined">auto_awesome</span>
+                        Generate Analysis
+                    </button>
+                </div>
+            </div>
+            </div>
+            </div>
         </div>
 
         <div id="details" class="table-container hidden">
@@ -861,8 +923,6 @@
                         <tr>
                             <th>Test Name</th>
                             <th style="width: 10rem;">Deviation (P/F/S)</th>
-                            <th class="text-right" style="width: 8rem;">Fail Count</th>
-                            <th class="text-center th-interactive" style="width: 6rem;" onclick="openFilter(event, 'grade')">Grade <span class="material-symbols-outlined filter-icon">filter_alt</span></th>
                         </tr>
                     </thead>
                     <tbody id="testTableBody"></tbody>
@@ -927,7 +987,7 @@
     </div>
 
     <footer style="text-align: center; padding: 1rem; font-size: 0.75rem; color: #9ca3af; flex-shrink: 0;">
-        Created by Yosef Barzilay
+        Created by <a href="mailto:yosefb11@gmail.com" style="color: inherit; text-decoration: underline;">Yosef Barzilay</a>
     </footer>
 
     <script>
@@ -939,12 +999,204 @@
         let globalRunStats = [];
         let globalTestDetails = {}; // Stores full row data per test
         let currentFilter = 'all'; // 'all', 'flaky', 'failing'
-        let columnFilters = { grade: 'All' };
+        let columnFilters = {};
         let activeRunFilter = null;
         let activeRunFilters = []; // Use an array for multi-select
         let isComparisonMode = false;
         let currentPage = 1;
         const itemsPerPage = 15;
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+
+            if (tabName === 'insights') {
+                document.getElementById('content-insights').classList.remove('hidden');
+                document.getElementById('content-deepThink').classList.add('hidden');
+            } else {
+                document.getElementById('content-insights').classList.add('hidden');
+                document.getElementById('content-deepThink').classList.remove('hidden');
+            }
+        }
+
+        function toggleInsights() {
+            const container = document.getElementById('tabContentContainer');
+            const icon = document.getElementById('insightsToggleIcon');
+            const summary = document.getElementById('insightsSummary');
+            
+            container.classList.toggle('collapsed');
+            
+            if (container.classList.contains('collapsed')) {
+                icon.textContent = 'expand_more';
+                summary.classList.remove('hidden');
+            } else {
+                icon.textContent = 'expand_less';
+                summary.classList.add('hidden');
+            }
+        }
+
+        function parseTimeSeconds(timeStr) {
+            if (!timeStr || timeStr === '-') return 0;
+            const parts = timeStr.split(':');
+            if (parts.length < 2) return 0;
+            return (+parts[0]) * 3600 + (+parts[1]) * 60 + (+parts[2] || 0);
+        }
+
+        function generateDeepAnalysis() {
+            const container = document.getElementById('deepThinkResults');
+            const intro = document.getElementById('deepThinkIntro');
+            const btn = document.getElementById('btnGenerateAnalysis');
+            
+            btn.innerHTML = '<span class="material-symbols-outlined spin">sync</span> Analyzing...';
+            btn.disabled = true;
+
+            setTimeout(() => {
+                const totalTests = Object.keys(globalTestHistory).length;
+                const flakyTests = Object.keys(globalTestResults).filter(t => globalTestResults[t].has('passed') && globalTestResults[t].has('failed'));
+                const brokenTests = Object.keys(globalTestResults).filter(t => !globalTestResults[t].has('passed') && globalTestResults[t].has('failed'));
+                
+                // Analyze Slow Tests (> 10 mins avg)
+                const slowTests = [];
+                for (const [testName, details] of Object.entries(globalTestDetails)) {
+                    let totalDuration = 0;
+                    let count = 0;
+                    details.forEach(d => {
+                        if (d.start && d.end && d.start !== '-' && d.end !== '-') {
+                            let start = parseTimeSeconds(d.start);
+                            let end = parseTimeSeconds(d.end);
+                            let duration = end - start;
+                            if (duration < 0) duration += 24 * 3600; 
+                            totalDuration += duration;
+                            count++;
+                        }
+                    });
+                    if (count > 0) {
+                        const avgMinutes = (totalDuration / count) / 60;
+                        if (avgMinutes > 10) {
+                            slowTests.push({name: globalTestNames[testName] || testName, duration: avgMinutes.toFixed(1)});
+                        }
+                    }
+                }
+
+                // Analyze Slow Runs (> 1.5x avg)
+                const slowRuns = [];
+                let totalRunDuration = 0;
+                let runCount = 0;
+                const runDurations = [];
+                globalRunStats.forEach(run => {
+                    if (run.startTime && run.endTime) {
+                        let start = parseTimeSeconds(run.startTime);
+                        let end = parseTimeSeconds(run.endTime);
+                        let duration = end - start;
+                        if (duration < 0) duration += 24 * 3600;
+                        runDurations.push({id: run.id, duration: duration});
+                        totalRunDuration += duration;
+                        runCount++;
+                    }
+                });
+                if (runCount > 0) {
+                    const avgRunDuration = totalRunDuration / runCount;
+                    const threshold = Math.max(avgRunDuration * 1.5, 120); // At least 2 mins
+                    runDurations.forEach(r => {
+                        if (r.duration > threshold) {
+                            slowRuns.push({
+                                id: r.id, 
+                                duration: (r.duration/60).toFixed(1), 
+                                avg: (avgRunDuration/60).toFixed(1)
+                            });
+                        }
+                    });
+                }
+
+                // Analyze Tests Without Group
+                const testsWithoutGroup = Object.keys(globalTestGroups).filter(t => !globalTestGroups[t] || globalTestGroups[t] === '--');
+                
+                let html = '';
+
+                // Stability Score
+                const stabilityScore = Math.max(0, 100 - ((flakyTests.length + brokenTests.length) / totalTests * 100)).toFixed(1);
+                let scoreColor = stabilityScore > 80 ? 'text-green' : (stabilityScore > 50 ? 'text-yellow' : 'text-red');
+                
+                html += `
+                    <div class="insights-grid" style="margin-bottom: 2rem;">
+                        <div class="card" style="border: 1px solid #e5e7eb; box-shadow: none;">
+                            <div class="card-title">Overall Stability Score</div>
+                            <div class="card-value ${scoreColor}">${stabilityScore}/100</div>
+                            <div class="card-subtext">Based on flaky and broken test rates</div>
+                        </div>
+                        <div class="card" style="border: 1px solid #e5e7eb; box-shadow: none;">
+                            <div class="card-title">Critical Issues</div>
+                            <div class="card-value text-red">${brokenTests.length}</div>
+                            <div class="card-subtext">Tests consistently failing</div>
+                        </div>
+                    </div>
+                    <h4 style="margin-bottom: 1rem;">AI Recommendations</h4>
+                `;
+
+                if (brokenTests.length > 0) {
+                    html += `
+                        <div class="recommendation-card">
+                            <div class="recommendation-title text-red"><span class="material-symbols-outlined">error</span> Fix Broken Tests First</div>
+                            <p style="font-size: 0.875rem; color: #4b5563; margin: 0;">
+                                ${brokenTests.length} tests are consistently failing. These provide no value and block the pipeline. 
+                                <strong>Recommendation:</strong> Quarantine or fix these tests immediately.
+                            </p>
+                        </div>`;
+                }
+                if (flakyTests.length > 0) {
+                    html += `
+                        <div class="recommendation-card">
+                            <div class="recommendation-title text-yellow"><span class="material-symbols-outlined">warning</span> Address Flakiness</div>
+                            <p style="font-size: 0.875rem; color: #4b5563; margin: 0;">
+                                ${flakyTests.length} tests are exhibiting flaky behavior. <strong>Recommendation:</strong> Review test isolation and environment stability.
+                            </p>
+                        </div>`;
+                }
+                if (slowTests.length > 0) {
+                    const testList = slowTests.slice(0, 3).map(t => `${t.name} (${t.duration}m)`).join(', ');
+                    const moreText = slowTests.length > 3 ? ` and ${slowTests.length - 3} more` : '';
+                    html += `
+                        <div class="recommendation-card">
+                            <div class="recommendation-title text-yellow"><span class="material-symbols-outlined">timer</span> Optimize Slow Tests</div>
+                            <p style="font-size: 0.875rem; color: #4b5563; margin: 0;">
+                                ${slowTests.length} tests have an average execution time > 10 minutes. 
+                                <strong>Recommendation:</strong> Investigate ${testList}${moreText} for performance optimization.
+                            </p>
+                        </div>`;
+                }
+                if (slowRuns.length > 0) {
+                    const runList = slowRuns.slice(0, 3).map(r => `Run ${r.id} (${r.duration}m)`).join(', ');
+                    const moreText = slowRuns.length > 3 ? ` and ${slowRuns.length - 3} more` : '';
+                    html += `
+                        <div class="recommendation-card">
+                            <div class="recommendation-title text-yellow"><span class="material-symbols-outlined">history_toggle_off</span> Long Pipeline Runs Detected</div>
+                            <p style="font-size: 0.875rem; color: #4b5563; margin: 0;">
+                                Some runs took significantly longer than the average (${slowRuns[0].avg}m). 
+                                <strong>Recommendation:</strong> Check infrastructure load or test retries in: ${runList}${moreText}.
+                            </p>
+                        </div>`;
+                }
+                if (testsWithoutGroup.length > 0) {
+                    html += `
+                        <div class="recommendation-card">
+                            <div class="recommendation-title text-yellow"><span class="material-symbols-outlined">group_off</span> Missing Test Ownership</div>
+                            <p style="font-size: 0.875rem; color: #4b5563; margin: 0;">
+                                ${testsWithoutGroup.length} tests are not assigned to any group. Tests without a group may lack ownership, making maintenance and targeted execution difficult.
+                                <strong>Recommendation:</strong> Assign a 'test_group_name' to ensure accountability and better organization.
+                            </p>
+                        </div>`;
+                }
+                if (brokenTests.length === 0 && flakyTests.length === 0 && slowTests.length === 0 && slowRuns.length === 0 && testsWithoutGroup.length === 0) {
+                     html += `<div class="recommendation-card"><div class="recommendation-title text-green"><span class="material-symbols-outlined">check_circle</span> Great Stability!</div><p style="font-size: 0.875rem; color: #4b5563; margin: 0;">Your test suite appears very stable and performant.</p></div>`;
+                }
+
+                container.innerHTML = html;
+                container.style.display = 'block';
+                if (intro) intro.style.display = 'none';
+                btn.innerHTML = '<span class="material-symbols-outlined">refresh</span> Regenerate Analysis';
+                btn.disabled = false;
+            }, 800);
+        }
 
         document.getElementById('csvInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -1200,7 +1452,7 @@
                 return a.id.localeCompare(b.id);
             });
             
-            columnFilters = { grade: 'All' };
+            columnFilters = {};
 
             setFilter('all');
             updateInsights();
@@ -1216,9 +1468,6 @@
             dropdown.innerHTML = '';
             
             let options = [];
-            if (column === 'grade') {
-                options = ['All', 'A+', 'A', 'B', 'C', 'D', 'F'];
-            }
 
             options.forEach(opt => {
                 const item = document.createElement('div');
@@ -1257,10 +1506,6 @@
             tbody.innerHTML = '';
             const filterText = document.getElementById('searchInput').value.toLowerCase();
             
-            // Load settings
-            const settings = JSON.parse(localStorage.getItem('testDashboardSettings')) || {
-                gradeThresholds: { 'A+': 98, 'A': 90, 'B': 80, 'C': 70, 'D': 60 }
-            };
 
             let tests = Object.keys(globalTestHistory);
 
@@ -1312,12 +1557,6 @@
                 const isFlaky = globalTestResults[testName].has('passed') && globalTestResults[testName].has('failed');
                 const isBroken = !isFlaky && failedCount > 0;
                 
-                let grade = 'F';
-                if (passRate >= settings.gradeThresholds['A+']) grade = 'A+';
-                else if (passRate >= settings.gradeThresholds['A']) grade = 'A';
-                else if (passRate >= settings.gradeThresholds['B']) grade = 'B';
-                else if (passRate >= settings.gradeThresholds['C']) grade = 'C';
-                else if (passRate >= settings.gradeThresholds['D']) grade = 'D';
 
                 let status = 'Passed'; // Default assumption if not broken/flaky
                 if (isFlaky) status = 'Flaky';
@@ -1325,13 +1564,9 @@
                 else if (globalTestResults[testName].has('skipped') && !globalTestResults[testName].has('passed') && !globalTestResults[testName].has('failed')) status = 'Skipped';
                 else if (failedCount > 0) status = 'Failed'; // Catch-all
 
-                testMetrics[testName] = { grade, status, passRate, passedCount, failedCount, skippedCount, isFlaky, isBroken };
+                testMetrics[testName] = { status, passRate, passedCount, failedCount, skippedCount, isFlaky, isBroken };
             });
 
-            // Apply Column Filters
-            if (columnFilters.grade !== 'All') {
-                tests = tests.filter(name => testMetrics[name].grade === columnFilters.grade);
-            }
 
             // Pagination Logic
             const totalItems = tests.length;
@@ -1398,9 +1633,11 @@
                 <tr>
                     <th>Test Name</th>
                     <th>Test Group</th>
+                    <th>Run ID</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Duration</th>
                     <th style="width: 10rem;">Deviation (P/F/S)</th>
-                    <th class="text-right" style="width: 8rem;">Fail Count</th>
-                    <th class="text-center th-interactive" style="width: 6rem;" onclick="openFilter(event, 'grade')">Grade <span class="material-symbols-outlined filter-icon">filter_alt</span></th>
                 </tr>
             `;
 
@@ -1409,11 +1646,10 @@
                 
                 // Use pre-calculated metrics
                 const m = testMetrics[testName];
-                let { passRate, passedCount, failedCount, skippedCount, isFlaky, isBroken, grade } = m;
+                let { passRate, passedCount, failedCount, skippedCount, isFlaky, isBroken } = m;
 
                 // Determine Status & Styles
                 let barColor = '';
-                let gradeColor = '';
 
                 if (passRate >= 90) {
                     barColor = '#10b981'; // Green
@@ -1423,13 +1659,44 @@
                     barColor = '#ef4444'; // Red
                 }
 
-                // Grade Logic
-                if (passRate >= settings.gradeThresholds['A+']) { grade = 'A+'; gradeColor = '#059669'; }
-                else if (passRate >= settings.gradeThresholds['A']) { grade = 'A'; gradeColor = '#059669'; }
-                else if (passRate >= settings.gradeThresholds['B']) { grade = 'B'; gradeColor = '#d97706'; }
-                else if (passRate >= settings.gradeThresholds['C']) { grade = 'C'; gradeColor = '#d97706'; }
-                else if (passRate >= settings.gradeThresholds['D']) { grade = 'D'; gradeColor = '#dc2626'; }
-                else { grade = 'F'; gradeColor = '#dc2626'; }
+
+                // Calculate Time & Duration (Latest Run)
+                let startTime = '-';
+                let endTime = '-';
+                let durationStr = '-';
+                let runId = '-';
+                
+                let details = globalTestDetails[testName] || [];
+                if (activeRunFilters.length > 0) {
+                    details = details.filter(d => activeRunFilters.includes(d.runId));
+                }
+                
+                if (details.length > 0) {
+                    const latest = details.reduce((prev, current) => {
+                        const numA = parseFloat(prev.runId);
+                        const numB = parseFloat(current.runId);
+                        if (!isNaN(numA) && !isNaN(numB)) return (numA > numB) ? prev : current;
+                        return (prev.runId > current.runId) ? prev : current;
+                    });
+                    
+                    runId = latest.runId || '-';
+                    startTime = latest.start || '-';
+                    endTime = latest.end || '-';
+                    
+                    if (startTime !== '-' && endTime !== '-') {
+                        const s = parseTimeSeconds(startTime);
+                        const e = parseTimeSeconds(endTime);
+                        let d = e - s;
+                        if (d < 0) d += 86400;
+                        
+                        if (d < 60) durationStr = d.toFixed(1) + 's';
+                        else {
+                            const m = Math.floor(d / 60);
+                            const sRem = (d % 60).toFixed(0);
+                            durationStr = `${m}m ${sRem}s`;
+                        }
+                    }
+                }
 
                 // 2. Test Name Column
                 const nameCell = document.createElement('td');
@@ -1445,6 +1712,30 @@
                 groupCell.textContent = globalTestGroups[testName] || '--';
                 row.appendChild(groupCell);
 
+                // Run ID
+                const runIdCell = document.createElement('td');
+                runIdCell.textContent = runId;
+                runIdCell.style.cssText = 'color: #6b7280; font-size: 0.8rem; white-space: nowrap;';
+                row.appendChild(runIdCell);
+
+                // Start Time
+                const startCell = document.createElement('td');
+                startCell.textContent = startTime;
+                startCell.style.cssText = 'color: #6b7280; font-size: 0.8rem; white-space: nowrap;';
+                row.appendChild(startCell);
+
+                // End Time
+                const endCell = document.createElement('td');
+                endCell.textContent = endTime;
+                endCell.style.cssText = 'color: #6b7280; font-size: 0.8rem; white-space: nowrap;';
+                row.appendChild(endCell);
+
+                // Duration
+                const durCell = document.createElement('td');
+                durCell.textContent = durationStr;
+                durCell.style.fontWeight = '500';
+                row.appendChild(durCell);
+
                 // 3. Deviation Column
                 const deviationCell = document.createElement('td');
                 deviationCell.innerHTML = `
@@ -1454,17 +1745,6 @@
                 `;
                 row.appendChild(deviationCell);
 
-                // 4. Fail Count Column
-                const failCell = document.createElement('td');
-                failCell.className = 'text-right';
-                failCell.innerHTML = `<span style="font-weight: 700; color: #111827;">${failedCount}</span><span style="font-size: 0.75rem; color: #6b7280; margin-left: 0.25rem;">fails</span>`;
-                row.appendChild(failCell);
-
-                // 5. Grade Column
-                const gradeCell = document.createElement('td');
-                gradeCell.className = 'text-center';
-                gradeCell.innerHTML = `<span class="grade-badge" style="color: ${gradeColor};">${grade}</span>`;
-                row.appendChild(gradeCell);
 
                 tbody.appendChild(row);
             }
@@ -1737,22 +2017,6 @@
             container.appendChild(svg);
         }
 
-        function toggleInsights() {
-            const content = document.getElementById('insightsContent');
-            const summary = document.getElementById('insightsSummary');
-            const icon = document.getElementById('insightsToggleIcon');
-            
-            content.classList.toggle('collapsed');
-            
-            if (content.classList.contains('collapsed')) {
-                summary.classList.remove('hidden');
-                icon.textContent = 'expand_more';
-            } else {
-                summary.classList.add('hidden');
-                icon.textContent = 'expand_less';
-            }
-        }
-
         function closeModal() {
             document.getElementById('detailModal').classList.add('hidden');
         }
@@ -1787,14 +2051,11 @@
 
     
             // 2. Gather Table Data (re-implementing filtering logic from renderTable)
-            const tableHeader = ['Test Name', 'Test Group', 'Passed', 'Failed', 'Skipped', 'Fail Count', 'Grade'];
+            const tableHeader = ['Test Name', 'Test Group', 'Run ID', 'Start Time', 'End Time', 'Duration', 'Passed', 'Failed', 'Skipped'];
             const tableRows = [];
 
     
             const filterText = document.getElementById('searchInput').value.toLowerCase();
-            const settings = JSON.parse(localStorage.getItem('testDashboardSettings')) || {
-                gradeThresholds: { 'A+': 98, 'A': 90, 'B': 80, 'C': 70, 'D': 60 }
-            };
 
     
             let tests = Object.keys(globalTestHistory);
@@ -1831,22 +2092,40 @@
                 const passedCount = history.filter(s => s === 'passed').length;
                 const failedCount = history.filter(s => s === 'failed').length;
                 const skippedCount = totalRuns - passedCount - failedCount;
-                const passRate = totalRuns ? (passedCount / totalRuns) * 100 : 0;
-                
-                let grade = 'F';
-                if (passRate >= settings.gradeThresholds['A+']) grade = 'A+';
-                else if (passRate >= settings.gradeThresholds['A']) grade = 'A';
-                else if (passRate >= settings.gradeThresholds['B']) grade = 'B';
-                else if (passRate >= settings.gradeThresholds['C']) grade = 'C';
-                else if (passRate >= settings.gradeThresholds['D']) grade = 'D';
-
-    
-                if (columnFilters.grade !== 'All' && grade !== columnFilters.grade) return;
                 const groupName = globalTestGroups[testName] || '--';
 
+                // Calculate Time & Duration (Latest Run)
+                let startTime = '-';
+                let endTime = '-';
+                let durationStr = '-';
+                let runId = '-';
+                
+                let details = globalTestDetails[testName] || [];
+                if (activeRunFilters.length > 0) {
+                    details = details.filter(d => activeRunFilters.includes(d.runId));
+                }
+                
+                if (details.length > 0) {
+                    const latest = details.reduce((prev, current) => {
+                        const numA = parseFloat(prev.runId);
+                        const numB = parseFloat(current.runId);
+                        if (!isNaN(numA) && !isNaN(numB)) return (numA > numB) ? prev : current;
+                        return (prev.runId > current.runId) ? prev : current;
+                    });
+                    runId = latest.runId || '-';
+                    startTime = latest.start || '-';
+                    endTime = latest.end || '-';
+                    if (startTime !== '-' && endTime !== '-') {
+                        const s = parseTimeSeconds(startTime);
+                        const e = parseTimeSeconds(endTime);
+                        let d = e - s;
+                        if (d < 0) d += 86400;
+                        durationStr = d.toFixed(1) + 's';
+                    }
+                }
     
                 const displayName = globalTestNames[testName] || testName;
-                tableRows.push([displayName, groupName, passedCount, failedCount, skippedCount, failedCount, grade]);
+                tableRows.push([displayName, groupName, runId, startTime, endTime, durationStr, passedCount, failedCount, skippedCount]);
             });
 
     
