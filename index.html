@@ -1323,6 +1323,7 @@
                         </div>`;
                 }
                 if (flakyTests.length > 0) {
+                    const flakyList = flakyTests.map(t => globalTestNames[t] || t).join(', ');
                     html += `
                         <div class="recommendation-card" style="border-left: 4px solid #f59e0b;">
                             <div class="recommendation-header" style="justify-content: space-between;">
@@ -1336,7 +1337,10 @@
                                 </label>
                             </div>
                             <div style="color: #4b5563; font-size: 0.95rem; line-height: 1.5;">
-                                ${flakyTests.length} tests are exhibiting flaky behavior.
+                                ${flakyTests.length} tests are exhibiting flaky behavior:
+                                <div style="margin-top:0.5rem; font-size: 0.85rem; background: #fff; padding: 0.5rem; border-radius: 0.25rem; border: 1px solid #e5e7eb; max-height: 100px; overflow-y: auto;">
+                                    ${flakyList}
+                                </div>
                             </div>
                             <div class="recommendation-action">
                                 <span class="material-symbols-outlined" style="color: #C1A35F;">lightbulb</span>
@@ -1345,8 +1349,7 @@
                         </div>`;
                 }
                 if (slowTests.length > 0) {
-                    const testList = slowTests.slice(0, 3).map(t => `${t.name} (${t.duration}m)`).join(', ');
-                    const moreText = slowTests.length > 3 ? ` and ${slowTests.length - 3} more` : '';
+                    const slowList = slowTests.map(t => `${t.name} (${t.duration}m)`).join(', ');
                     html += `
                         <div class="recommendation-card" style="border-left: 4px solid #f59e0b;">
                             <div class="recommendation-header" style="justify-content: space-between;">
@@ -1360,17 +1363,19 @@
                                 </label>
                             </div>
                             <div style="color: #4b5563; font-size: 0.95rem; line-height: 1.5;">
-                                ${slowTests.length} tests have an average execution time > 10 minutes.
+                                ${slowTests.length} tests have an average execution time > 10 minutes:
+                                <div style="margin-top:0.5rem; font-size: 0.85rem; background: #fff; padding: 0.5rem; border-radius: 0.25rem; border: 1px solid #e5e7eb; max-height: 100px; overflow-y: auto;">
+                                    ${slowList}
+                                </div>
                             </div>
                             <div class="recommendation-action">
                                 <span class="material-symbols-outlined" style="color: #C1A35F;">lightbulb</span>
-                                <span style="font-size: 0.9rem; font-weight: 500; color: #374151;"><strong>Recommendation:</strong> Investigate ${testList}${moreText} for performance optimization.</span>
+                                <span style="font-size: 0.9rem; font-weight: 500; color: #374151;"><strong>Recommendation:</strong> Investigate these tests for performance optimization.</span>
                             </div>
                         </div>`;
                 }
                 if (slowRuns.length > 0) {
-                    const runList = slowRuns.slice(0, 3).map(r => `Run ${r.id} (${r.duration}m)`).join(', ');
-                    const moreText = slowRuns.length > 3 ? ` and ${slowRuns.length - 3} more` : '';
+                    const slowRunList = slowRuns.map(r => `Run ${r.id} (${r.duration}m)`).join(', ');
                     html += `
                         <div class="recommendation-card" style="border-left: 4px solid #f59e0b;">
                             <div class="recommendation-header" style="justify-content: space-between;">
@@ -1384,11 +1389,14 @@
                                 </label>
                             </div>
                             <div style="color: #4b5563; font-size: 0.95rem; line-height: 1.5;">
-                                Some runs took significantly longer than the average (${slowRuns[0].avg}m).
+                                Some runs took significantly longer than the average (${slowRuns[0].avg}m):
+                                <div style="margin-top:0.5rem; font-size: 0.85rem; background: #fff; padding: 0.5rem; border-radius: 0.25rem; border: 1px solid #e5e7eb; max-height: 100px; overflow-y: auto;">
+                                    ${slowRunList}
+                                </div>
                             </div>
                             <div class="recommendation-action">
                                 <span class="material-symbols-outlined" style="color: #C1A35F;">lightbulb</span>
-                                <span style="font-size: 0.9rem; font-weight: 500; color: #374151;"><strong>Recommendation:</strong> Check infrastructure load or test retries in: ${runList}${moreText}.</span>
+                                <span style="font-size: 0.9rem; font-weight: 500; color: #374151;"><strong>Recommendation:</strong> Check infrastructure load or test retries in these runs.</span>
                             </div>
                         </div>`;
                 }
