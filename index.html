@@ -769,23 +769,11 @@
                 <button class="import-btn" style="font-size: 1rem; padding: 0.875rem 2.5rem; box-shadow: 0 4px 6px -1px rgba(193, 163, 95, 0.3);" onclick="document.getElementById('csvInput').click()">
                     <span>Select CSV File</span>
                 </button>
-                <div style="margin-top: 2rem; width: 100%;">
-                    <details style="text-align: center; font-size: 0.875rem; color: #6b7280;">
-                        <summary style="cursor: pointer; list-style: none; user-select: none; display: inline-flex; align-items: center; gap: 0.25rem; color: #C1A35F; font-weight: 500;">
-                            <span style="text-decoration: underline; text-underline-offset: 2px;">First time</span>
-                                                        <span class="material-symbols-outlined" style="font-size: 1.1rem;">help</span>
-                        </summary>
-                        <div style="margin-top: 1rem; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; text-align: left;">
-                            <p style="font-size: 0.75rem; color: #6b7280; margin: 0 0 0.5rem 0;">
-                                Required columns (comma-separated). <span style="font-style: italic; color: #9ca3af;">* test_group_name is optional</span>
-                            </p>
-                            <div style="font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.75rem; color: #4b5563; line-height: 1.6; overflow-x: auto;">
-                                <div style="font-weight: 600; color: #111827; border-bottom: 1px dashed #d1d5db; padding-bottom: 0.25rem; margin-bottom: 0.25rem; white-space: nowrap;">run_id, test_name, test_group_name*, status, run_date, start_time, end_time</div>
-                                <div style="color: #6b7280; white-space: nowrap;">101, login_test, Auth, Passed, 2023-10-01, 10:00:00, 10:00:05</div>
-                                <div style="color: #6b7280; white-space: nowrap;">101, checkout_test, , Failed, 2023-10-01, 10:00:06, 10:00:10</div>
-                            </div>
-                        </div>
-                    </details>
+                <div style="margin-top: 2rem; width: 100%; text-align: center;">
+                    <button onclick="openHelpModal()" style="background: none; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; color: #C1A35F; font-weight: 500; font-size: 0.875rem; transition: color 0.2s;">
+                        <span class="material-symbols-outlined">help</span>
+                        <span style="text-decoration: underline; text-underline-offset: 2px;">CSV Format Guide</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -1075,6 +1063,48 @@
                 <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
                     <button class="btn btn-secondary" onclick="clearAdvancedFilters()">Clear All</button>
                     <button class="btn btn-primary" onclick="applyAdvancedFilters()">Apply Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Help Modal -->
+        <div id="helpModal" class="modal-overlay hidden">
+            <div class="modal-content" style="max-width: 700px;">
+                <div class="modal-header">
+                    <h2>CSV Format Guide</h2>
+                    <button class="close-btn" onclick="closeHelpModal()">&times;</button>
+                </div>
+                <div style="color: #4b5563; line-height: 1.6;">
+                    <p style="margin-bottom: 1.5rem;">
+                        To generate insights, your CSV file must contain specific columns. The order of columns does not matter, but the <strong>headers must match exactly</strong>.
+                    </p>
+                    
+                    <h4 style="color: #111827; margin-bottom: 0.5rem; font-size: 1rem;">Required Columns</h4>
+                    <ul style="list-style: disc; padding-left: 1.5rem; margin-bottom: 1.5rem; font-size: 0.9rem;">
+                        <li style="margin-bottom: 0.25rem;"><code>run_id</code>: Unique identifier for the test execution run (e.g., build number).</li>
+                        <li style="margin-bottom: 0.25rem;"><code>test_name</code>: The name of the test case.</li>
+                        <li style="margin-bottom: 0.25rem;"><code>status</code>: Result of the test (Passed, Failed, Skipped).</li>
+                        <li style="margin-bottom: 0.25rem;"><code>run_date</code>: Date of execution (YYYY-MM-DD).</li>
+                        <li style="margin-bottom: 0.25rem;"><code>start_time</code>: Start time (HH:MM:SS).</li>
+                        <li><code>end_time</code>: End time (HH:MM:SS).</li>
+                    </ul>
+
+                    <h4 style="color: #111827; margin-bottom: 0.5rem; font-size: 1rem;">Optional Columns</h4>
+                    <ul style="list-style: disc; padding-left: 1.5rem; margin-bottom: 1.5rem; font-size: 0.9rem;">
+                        <li><code>test_group_name</code>: Category or suite name (e.g., "Auth", "Checkout"). Highly recommended for better organization.</li>
+                    </ul>
+
+                    <h4 style="color: #111827; margin-bottom: 0.5rem; font-size: 1rem;">Example CSV Content</h4>
+                    <div style="background: #f3f4f6; padding: 1rem; border-radius: 0.5rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.8rem; overflow-x: auto; border: 1px solid #e5e7eb;">
+                        <div style="color: #6b7280; margin-bottom: 0.5rem; font-style: italic;"># Header row is required</div>
+                        <div style="color: #111827; font-weight: 600;">run_id, test_name, test_group_name, status, run_date, start_time, end_time</div>
+                        <div>101, login_test, Auth, Passed, 2023-10-01, 10:00:00, 10:00:05</div>
+                        <div>101, checkout_test, Checkout, Failed, 2023-10-01, 10:00:06, 10:00:10</div>
+                        <div>102, login_test, Auth, Passed, 2023-10-02, 12:00:00, 12:00:04</div>
+                    </div>
+                </div>
+                <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
+                    <button class="btn btn-primary" onclick="closeHelpModal()">Got it</button>
                 </div>
             </div>
         </div>
@@ -2326,6 +2356,14 @@
             document.getElementById('advancedFilterModal').classList.add('hidden');
         }
 
+        function openHelpModal() {
+            document.getElementById('helpModal').classList.remove('hidden');
+        }
+
+        function closeHelpModal() {
+            document.getElementById('helpModal').classList.add('hidden');
+        }
+
         function applyAdvancedFilters() {
             advancedFilters.testName = document.getElementById('filterTestName').value;
             advancedFilters.testGroup = document.getElementById('filterTestGroup').value;
@@ -2430,6 +2468,9 @@
         });
         document.getElementById('advancedFilterModal').addEventListener('click', function(e) {
             if (e.target === this) closeAdvancedFilter();
+        });
+        document.getElementById('helpModal').addEventListener('click', function(e) {
+            if (e.target === this) closeHelpModal();
         });
 
         function exportDataToCsv() {
