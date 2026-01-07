@@ -31,11 +31,17 @@ function switchTab(tabName) {
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`tab-${tabName}`).classList.add('active');
 
+    // Hide all content
+    document.getElementById('content-insights').classList.add('hidden');
+    document.getElementById('details').classList.add('hidden');
+    document.getElementById('content-deepThink').classList.add('hidden');
+
+    // Show selected content
     if (tabName === 'insights') {
         document.getElementById('content-insights').classList.remove('hidden');
-        document.getElementById('content-deepThink').classList.add('hidden');
-    } else {
-        document.getElementById('content-insights').classList.add('hidden');
+    } else if (tabName === 'tests') {
+        document.getElementById('details').classList.remove('hidden');
+    } else if (tabName === 'deepThink') {
         document.getElementById('content-deepThink').classList.remove('hidden');
     }
 }
@@ -677,11 +683,9 @@ function processJSON(jsonText) {
     updateInsights(currentVisibleRunIds);
 
     document.getElementById('dashboard').classList.remove('hidden');
-    document.getElementById('details').classList.remove('hidden');
 }
 
 function openFilter(event, column) {
-    event.stopPropagation();
     const dropdown = document.getElementById('filterDropdown');
     dropdown.innerHTML = '';
 
@@ -1538,6 +1542,28 @@ function clearAdvancedFilters() {
     document.getElementById('filterDurationMin').value = '';
     document.getElementById('filterDurationMax').value = '';
     applyAdvancedFilters();
+}
+
+function clearRunSelection() {
+    activeRunFilters = [];
+    currentFilter = 'all';
+    isComparisonMode = false;
+
+    // Reset UI states
+    document.getElementById('flakyCount').classList.remove('filter-active');
+    document.getElementById('brokenCount').classList.remove('filter-active');
+    document.getElementById('passedFilterClickable').classList.remove('filter-active');
+    document.getElementById('failedFilterClickable').classList.remove('filter-active');
+    document.getElementById('skippedFilterClickable').classList.remove('filter-active');
+    document.getElementById('totalExecutionsClickable').classList.remove('filter-active');
+
+    document.getElementById('compareRunsBtn').disabled = true;
+    document.getElementById('clearRunFilterBtn').disabled = true;
+
+    renderTrendChart('trendChartSmall', globalRunStats);
+    renderTrendChart('trendChartLarge', globalRunStats);
+    updateInsights(currentVisibleRunIds);
+    renderTable();
 }
 
 function clearAllFilters() {

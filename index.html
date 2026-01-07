@@ -103,30 +103,32 @@
                         </div>
                     </div>
                 </div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-left: auto;">
+                <div class="trend-chart-container">
+                    <div id="trendChartSmall"
+                        style="width: 100%; height: 100%; display: flex; align-items: flex-end; padding-top: 10px;">
+                    </div>
+                    <div class="trend-chart-controls">
                         <button id="compareRunsBtn" class="btn-icon" onclick="toggleComparisonMode()"
                             title="Select 2-3 runs to compare" disabled>
                             <span class="material-symbols-outlined">compare_arrows</span>
                         </button>
-                        <button id="clearRunFilterBtn" class="btn-icon" onclick="setFilter('all')"
+                        <button id="clearRunFilterBtn" class="btn-icon" onclick="clearRunSelection()"
                             title="Clear Selection" disabled>
-                            <span class="material-symbols-outlined">clear</span>
+                            <span class="material-symbols-outlined">close</span>
                         </button>
                         <button class="btn-icon" onclick="openTrendModal()" title="Enlarge">
                             <span class="material-symbols-outlined">open_in_full</span>
                         </button>
                     </div>
                 </div>
-                <div id="trendChartSmall"
-                    style="width: 100%; height: 100px; display: flex; align-items: flex-end; padding-top: 10px;">
-                </div>
             </div>
-            <div class="card">
+            <div class="card" style="padding: 0; overflow: hidden;">
                 <div
-                    style="border-bottom: 1px solid #e5e7eb; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    style="border-bottom: 1px solid #e5e7eb; padding: 1rem; display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; gap: 1.5rem;">
                         <button id="tab-insights" class="tab-btn active"
                             onclick="switchTab('insights')">Insights</button>
+                        <button id="tab-tests" class="tab-btn" onclick="switchTab('tests')">Tests</button>
                         <button id="tab-deepThink" class="tab-btn" onclick="switchTab('deepThink')">Deep Think</button>
                     </div>
                     <div id="insightsSummary" class="insights-summary hidden">
@@ -152,7 +154,7 @@
                     </button>
                 </div>
                 <div id="tabContentContainer">
-                    <div id="content-insights">
+                    <div id="content-insights" style="padding: 1.5rem;">
                         <div id="insightsContent" class="insights-grid">
                             <!-- Status Distribution Card -->
                             <div class="card">
@@ -242,7 +244,50 @@
                             </div>
                         </div>
                     </div>
-                    <div id="content-deepThink" class="hidden">
+                    <div id="details" class="table-container hidden">
+                        <div class="toolbar">
+                            <div class="search-container">
+                                <span class="material-symbols-outlined search-icon">search</span>
+                                <input type="text" id="searchInput" class="search-input" placeholder="Search by test name..." />
+                            </div>
+                            <div class="actions-container">
+                                <button id="btnClearFilters" class="btn btn-secondary hidden" onclick="clearAllFilters()">
+                                    <span class="material-symbols-outlined" style="font-size: 18px;">filter_alt_off</span>
+                                    <span>Clear</span>
+                                </button>
+                                <button class="btn btn-secondary" onclick="openAdvancedFilter()">
+                                    <span class="material-symbols-outlined" style="font-size: 18px;">filter_alt</span>
+                                    <span>Filter</span>
+                                </button>
+                                <div class="separator"></div>
+                                <button class="btn-icon" id="btnExportCsv" title="Export CSV">
+                                    <span class="material-symbols-outlined">download</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-scroll-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Test Name</th>
+                                        <th class="text-right" style="width: 10rem;">Deviation (P/F/S)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="testTableBody"></tbody>
+                            </table>
+                        </div>
+                        <div class="pagination-container">
+                            <div class="pagination-info">
+                                Showing <span id="pageStart">0</span> to <span id="pageEnd">0</span> of <span
+                                    id="totalItems">0</span> results
+                            </div>
+                            <div class="pagination-controls">
+                                <button id="btnPrev" class="btn-page" disabled>Previous</button>
+                                <button id="btnNext" class="btn-page" disabled>Next</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="content-deepThink" class="hidden" style="padding: 1.5rem;">
                         <div class="deep-think-scroll">
                             <div id="deepThinkIntro" style="margin-bottom: 1.5rem;">
                                 <span class="material-symbols-outlined"
@@ -270,50 +315,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="details" class="table-container hidden">
-            <div class="toolbar">
-                <div class="search-container">
-                    <span class="material-symbols-outlined search-icon">search</span>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search by test name..." />
-                </div>
-                <div class="actions-container">
-                    <button id="btnClearFilters" class="btn btn-secondary hidden" onclick="clearAllFilters()">
-                        <span class="material-symbols-outlined" style="font-size: 18px;">filter_alt_off</span>
-                        <span>Clear</span>
-                    </button>
-                    <button class="btn btn-secondary" onclick="openAdvancedFilter()">
-                        <span class="material-symbols-outlined" style="font-size: 18px;">filter_alt</span>
-                        <span>Filter</span>
-                    </button>
-                    <div class="separator"></div>
-                    <button class="btn-icon" id="btnExportCsv" title="Export CSV">
-                        <span class="material-symbols-outlined">download</span>
-                    </button>
-                </div>
-            </div>
-            <div class="table-scroll-wrapper">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Test Name</th>
-                            <th class="text-right" style="width: 10rem;">Deviation (P/F/S)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="testTableBody"></tbody>
-                </table>
-            </div>
-            <div class="pagination-container">
-                <div class="pagination-info">
-                    Showing <span id="pageStart">0</span> to <span id="pageEnd">0</span> of <span
-                        id="totalItems">0</span> results
-                </div>
-                <div class="pagination-controls">
-                    <button id="btnPrev" class="btn-page" disabled>Previous</button>
-                    <button id="btnNext" class="btn-page" disabled>Next</button>
                 </div>
             </div>
         </div>
