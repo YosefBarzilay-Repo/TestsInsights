@@ -150,7 +150,7 @@
         }
         .main-content {
             padding: 2rem;
-            max-width: 1600px;
+            max-width: 85%;
             margin: 0 auto;
             flex: 1;
             min-height: 0;
@@ -734,6 +734,18 @@
         .form-label { display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem; }
         .form-input { width: 100%; padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.375rem; font-size: 0.875rem; }
         .form-row { display: flex; gap: 0.5rem; }
+        /* Calendar Styles */
+        .calendar-widget { padding: 0.5rem 0; }
+        .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; padding: 0 0.5rem; }
+        .calendar-nav-btn { background: none; border: none; cursor: pointer; padding: 0.25rem; border-radius: 0.25rem; color: #6b7280; display: flex; align-items: center; justify-content: center; }
+        .calendar-nav-btn:hover { background-color: #f3f4f6; color: #111827; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: 0.75rem; }
+        .calendar-day-header { font-weight: 600; color: #9ca3af; padding: 0.25rem 0; }
+        .calendar-day { padding: 0.4rem 0; cursor: default; border-radius: 0.25rem; color: #e5e7eb; }
+        .calendar-day.has-data { color: #1f2937; cursor: pointer; font-weight: 500; }
+        .calendar-day.has-data:hover { background-color: #f3f4f6; }
+        .calendar-day.selected { background-color: #C1A35F; color: white; }
+        .calendar-day.selected:hover { background-color: #A38A4F; }
     </style>
 </head>
 <body>
@@ -763,6 +775,56 @@
         </div>
 
         <div id="dashboard" class="dashboard hidden">
+            <div id="runFiltersBar" class="run-filters-bar" style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; background: white; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
+                    <span style="font-weight: 600; font-size: 0.875rem; color: #374151;">Run Filters:</span>
+                    <select id="globalRunType" class="form-input" style="width: auto;" onchange="applyGlobalRunFilters()">
+                        <option value="">All Types</option>
+                    </select>
+                    <select id="globalVersion" class="form-input" style="width: auto;" onchange="applyGlobalRunFilters()">
+                        <option value="">All Versions</option>
+                    </select>
+                    <div class="custom-dropdown" style="position: relative;">
+                        <button id="dateFilterBtn" class="form-input" style="background: white; text-align: left; min-width: 180px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleDateDropdown(event)">
+                            <span id="dateFilterText" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">All Dates</span>
+                            <span class="material-symbols-outlined" style="font-size: 1.2rem; color: #6b7280;">calendar_month</span>
+                        </button>
+                        <div id="dateFilterMenu" class="dropdown-menu" style="display: none; position: absolute; top: 100%; left: 0; width: 280px; padding: 1rem; margin-top: 0.5rem;">
+                            <div style="margin-bottom: 1rem;">
+                                <label style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.5rem;">QUICK FILTER</label>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="font-size: 0.875rem;">Last</span>
+                                    <input type="number" id="filterLastDays" class="form-input" style="width: 80px; padding: 0.25rem 0.5rem;" min="1" placeholder="#" oninput="handleLastDaysInput()">
+                                    <span style="font-size: 0.875rem;">Days</span>
+                                </div>
+                            </div>
+                            <div style="border-top: 1px solid #e5e7eb; margin: 0.5rem 0; padding-top: 0.5rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                    <label style="font-size: 0.75rem; font-weight: 600; color: #6b7280;">SPECIFIC DATES</label>
+                                    <button class="btn-icon" style="padding: 2px; height: 20px; width: 20px;" onclick="clearDateSelection()" title="Clear Selection">
+                                    <label style="font-size: 0.75rem; font-weight: 600; color: #6b7280;">DATE RANGE</label>
+                                    <button class="btn-icon" style="padding: 2px; height: 20px; width: 20px;" onclick="clearDateRange()" title="Clear Range">
+                                        <span class="material-symbols-outlined" style="font-size: 14px;">close</span>
+                                    </button>
+                                </div>
+                                <div id="calendarWidget" class="calendar-widget"></div>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="font-size: 0.875rem; width: 40px;">From:</span>
+                                        <input type="date" id="filterDateFrom" class="form-input" onchange="handleDateRangeChange()">
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span style="font-size: 0.875rem; width: 40px;">To:</span>
+                                        <input type="date" id="filterDateTo" class="form-input" onchange="handleDateRangeChange()">
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="border-top: 1px solid #e5e7eb; margin: 0.5rem 0; padding-top: 0.5rem;">
+                                <label style="font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.5rem; display: block;">AVAILABLE DATES</label>
+                                <div id="availableDatesList" style="max-height: 150px; overflow-y: auto;"></div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
             <div class="card">
                 <div style="border-bottom: 1px solid #e5e7eb; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; gap: 1.5rem;">
@@ -1077,6 +1139,8 @@
                         <li style="margin-bottom: 0.25rem;"><code>run_date</code>: Date of execution (YYYY-MM-DD).</li>
                         <li style="margin-bottom: 0.25rem;"><code>start_time</code>: Start time (HH:MM:SS).</li>
                         <li><code>end_time</code>: End time (HH:MM:SS).</li>
+                        <li style="margin-bottom: 0.25rem;"><code>run_type</code>: (Optional) Type of run (e.g., Nightly, CI).</li>
+                        <li><code>version</code>: (Optional) Version or build number tested.</li>
                     </ul>
 
                     <h4 style="color: #111827; margin-bottom: 0.5rem; font-size: 1rem;">Optional Keys</h4>
@@ -1123,6 +1187,8 @@
         let globalTestGroups = {};
         let globalTestNames = {};
         let runToTestsMap = {};
+        let globalRunTypes = new Set();
+        let globalVersions = new Set();
         let globalRunStats = [];
         let globalTestDetails = {}; // Stores full row data per test
         let currentFilter = 'all'; // 'all', 'flaky', 'failing'
@@ -1131,6 +1197,7 @@
         let activeRunFilter = null;
         let activeRunFilters = []; // Use an array for multi-select
         let isComparisonMode = false;
+        let currentVisibleRunIds = [];
         let currentPage = 1;
         let advancedFilters = {
             testName: '',
@@ -1586,9 +1653,12 @@
             const testHistory = {};
             const testNames = {};
             const testDetails = {};
+            const runTypes = new Set();
+            const versions = new Set();
             const runStatsMap = {};
             const localRunToTestsMap = {};
             const runIds = new Set();
+            const mockRunMetadata = {};
             let totalPassed = 0;
             let totalFailed = 0;
             let totalSkipped = 0;
@@ -1608,9 +1678,32 @@
                     if (trimmed) groupName = trimmed;
                 }
 
+                let runId = item.run_id ? String(item.run_id).trim() : '';
+
+                let runType = item.run_type || item.type || '';
+                let version = item.version || item.build_number || '';
+
+                if (runId) {
+                    if (!mockRunMetadata[runId]) {
+                        const mTypes = ['Nightly', 'CI', 'Sanity', 'Regression'];
+                        const mVers = ['1.0.0', '1.0.1', '1.1.0', '1.2.0-beta'];
+                        let hash = 0;
+                        for (let i = 0; i < runId.length; i++) hash = (hash << 5) - hash + runId.charCodeAt(i);
+                        hash = Math.abs(hash);
+                        mockRunMetadata[runId] = {
+                            type: mTypes[hash % mTypes.length],
+                            version: mVers[(hash >> 2) % mVers.length]
+                        };
+                    }
+                    if (!runType) runType = mockRunMetadata[runId].type;
+                    if (!version) version = mockRunMetadata[runId].version;
+                }
+
+                if (runType) runTypes.add(runType);
+                if (version) versions.add(version);
+
                 const testKey = `${rawTestName}|${groupName}`;
                 
-                let runId = item.run_id ? String(item.run_id).trim() : '';
                 if (runId) runIds.add(runId);
 
                 if (runId) {
@@ -1623,7 +1716,9 @@
                             date: item.run_date || '',
                             passed: 0, failed: 0, skipped: 0, total: 0,
                             startTime: currentStartTime,
-                            endTime: currentEndTime
+                            endTime: currentEndTime,
+                            runType: runType,
+                            version: version
                         };
                     }
                     runStatsMap[runId].total++;
@@ -1637,6 +1732,10 @@
                     if (currentEndTime && (!runStatsMap[runId].endTime || currentEndTime > runStatsMap[runId].endTime)) {
                         runStatsMap[runId].endTime = currentEndTime;
                     }
+                    
+                    // Ensure metadata is captured if it was missing in previous items of the same run
+                    if (!runStatsMap[runId].runType && runType) runStatsMap[runId].runType = runType;
+                    if (!runStatsMap[runId].version && version) runStatsMap[runId].version = version;
                 }
 
                 if (status === 'passed') totalPassed++;
@@ -1666,7 +1765,9 @@
                     status: status,
                     date: item.run_date || '-',
                     start: item.start_time || '-',
-                    end: item.end_time || '-'
+                    end: item.end_time || '-',
+                    runType: runType,
+                    version: version
                 });
 
                 if (runId) {
@@ -1681,6 +1782,8 @@
             globalTestGroups = testGroups;
             globalTestNames = testNames;
             globalTestDetails = testDetails;
+            globalRunTypes = runTypes;
+            globalVersions = versions;
             runToTestsMap = localRunToTestsMap;
             
             globalRunStats = Object.values(runStatsMap).sort((a, b) => {
@@ -1703,10 +1806,66 @@
                 }
             });
             
+            // Initialize visible runs
+            currentVisibleRunIds = globalRunStats.map(r => r.id);
+
+            // Populate Global Filter Dropdowns
+            const typeSelect = document.getElementById('globalRunType');
+            const verSelect = document.getElementById('globalVersion');
+            typeSelect.innerHTML = '<option value="">All Types</option>';
+            verSelect.innerHTML = '<option value="">All Versions</option>';
+
+            Array.from(runTypes).sort().forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t;
+                opt.textContent = t;
+                typeSelect.appendChild(opt);
+            });
+            Array.from(versions).sort().forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v;
+                opt.textContent = v;
+                verSelect.appendChild(opt);
+            });
+            
+            const uniqueDates = new Set(globalRunStats.map(r => r.date).filter(d => d));
+            const sortedDates = Array.from(uniqueDates).sort();
+            
+            const datesList = document.getElementById('availableDatesList');
+            if (datesList) {
+                datesList.innerHTML = '';
+                if (sortedDates.length === 0) {
+                    datesList.innerHTML = '<div style="color:#9ca3af; font-size:0.75rem;">No dates found</div>';
+                } else {
+                    // Show newest first
+                    [...sortedDates].reverse().forEach(d => {
+                        const badge = document.createElement('div');
+                        badge.textContent = d;
+                        badge.style.cssText = 'display: inline-block; background: #f3f4f6; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; color: #4b5563; border: 1px solid #e5e7eb; margin-right: 4px; margin-bottom: 4px; cursor: pointer;';
+                        badge.onclick = () => {
+                            document.getElementById('filterDateFrom').value = d;
+                            document.getElementById('filterDateTo').value = d;
+                            handleDateRangeChange();
+                        };
+                        datesList.appendChild(badge);
+                    });
+                }
+            }
+
+            if (sortedDates.length > 0) {
+                const minDate = sortedDates[0];
+                const maxDate = sortedDates[sortedDates.length - 1];
+                const fromInput = document.getElementById('filterDateFrom');
+                const toInput = document.getElementById('filterDateTo');
+                if (fromInput) { fromInput.min = minDate; fromInput.max = maxDate; }
+                if (toInput) { toInput.min = minDate; toInput.max = maxDate; }
+            }
+
             columnFilters = {};
 
             setFilter('all');
             updateInsights();
+            updateInsights(currentVisibleRunIds);
 
             document.getElementById('dashboard').classList.remove('hidden');
              document.getElementById('details').classList.remove('hidden');
@@ -1748,6 +1907,12 @@
             if (dropdown.style.display === 'block' && !e.target.closest('.th-interactive')) {
                 dropdown.style.display = 'none';
             }
+            
+            const dateMenu = document.getElementById('dateFilterMenu');
+            const dateBtn = document.getElementById('dateFilterBtn');
+            if (dateMenu && dateMenu.style.display === 'block' && !dateMenu.contains(e.target) && !dateBtn.contains(e.target)) {
+                dateMenu.style.display = 'none';
+            }
         });
 
         function getTestDisplayDetails(testName) {
@@ -1755,8 +1920,10 @@
             if (activeRunFilters.length > 0) {
                 details = details.filter(d => activeRunFilters.includes(d.runId));
             }
+            const effectiveRunIds = activeRunFilters.length > 0 ? activeRunFilters : currentVisibleRunIds;
+            details = details.filter(d => effectiveRunIds.includes(d.runId));
             
-            if (details.length === 0) return { runId: '-', start: '-', end: '-', duration: 0, group: globalTestGroups[testName] || '--', status: '-' };
+            if (details.length === 0) return { runId: '-', start: '-', end: '-', duration: 0, group: globalTestGroups[testName] || '--', status: '-', runType: '-', version: '-' };
 
             const latest = details.reduce((prev, current) => {
                 const numA = parseFloat(prev.runId);
@@ -1773,7 +1940,16 @@
                 if (duration < 0) duration += 86400;
             }
 
-            return { runId: latest.runId, start: latest.start, end: latest.end, duration: duration, group: globalTestGroups[testName] || '--', status: latest.status };
+            return { 
+                runId: latest.runId, 
+                start: latest.start, 
+                end: latest.end, 
+                duration: duration, 
+                group: globalTestGroups[testName] || '--', 
+                status: latest.status,
+                runType: latest.runType || '-',
+                version: latest.version || '-'
+            };
         }
 
         function renderTable() {
@@ -1806,6 +1982,15 @@
                 });
                 tests = tests.filter(name => testsInSelectedRuns.has(name));
             }
+            const effectiveRunIds = activeRunFilters.length > 0 ? activeRunFilters : currentVisibleRunIds;
+            const effectiveRunIdsSet = new Set(effectiveRunIds);
+
+            const testsInEffectiveRuns = new Set();
+            effectiveRunIds.forEach(runId => {
+                const runTests = runToTestsMap[runId] || new Set();
+                runTests.forEach(testName => testsInEffectiveRuns.add(testName));
+            });
+            tests = tests.filter(name => testsInEffectiveRuns.has(name));
 
             // Then apply search filter
             tests = tests.filter(name => name.toLowerCase().includes(filterText));
@@ -1814,18 +1999,15 @@
             // Apply Toolbar Filters
             if (currentFilter !== 'all') {
                 tests = tests.filter(name => {
-                    let statuses;
-                    if (activeRunFilters.length > 0) {
-                        statuses = new Set();
-                        const details = globalTestDetails[name] || [];
-                        details.forEach(d => {
-                            if (activeRunFilters.includes(d.runId)) {
-                                statuses.add(d.status);
-                            }
-                        });
-                    } else {
-                        statuses = globalTestResults[name];
-                    }
+                    const statuses = new Set();
+                    const details = globalTestDetails[name] || [];
+                    details.forEach(d => {
+                        if (effectiveRunIdsSet.has(d.runId)) {
+                            statuses.add(d.status);
+                        }
+                    });
+                    
+                    if (statuses.size === 0) return false;
 
                     if (currentFilter === 'flaky') {
                         return statuses.has('passed') && statuses.has('failed');
@@ -1871,13 +2053,23 @@
             // Pre-calculate metrics for filtering
             const testMetrics = {};
             tests.forEach(testName => {
-                const history = globalTestHistory[testName];
-                const totalRuns = history.length;
-                const passedCount = history.filter(s => s === 'passed').length;
-                const failedCount = history.filter(s => s === 'failed').length;
-                const skippedCount = totalRuns - passedCount - failedCount;
+                // Calculate metrics based on effective runs
+                const details = globalTestDetails[testName] || [];
+                let passedCount = 0;
+                let failedCount = 0;
+                let skippedCount = 0;
+                
+                details.forEach(d => {
+                    if (effectiveRunIdsSet.has(d.runId)) {
+                        if (d.status === 'passed') passedCount++;
+                        else if (d.status === 'failed') failedCount++;
+                        else if (d.status === 'skipped') skippedCount++;
+                    }
+                });
+
+                const totalRuns = passedCount + failedCount + skippedCount;
                 const passRate = totalRuns ? (passedCount / totalRuns) * 100 : 0;
-                const isFlaky = globalTestResults[testName].has('passed') && globalTestResults[testName].has('failed');
+                const isFlaky = passedCount > 0 && failedCount > 0;
                 const isBroken = !isFlaky && failedCount > 0;
                 
 
@@ -1995,6 +2187,7 @@
                 if (activeRunFilters.length > 0) {
                     details = details.filter(d => activeRunFilters.includes(d.runId));
                 }
+                details = details.filter(d => effectiveRunIdsSet.has(d.runId));
                 
                 if (details.length > 0) {
                     const latest = details.reduce((prev, current) => {
@@ -2144,6 +2337,19 @@
                     if (!statuses.has('passed') && statuses.has('failed')) {
                         brokenCount++;
                     }
+                    const details = globalTestDetails[testName] || [];
+                    let hasPass = false;
+                    let hasFail = false;
+                    
+                    details.forEach(d => {
+                        if (runIds.includes(d.runId)) {
+                            if (d.status === 'passed') hasPass = true;
+                            else if (d.status === 'failed') hasFail = true;
+                        }
+                    });
+
+                    if (hasPass && hasFail) flakyCount++;
+                    if (!hasPass && hasFail) brokenCount++;
                 });
 
             } else { // Global stats
@@ -2255,11 +2461,106 @@
             }
 
             updateInsights(activeRunFilters);
+            updateInsights(activeRunFilters.length > 0 ? activeRunFilters : currentVisibleRunIds);
             document.getElementById('clearRunFilterBtn').disabled = activeRunFilters.length === 0;
 
             renderTable();
             renderTrendChart('trendChartSmall', globalRunStats);
             renderTrendChart('trendChartLarge', globalRunStats);
+        }
+
+        function toggleDateDropdown(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('dateFilterMenu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function handleDateRangeChange() {
+            document.getElementById('filterLastDays').value = '';
+            updateDateFilterText();
+            applyGlobalRunFilters();
+        }
+
+        function clearDateRange() {
+            document.getElementById('filterDateFrom').value = '';
+            document.getElementById('filterDateTo').value = '';
+            updateDateFilterText();
+            applyGlobalRunFilters();
+        }
+
+        function updateDateFilterText() {
+            const btnText = document.getElementById('dateFilterText');
+            const lastDays = document.getElementById('filterLastDays').value;
+            const fromDate = document.getElementById('filterDateFrom').value;
+            const toDate = document.getElementById('filterDateTo').value;
+
+            if (lastDays) {
+                btnText.textContent = `Last ${lastDays} Days`;
+            } else if (fromDate && toDate) {
+                btnText.textContent = `${fromDate} - ${toDate}`;
+            } else if (fromDate) {
+                btnText.textContent = `From ${fromDate}`;
+            } else if (toDate) {
+                btnText.textContent = `Until ${toDate}`;
+            } else {
+                btnText.textContent = 'All Dates';
+            }
+        }
+
+        function handleLastDaysInput() {
+            const daysInput = document.getElementById('filterLastDays');
+            if (daysInput.value) {
+                document.getElementById('filterDateFrom').value = '';
+                document.getElementById('filterDateTo').value = '';
+            }
+            updateDateFilterText();
+            applyGlobalRunFilters();
+        }
+
+        function applyGlobalRunFilters() {
+            const type = document.getElementById('globalRunType').value;
+            const ver = document.getElementById('globalVersion').value;
+            const fromDate = document.getElementById('filterDateFrom').value;
+            const toDate = document.getElementById('filterDateTo').value;
+            const lastDaysInput = document.getElementById('filterLastDays');
+            const lastDays = parseInt(lastDaysInput.value);
+            let cutoffDateStr = null;
+
+            if (!isNaN(lastDays) && lastDays > 0) {
+                const allDates = globalRunStats.map(r => r.date).filter(d => d).sort();
+                if (allDates.length > 0) {
+                    const maxDateStr = allDates[allDates.length - 1];
+                    const maxDate = new Date(maxDateStr);
+                    if (!isNaN(maxDate.getTime())) {
+                        const targetDate = new Date(maxDate);
+                        targetDate.setDate(maxDate.getDate() - (lastDays - 1));
+                        cutoffDateStr = targetDate.toISOString().split('T')[0];
+                    }
+                }
+            }
+
+            const visibleRuns = globalRunStats.filter(r => {
+                let dateMatch = true;
+                if (cutoffDateStr) {
+                    dateMatch = r.date >= cutoffDateStr;
+                } else {
+                    if (fromDate && r.date < fromDate) dateMatch = false;
+                    if (toDate && r.date > toDate) dateMatch = false;
+                }
+
+                return (!type || r.runType === type) && (!ver || r.version === ver) && dateMatch;
+            });
+            
+            currentVisibleRunIds = visibleRuns.map(r => r.id);
+            
+            // Clean up selection if it's no longer visible
+            activeRunFilters = activeRunFilters.filter(id => currentVisibleRunIds.includes(id));
+            
+            renderTrendChart('trendChartSmall', visibleRuns);
+            renderTrendChart('trendChartLarge', visibleRuns);
+            
+            updateInsights(activeRunFilters.length > 0 ? activeRunFilters : currentVisibleRunIds);
+            renderTable();
         }
 
         function toggleComparisonMode() {
@@ -2718,6 +3019,9 @@
                 });
             });
         })();
+    </script>
+</body>
+</html> })();
     </script>
 </body>
 </html>
