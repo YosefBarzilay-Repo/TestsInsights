@@ -1,23 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TestsInsight</title>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link href="src/client/css/style.css" rel="stylesheet" />
 </head>
+
 <body>
     <!-- Created by Yosef Barzilay -->
     <header class="app-header">
         <div class="header-left">
             <div class="logo-box">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"></line>
+                    <line x1="12" y1="20" x2="12" y2="4"></line>
+                    <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
             </div>
-        <h2 class="header-title">TestInsights</h2>
+            <h2 class="header-title">TestInsights</h2>
         </div>
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <button class="btn-icon-header" title="Settings" disabled style="background: transparent; border: none; opacity: 0.5; cursor: not-allowed;">
+            <button class="btn-icon-header" title="Settings" disabled
+                style="background: transparent; border: none; opacity: 0.5; cursor: not-allowed;">
                 <span class="material-symbols-outlined">settings</span>
             </button>
         </div>
@@ -25,69 +37,79 @@
 
     <div class="main-content">
 
-        <div id="loadingState" class="empty-state hidden">
-            <div style="background: white; padding: 4rem; border-radius: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); display: flex; flex-direction: column; align-items: center; max-width: 500px; width: 100%; border: 1px solid #f3f4f6;">
-                <div class="spin" style="width: 4rem; height: 4rem; border: 4px solid #f3f4f6; border-top-color: #C1A35F; border-radius: 50%; margin-bottom: 2rem;"></div>
-                <h3 style="font-size: 1.5rem; font-weight: 700; color: #111827; margin: 0 0 0.5rem 0;">Analyzing Test Results...</h3>
-                <p style="color: #6b7280; margin: 0; font-size: 1.1rem;">Please wait while we process your data.</p>
-            </div>
-        </div>
-
         <div id="dashboard" class="dashboard hidden">
-            <div id="runFiltersBar" class="run-filters-bar" style="display: flex; gap: 1rem; margin-bottom: 1rem; align-items: center; background: white; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e5e7eb;">
-                    <span style="font-weight: 600; font-size: 0.875rem; color: #374151;">Run Filters:</span>
-                    <select id="globalRunType" class="form-input" style="width: auto;" onchange="applyGlobalRunFilters()">
-                        <option value="">All Types</option>
-                    </select>
-                    <select id="globalVersion" class="form-input" style="width: auto;" onchange="applyGlobalRunFilters()">
-                        <option value="">All Versions</option>
-                    </select>
-                    <div class="custom-dropdown" style="position: relative;">
-                        <button id="dateFilterBtn" class="form-input" style="background: white; text-align: left; min-width: 180px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleDateDropdown(event)">
-                            <span id="dateFilterText" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">All Dates</span>
-                            <span class="material-symbols-outlined" style="font-size: 1.2rem; color: #6b7280;">calendar_month</span>
-                        </button>
-                        <div id="dateFilterMenu" class="dropdown-menu" style="display: none; position: absolute; top: 100%; left: 0; width: 280px; padding: 1rem; margin-top: 0.5rem;">
-                            <div style="margin-bottom: 1rem;">
-                                <label style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.5rem;">QUICK FILTER</label>
-                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <span style="font-size: 0.875rem;">Last</span>
-                                    <input type="number" id="filterLastDays" class="form-input" style="width: 80px; padding: 0.25rem 0.5rem;" min="1" placeholder="#" oninput="handleLastDaysInput()">
-                                    <span style="font-size: 0.875rem;">Days</span>
-                                </div>
-                            </div>
-                            <div style="border-top: 1px solid #e5e7eb; margin: 0.5rem 0; padding-top: 0.5rem;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                    <label style="font-size: 0.75rem; font-weight: 600; color: #6b7280;">SPECIFIC DATES</label>
-                                    <button class="btn-icon" style="padding: 2px; height: 20px; width: 20px;" onclick="clearDateSelection()" title="Clear Selection">
-                                    <label style="font-size: 0.75rem; font-weight: 600; color: #6b7280;">DATE RANGE</label>
-                                    <button class="btn-icon" style="padding: 2px; height: 20px; width: 20px;" onclick="clearDateRange()" title="Clear Range">
-                                        <span class="material-symbols-outlined" style="font-size: 14px;">close</span>
-                                    </button>
-                                </div>
-                                <div id="calendarWidget" class="calendar-widget"></div>
-                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <span style="font-size: 0.875rem; width: 40px;">From:</span>
-                                        <input type="date" id="filterDateFrom" class="form-input" onchange="handleDateRangeChange()">
-                                    </div>
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <span style="font-size: 0.875rem; width: 40px;">To:</span>
-                                        <input type="date" id="filterDateTo" class="form-input" onchange="handleDateRangeChange()">
-                                    </div>
-                                </div>
-                            </div>
-                            <div style="border-top: 1px solid #e5e7eb; margin: 0.5rem 0; padding-top: 0.5rem;">
-                                <label style="font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.5rem; display: block;">AVAILABLE DATES</label>
-                                <div id="availableDatesList" style="max-height: 150px; overflow-y: auto;"></div>
+            <div id="runFiltersBar" class="run-filters-bar">
+                <span style="font-weight: 600; font-size: 0.875rem; color: var(--text-main);">Run Filters:</span>
+                <select id="globalRunType" class="form-input" onchange="applyGlobalRunFilters()">
+                    <option value="">All Types</option>
+                </select>
+                <select id="globalVersion" class="form-input" onchange="applyGlobalRunFilters()">
+                    <option value="">All Versions</option>
+                </select>
+                <div class="custom-dropdown" style="position: relative;">
+                    <button id="dateFilterBtn" class="form-input date-filter-btn" onclick="toggleDateDropdown(event)">
+                        <span id="dateFilterText"
+                            style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">All Dates</span>
+                        <span class="material-symbols-outlined"
+                            style="font-size: 1.2rem; color: #6b7280;">calendar_month</span>
+                    </button>
+                    <div id="dateFilterMenu" class="dropdown-menu"
+                        style="display: none; position: absolute; top: 100%; left: 0; width: 280px; padding: 1rem; margin-top: 0.5rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <label
+                                style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.5rem;">QUICK
+                                FILTER</label>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="font-size: 0.875rem;">Last</span>
+                                <input type="number" id="filterLastDays" class="form-input"
+                                    style="width: 80px; padding: 0.25rem 0.5rem;" min="1" placeholder="#"
+                                    oninput="handleLastDaysInput()">
+                                <span style="font-size: 0.875rem;">Days</span>
                             </div>
                         </div>
+                        <div style="border-top: 1px solid #e5e7eb; margin: 0.5rem 0; padding-top: 0.5rem;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <label style="font-size: 0.75rem; font-weight: 600; color: #6b7280;">SPECIFIC
+                                    DATES</label>
+                                <button class="btn-icon" style="padding: 2px; height: 20px; width: 20px;"
+                                    onclick="clearDateSelection()" title="Clear Selection">
+                                    <label style="font-size: 0.75rem; font-weight: 600; color: #6b7280;">DATE
+                                        RANGE</label>
+                                    <button class="btn-icon" style="padding: 2px; height: 20px; width: 20px;"
+                                        onclick="clearDateRange()" title="Clear Range">
+                                        <span class="material-symbols-outlined" style="font-size: 14px;">close</span>
+                                    </button>
+                            </div>
+                            <div id="calendarWidget" class="calendar-widget"></div>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="font-size: 0.875rem; width: 40px;">From:</span>
+                                    <input type="date" id="filterDateFrom" class="form-input"
+                                        onchange="handleDateRangeChange()">
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <span style="font-size: 0.875rem; width: 40px;">To:</span>
+                                    <input type="date" id="filterDateTo" class="form-input"
+                                        onchange="handleDateRangeChange()">
+                                </div>
+                            </div>
+                        </div>
+                        <div style="border-top: 1px solid #e5e7eb; margin: 0.5rem 0; padding-top: 0.5rem;">
+                            <label
+                                style="font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.5rem; display: block;">AVAILABLE
+                                DATES</label>
+                            <div id="availableDatesList" style="max-height: 150px; overflow-y: auto;"></div>
+                        </div>
                     </div>
+                </div>
             </div>
             <div class="card">
-                <div style="border-bottom: 1px solid #e5e7eb; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <div
+                    style="border-bottom: 1px solid #e5e7eb; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; gap: 1.5rem;">
-                        <button id="tab-insights" class="tab-btn active" onclick="switchTab('insights')">Insights</button>
+                        <button id="tab-insights" class="tab-btn active"
+                            onclick="switchTab('insights')">Insights</button>
                         <button id="tab-deepThink" class="tab-btn" onclick="switchTab('deepThink')">Deep Think</button>
                     </div>
                     <div id="insightsSummary" class="insights-summary hidden">
@@ -112,124 +134,149 @@
                         <span id="insightsToggleIcon" class="material-symbols-outlined">expand_less</span>
                     </button>
                 </div>
-            <div id="tabContentContainer">
-            <div id="content-insights">
-            <div id="insightsContent" class="insights-grid">
-                <!-- Execution Trend Card -->
-                <div class="card span-full">
-                    <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>Execution Trends</span>
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <button id="compareRunsBtn" class="btn-icon" onclick="toggleComparisonMode()" title="Select 2-3 runs to compare" disabled>
-                                <span class="material-symbols-outlined">compare_arrows</span>
-                            </button>
-                            <button id="clearRunFilterBtn" class="btn-icon" onclick="setFilter('all')" title="Clear Selection" disabled>
-                                <span class="material-symbols-outlined">clear</span>
-                            </button>
-                            <button class="btn-icon" onclick="openTrendModal()" title="Enlarge">
-                                <span class="material-symbols-outlined">open_in_full</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="trendChartSmall" style="width: 100%; height: 100px; display: flex; align-items: flex-end; padding-top: 10px;"></div>
-                </div>
-                <!-- Status Distribution Card -->
-                <div class="card">
-                    <div class="card-title" style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>Status Distribution</span>
-                        <span id="totalExecutionsClickable" class="clickable-legend" style="font-size: 0.75rem; color: #6b7280; text-transform: none; font-weight: normal;">Total: <strong id="totalExecutions" style="color: #1f2937;">-</strong></span>
-                    </div>
-                    <div class="status-legend">
-                        <div id="passedFilterClickable" class="legend-item clickable-legend">
-                            <span class="legend-dot bg-green"></span>
-                            <span>Passed: <strong id="countPassed">-</strong></span>
-                        </div>
-                        <div id="failedFilterClickable" class="legend-item clickable-legend">
-                            <span class="legend-dot bg-red"></span>
-                            <span>Failed: <strong id="countFailed">-</strong></span>
-                        </div>
-                        <div id="skippedFilterClickable" class="legend-item clickable-legend">
-                            <span class="legend-dot bg-grey"></span>
-                            <span>Skipped: <strong id="countSkipped">-</strong></span>
-                        </div>
-                    </div>
-                    <div class="progress-track">
-                        <div id="barPassed" class="progress-fill bg-green" style="width: 0%"></div>
-                        <div id="barFailed" class="progress-fill bg-red" style="width: 0%"></div>
-                        <div id="barSkipped" class="progress-fill bg-grey" style="width: 0%"></div>
-                    </div>
-                    </div>
+                <div id="tabContentContainer">
+                    <div id="content-insights">
+                        <div id="insightsContent" class="insights-grid">
+                            <!-- Execution Trend Card -->
+                            <div class="card span-full">
+                                <div class="card-title"
+                                    style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Execution Trends</span>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <button id="compareRunsBtn" class="btn-icon" onclick="toggleComparisonMode()"
+                                            title="Select 2-3 runs to compare" disabled>
+                                            <span class="material-symbols-outlined">compare_arrows</span>
+                                        </button>
+                                        <button id="clearRunFilterBtn" class="btn-icon" onclick="setFilter('all')"
+                                            title="Clear Selection" disabled>
+                                            <span class="material-symbols-outlined">clear</span>
+                                        </button>
+                                        <button class="btn-icon" onclick="openTrendModal()" title="Enlarge">
+                                            <span class="material-symbols-outlined">open_in_full</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="trendChartSmall"
+                                    style="width: 100%; height: 100px; display: flex; align-items: flex-end; padding-top: 10px;">
+                                </div>
+                            </div>
+                            <!-- Status Distribution Card -->
+                            <div class="card">
+                                <div class="card-title"
+                                    style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Status Distribution</span>
+                                    <span id="totalExecutionsClickable" class="clickable-legend"
+                                        style="font-size: 0.75rem; color: #6b7280; text-transform: none; font-weight: normal;">Total:
+                                        <strong id="totalExecutions" style="color: #1f2937;">-</strong></span>
+                                </div>
+                                <div class="status-legend">
+                                    <div id="passedFilterClickable" class="legend-item clickable-legend">
+                                        <span class="legend-dot bg-green"></span>
+                                        <span>Passed: <strong id="countPassed">-</strong></span>
+                                    </div>
+                                    <div id="failedFilterClickable" class="legend-item clickable-legend">
+                                        <span class="legend-dot bg-red"></span>
+                                        <span>Failed: <strong id="countFailed">-</strong></span>
+                                    </div>
+                                    <div id="skippedFilterClickable" class="legend-item clickable-legend">
+                                        <span class="legend-dot bg-grey"></span>
+                                        <span>Skipped: <strong id="countSkipped">-</strong></span>
+                                    </div>
+                                </div>
+                                <div class="progress-track">
+                                    <div id="barPassed" class="progress-fill bg-green" style="width: 0%"></div>
+                                    <div id="barFailed" class="progress-fill bg-red" style="width: 0%"></div>
+                                    <div id="barSkipped" class="progress-fill bg-grey" style="width: 0%"></div>
+                                </div>
+                            </div>
 
-                <!-- FR-08: Execution Summary Card -->
-                <div class="card">
-                    <div class="card-title">Execution Summary</div>
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-icon">
-                                <!-- Play/Run Icon -->
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            <!-- FR-08: Execution Summary Card -->
+                            <div class="card">
+                                <div class="card-title">Execution Summary</div>
+                                <div class="stats-grid">
+                                    <div class="stat-item">
+                                        <div class="stat-icon">
+                                            <!-- Play/Run Icon -->
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <polygon points="5 3 19 12 5 21 5 3" />
+                                            </svg>
+                                        </div>
+                                        <div class="stat-content">
+                                            <div class="stat-value-small" id="totalRuns">-</div>
+                                            <div class="stat-label">Total Runs</div>
+                                        </div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-icon">
+                                            <!-- Beaker Icon -->
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M4.5 3h15" />
+                                                <path d="M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3" />
+                                                <path d="M6 14h12" />
+                                            </svg>
+                                        </div>
+                                        <div class="stat-content">
+                                            <div class="stat-value-small" id="totalTestsDisplay">-</div>
+                                            <div class="stat-label">Total Tests</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="stat-content">
-                                <div class="stat-value-small" id="totalRuns">-</div>
-                                <div class="stat-label">Total Runs</div>
-                            </div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-icon">
-                                <!-- Beaker Icon -->
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 3h15"/><path d="M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3"/><path d="M6 14h12"/></svg>
-                            </div>
-                            <div class="stat-content">
-                                <div class="stat-value-small" id="totalTestsDisplay">-</div>
-                                <div class="stat-label">Total Tests</div>
-                            </div>
-                        </div>
-                        </div>
-                    </div>
 
-                <!-- FR-06 & FR-08: Flaky Tests Card -->
-                <div class="card">
-                    <div class="card-title">Flaky Tests</div>
-                    <div class="card-value" id="flakyRate">-</div>
-                    <div class="card-subtext">
-                        <span id="flakyCount" class="clickable-count">-</span> flaky tests of <span id="totalTests">-</span> total
-                    </div>
-                </div>
+                            <!-- FR-06 & FR-08: Flaky Tests Card -->
+                            <div class="card">
+                                <div class="card-title">Flaky Tests</div>
+                                <div class="card-value" id="flakyRate">-</div>
+                                <div class="card-subtext">
+                                    <span id="flakyCount" class="clickable-count">-</span> flaky tests of <span
+                                        id="totalTests">-</span> total
+                                </div>
+                            </div>
 
-                <!-- Continuous Failing Tests Card -->
-                <div class="card">
-                    <div class="card-title">Continuous Failing</div>
-                    <div class="card-value" id="brokenRate">-</div>
-                    <div class="card-subtext">
-                        <span id="brokenCount" class="clickable-count">-</span> failing tests of <span id="totalTestsBroken">-</span> total
+                            <!-- Continuous Failing Tests Card -->
+                            <div class="card">
+                                <div class="card-title">Continuous Failing</div>
+                                <div class="card-value" id="brokenRate">-</div>
+                                <div class="card-subtext">
+                                    <span id="brokenCount" class="clickable-count">-</span> failing tests of <span
+                                        id="totalTestsBroken">-</span> total
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="content-deepThink" class="hidden">
+                        <div class="deep-think-scroll">
+                            <div id="deepThinkIntro" style="margin-bottom: 1.5rem;">
+                                <span class="material-symbols-outlined"
+                                    style="font-size: 48px; color: #C1A35F;">psychology</span>
+                                <h3 style="margin: 0.5rem 0; color: #111827;">Deep Analysis & Recommendations</h3>
+                                <p style="color: #6b7280; max-width: 600px; margin: 0 auto;">
+                                    Analyze patterns in your test execution history to identify root causes of
+                                    instability and get actionable recommendations.
+                                </p>
+                            </div>
+                            <div id="deepThinkResults" style="text-align: left; display: none; margin-bottom: 2rem;">
+                            </div>
+
+                            <div style="display: flex; justify-content: center; gap: 1rem;">
+                                <button id="btnGenerateAnalysis" class="btn btn-primary"
+                                    onclick="generateDeepAnalysis()" style="width: fit-content;">
+                                    <span class="material-symbols-outlined">auto_awesome</span>
+                                    Generate Analysis
+                                </button>
+                                <button id="btnExportDeepThink" class="btn btn-secondary hidden"
+                                    onclick="exportDeepThinkToCsv()">
+                                    <span class="material-symbols-outlined">download</span>
+                                    Export Recommendations
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                </div>
-            </div>
-            <div id="content-deepThink" class="hidden">
-                <div class="deep-think-scroll">
-                    <div id="deepThinkIntro" style="margin-bottom: 1.5rem;">
-                        <span class="material-symbols-outlined" style="font-size: 48px; color: #C1A35F;">psychology</span>
-                        <h3 style="margin: 0.5rem 0; color: #111827;">Deep Analysis & Recommendations</h3>
-                        <p style="color: #6b7280; max-width: 600px; margin: 0 auto;">
-                            Analyze patterns in your test execution history to identify root causes of instability and get actionable recommendations.
-                        </p>
-                    </div>
-                    <div id="deepThinkResults" style="text-align: left; display: none; margin-bottom: 2rem;"></div>
-                    
-                    <div style="display: flex; justify-content: center; gap: 1rem;">
-                        <button id="btnGenerateAnalysis" class="btn btn-primary" onclick="generateDeepAnalysis()" style="width: fit-content;">
-                            <span class="material-symbols-outlined">auto_awesome</span>
-                            Generate Analysis
-                        </button>
-                        <button id="btnExportDeepThink" class="btn btn-secondary hidden" onclick="exportDeepThinkToCsv()">
-                            <span class="material-symbols-outlined">download</span>
-                            Export Recommendations
-                        </button>
-                    </div>
-                </div>
-            </div>
-            </div>
             </div>
         </div>
 
@@ -259,7 +306,7 @@
                     <thead>
                         <tr>
                             <th>Test Name</th>
-                            <th style="width: 10rem;">Deviation (P/F/S)</th>
+                            <th class="text-right" style="width: 10rem;">Deviation (P/F/S)</th>
                         </tr>
                     </thead>
                     <tbody id="testTableBody"></tbody>
@@ -267,7 +314,8 @@
             </div>
             <div class="pagination-container">
                 <div class="pagination-info">
-                    Showing <span id="pageStart">0</span> to <span id="pageEnd">0</span> of <span id="totalItems">0</span> results
+                    Showing <span id="pageStart">0</span> to <span id="pageEnd">0</span> of <span
+                        id="totalItems">0</span> results
                 </div>
                 <div class="pagination-controls">
                     <button id="btnPrev" class="btn-page" disabled>Previous</button>
@@ -283,7 +331,9 @@
                     <h2>Execution Trends</h2>
                     <button class="close-btn" onclick="closeTrendModal()">&times;</button>
                 </div>
-                <div id="trendChartLarge" style="flex: 1; width: 100%; display: flex; align-items: flex-end; padding: 20px 0; gap: 2px;"></div>
+                <div id="trendChartLarge"
+                    style="flex: 1; width: 100%; display: flex; align-items: flex-end; padding: 20px 0; gap: 2px;">
+                </div>
             </div>
         </div>
 
@@ -294,11 +344,12 @@
                     <h2 id="modalTitle">Test Details</h2>
                     <button class="close-btn" onclick="closeModal()">&times;</button>
                 </div>
-                
+
                 <!-- Visualization -->
                 <div style="margin-bottom: 2rem;">
                     <h4>Status Trend (Pass vs Fail)</h4>
-                    <div id="chartContainer" style="width: 100%; height: 150px; border: 1px solid #e5e7eb; border-radius: 0.5rem; background: #f9fafb; position: relative;">
+                    <div id="chartContainer"
+                        style="width: 100%; height: 150px; border: 1px solid #e5e7eb; border-radius: 0.5rem; background: #f9fafb; position: relative;">
                         <!-- SVG Chart will be injected here -->
                     </div>
                 </div>
@@ -318,7 +369,7 @@
                 </table>
             </div>
         </div>
-        
+
         <!-- Filter Dropdown -->
         <div id="filterDropdown" class="dropdown-menu"></div>
 
@@ -332,17 +383,20 @@
                 <div class="filter-form">
                     <div class="form-group">
                         <label class="form-label">Test Name</label>
-                        <input type="text" id="filterTestName" class="form-input" placeholder="Contains..." list="testNameOptions">
+                        <input type="text" id="filterTestName" class="form-input" placeholder="Contains..."
+                            list="testNameOptions">
                         <datalist id="testNameOptions"></datalist>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Test Group</label>
-                        <input type="text" id="filterTestGroup" class="form-input" placeholder="Contains..." list="testGroupOptions">
+                        <input type="text" id="filterTestGroup" class="form-input" placeholder="Contains..."
+                            list="testGroupOptions">
                         <datalist id="testGroupOptions"></datalist>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Run ID</label>
-                        <input type="text" id="filterRunId" class="form-input" placeholder="Contains..." list="runIdOptions">
+                        <input type="text" id="filterRunId" class="form-input" placeholder="Contains..."
+                            list="runIdOptions">
                         <datalist id="runIdOptions"></datalist>
                     </div>
                     <div class="form-group">
@@ -377,68 +431,16 @@
                 </div>
             </div>
         </div>
-
-        <!-- Help Modal -->
-        <div id="helpModal" class="modal-overlay hidden">
-            <div class="modal-content" style="max-width: 700px;">
-                <div class="modal-header">
-                    <h2>JSON Format Guide</h2>
-                    <button class="close-btn" onclick="closeHelpModal()">&times;</button>
-                </div>
-                <div style="color: #4b5563; line-height: 1.6;">
-                    <p style="margin-bottom: 1.5rem;">
-                        To generate insights, your JSON file must be an array of objects containing specific keys.
-                    </p>
-                    
-                    <h4 style="color: #111827; margin-bottom: 0.5rem; font-size: 1rem;">Required Keys</h4>
-                    <ul style="list-style: disc; padding-left: 1.5rem; margin-bottom: 1.5rem; font-size: 0.9rem;">
-                        <li style="margin-bottom: 0.25rem;"><code>run_id</code>: Unique identifier for the test execution run (e.g., build number).</li>
-                        <li style="margin-bottom: 0.25rem;"><code>test_name</code>: The name of the test case.</li>
-                        <li style="margin-bottom: 0.25rem;"><code>status</code>: Result of the test (Passed, Failed, Skipped).</li>
-                        <li style="margin-bottom: 0.25rem;"><code>run_date</code>: Date of execution (YYYY-MM-DD).</li>
-                        <li style="margin-bottom: 0.25rem;"><code>start_time</code>: Start time (HH:MM:SS).</li>
-                        <li><code>end_time</code>: End time (HH:MM:SS).</li>
-                        <li style="margin-bottom: 0.25rem;"><code>run_type</code>: (Optional) Type of run (e.g., Nightly, CI).</li>
-                        <li><code>version</code>: (Optional) Version or build number tested.</li>
-                    </ul>
-
-                    <h4 style="color: #111827; margin-bottom: 0.5rem; font-size: 1rem;">Optional Keys</h4>
-                    <ul style="list-style: disc; padding-left: 1.5rem; margin-bottom: 1.5rem; font-size: 0.9rem;">
-                        <li><code>test_group_name</code>: Category or suite name (e.g., "Auth", "Checkout"). Highly recommended for better organization.</li>
-                    </ul>
-
-                    <h4 style="color: #111827; margin-bottom: 0.5rem; font-size: 1rem;">Example JSON Content</h4>
-                    <div style="background: #f3f4f6; padding: 1rem; border-radius: 0.5rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.8rem; overflow-x: auto; border: 1px solid #e5e7eb; white-space: pre;">[
-  {
-    "run_id": "101",
-    "test_name": "login_test",
-    "test_group_name": "Auth",
-    "status": "Passed",
-    "run_date": "2023-10-01",
-    "start_time": "10:00:00",
-    "end_time": "10:00:05"
-  },
-  {
-    "run_id": "101",
-    "test_name": "checkout_test",
-    "test_group_name": "Checkout",
-    "status": "Failed",
-    "run_date": "2023-10-01",
-    "start_time": "10:00:06",
-    "end_time": "10:00:10"
-  }
-]</div>
-                </div>
-                <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
-                    <button class="btn btn-primary" onclick="closeHelpModal()">Got it</button>
-                </div>
-            </div>
-        </div>
+    </div>
+    </div>
+    </div>
     </div>
 
     <footer style="text-align: center; padding: 1rem; font-size: 0.75rem; color: #9ca3af; flex-shrink: 0;">
-        Created by <a href="mailto:yosefb11@gmail.com" style="color: inherit; text-decoration: underline;">Yosef Barzilay</a>
+        Created by <a href="mailto:yosefb11@gmail.com" style="color: inherit; text-decoration: underline;">Yosef
+            Barzilay</a>
     </footer>
     <script src="src/js/app.js"></script>
 </body>
+
 </html>
