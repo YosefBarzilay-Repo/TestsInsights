@@ -1618,9 +1618,6 @@ document.getElementById('trendModal').addEventListener('click', function (e) {
 document.getElementById('advancedFilterModal').addEventListener('click', function (e) {
     if (e.target === this) closeAdvancedFilter();
 });
-document.getElementById('helpModal').addEventListener('click', function (e) {
-    if (e.target === this) closeHelpModal();
-});
 
 function exportDeepThinkToCsv() {
     if (!lastDeepAnalysisData) return;
