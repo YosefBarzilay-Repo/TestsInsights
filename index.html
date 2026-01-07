@@ -749,34 +749,10 @@
             <button class="btn-icon-header" title="Settings" disabled style="background: transparent; border: none; opacity: 0.5; cursor: not-allowed;">
                 <span class="material-symbols-outlined">settings</span>
             </button>
-            <button class="import-btn" onclick="document.getElementById('csvInput').click()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                <span>Import CSV</span>
-            </button>
-            <input type="file" id="csvInput" accept=".csv" class="hidden" />
         </div>
     </header>
 
     <div class="main-content">
-
-        <div id="emptyState" class="empty-state">
-            <div style="background: white; padding: 4rem; border-radius: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); display: flex; flex-direction: column; align-items: center; max-width: 500px; width: 100%; border: 1px solid #f3f4f6;">
-                <div style="width: 6rem; height: 6rem; background: #F4EFE2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; color: #C1A35F;">
-                    <span class="material-symbols-outlined" style="font-size: 3rem;">analytics</span>
-                </div>
-                <h3 style="font-size: 1.75rem; font-weight: 700; color: #111827; margin: 0 0 0.75rem 0; letter-spacing: -0.025em;">Import Test Results</h3>
-                <p style="color: #6b7280; margin: 0 0 2.5rem 0; font-size: 1.1rem;">and start analyzing your test stability & trends.</p>
-                <button class="import-btn" style="font-size: 1rem; padding: 0.875rem 2.5rem; box-shadow: 0 4px 6px -1px rgba(193, 163, 95, 0.3);" onclick="document.getElementById('csvInput').click()">
-                    <span>Select CSV File</span>
-                </button>
-                <div style="margin-top: 2rem; width: 100%; text-align: center;">
-                    <button onclick="openHelpModal()" style="background: none; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; color: #C1A35F; font-weight: 500; font-size: 0.875rem; transition: color 0.2s;">
-                        <span class="material-symbols-outlined">help</span>
-                        <span style="text-decoration: underline; text-underline-offset: 2px;">CSV Format Guide</span>
-                    </button>
-                </div>
-            </div>
-        </div>
 
         <div id="loadingState" class="empty-state hidden">
             <div style="background: white; padding: 4rem; border-radius: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); display: flex; flex-direction: column; align-items: center; max-width: 500px; width: 100%; border: 1px solid #f3f4f6;">
@@ -1085,15 +1061,15 @@
         <div id="helpModal" class="modal-overlay hidden">
             <div class="modal-content" style="max-width: 700px;">
                 <div class="modal-header">
-                    <h2>CSV Format Guide</h2>
+                    <h2>JSON Format Guide</h2>
                     <button class="close-btn" onclick="closeHelpModal()">&times;</button>
                 </div>
                 <div style="color: #4b5563; line-height: 1.6;">
                     <p style="margin-bottom: 1.5rem;">
-                        To generate insights, your CSV file must contain specific columns. The order of columns does not matter, but the <strong>headers must match exactly</strong>.
+                        To generate insights, your JSON file must be an array of objects containing specific keys.
                     </p>
                     
-                    <h4 style="color: #111827; margin-bottom: 0.5rem; font-size: 1rem;">Required Columns</h4>
+                    <h4 style="color: #111827; margin-bottom: 0.5rem; font-size: 1rem;">Required Keys</h4>
                     <ul style="list-style: disc; padding-left: 1.5rem; margin-bottom: 1.5rem; font-size: 0.9rem;">
                         <li style="margin-bottom: 0.25rem;"><code>run_id</code>: Unique identifier for the test execution run (e.g., build number).</li>
                         <li style="margin-bottom: 0.25rem;"><code>test_name</code>: The name of the test case.</li>
@@ -1103,19 +1079,32 @@
                         <li><code>end_time</code>: End time (HH:MM:SS).</li>
                     </ul>
 
-                    <h4 style="color: #111827; margin-bottom: 0.5rem; font-size: 1rem;">Optional Columns</h4>
+                    <h4 style="color: #111827; margin-bottom: 0.5rem; font-size: 1rem;">Optional Keys</h4>
                     <ul style="list-style: disc; padding-left: 1.5rem; margin-bottom: 1.5rem; font-size: 0.9rem;">
                         <li><code>test_group_name</code>: Category or suite name (e.g., "Auth", "Checkout"). Highly recommended for better organization.</li>
                     </ul>
 
-                    <h4 style="color: #111827; margin-bottom: 0.5rem; font-size: 1rem;">Example CSV Content</h4>
-                    <div style="background: #f3f4f6; padding: 1rem; border-radius: 0.5rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.8rem; overflow-x: auto; border: 1px solid #e5e7eb;">
-                        <div style="color: #6b7280; margin-bottom: 0.5rem; font-style: italic;"># Header row is required</div>
-                        <div style="color: #111827; font-weight: 600;">run_id, test_name, test_group_name, status, run_date, start_time, end_time</div>
-                        <div>101, login_test, Auth, Passed, 2023-10-01, 10:00:00, 10:00:05</div>
-                        <div>101, checkout_test, Checkout, Failed, 2023-10-01, 10:00:06, 10:00:10</div>
-                        <div>102, login_test, Auth, Passed, 2023-10-02, 12:00:00, 12:00:04</div>
-                    </div>
+                    <h4 style="color: #111827; margin-bottom: 0.5rem; font-size: 1rem;">Example JSON Content</h4>
+                    <div style="background: #f3f4f6; padding: 1rem; border-radius: 0.5rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 0.8rem; overflow-x: auto; border: 1px solid #e5e7eb; white-space: pre;">[
+  {
+    "run_id": "101",
+    "test_name": "login_test",
+    "test_group_name": "Auth",
+    "status": "Passed",
+    "run_date": "2023-10-01",
+    "start_time": "10:00:00",
+    "end_time": "10:00:05"
+  },
+  {
+    "run_id": "101",
+    "test_name": "checkout_test",
+    "test_group_name": "Checkout",
+    "status": "Failed",
+    "run_date": "2023-10-01",
+    "start_time": "10:00:06",
+    "end_time": "10:00:10"
+  }
+]</div>
                 </div>
                 <div style="margin-top: 2rem; display: flex; justify-content: flex-end;">
                     <button class="btn btn-primary" onclick="closeHelpModal()">Got it</button>
@@ -1462,38 +1451,31 @@
             }, 800);
         }
 
-        document.getElementById('csvInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            if (!file.name.toLowerCase().endsWith('.csv')) {
-                alert('Invalid file format. Please upload a .csv file.');
-                showError('Invalid File', 'Invalid file format. Please upload a .csv file.');
-                this.value = '';
-                return;
-            }
-
+        window.addEventListener('DOMContentLoaded', () => {
             // Show loading state
-            document.getElementById('emptyState').classList.add('hidden');
             document.getElementById('loadingState').classList.remove('hidden');
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                
+            fetch('demo/valid_tests_list.json')
+            .then(response => {
+                if (!response.ok) throw new Error("Failed to load data");
+                return response.text();
+            })
+            .then(text => {
                 setTimeout(() => {
                     try {
-                        processCSV(text);
+                        processJSON(text);
                     } catch (err) {
                         console.error(err);
+                        alert('Error processing JSON data');
                     }
                     document.getElementById('loadingState').classList.add('hidden');
-                    if (document.getElementById('dashboard').classList.contains('hidden')) {
-                        document.getElementById('emptyState').classList.remove('hidden');
-                    }
-                }, 2000);
-            };
-            reader.readAsText(file);
+                }, 1000);
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('loadingState').classList.add('hidden');
+                alert('Could not fetch data file: ' + err.message);
+            });
         });
 
         document.getElementById('searchInput').addEventListener('input', function(e) {
@@ -1560,51 +1542,44 @@
             renderTrendChart('trendChartLarge', globalRunStats);
         }
 
-        function processCSV(csvText) {
-                        if (!csvText || !csvText.trim()) {
-                alert('The uploaded CSV file is empty.');
-                showError('Empty File', 'The uploaded CSV file is empty.');
+        function processJSON(jsonText) {
+            if (!jsonText || !jsonText.trim()) {
+                alert('The uploaded JSON file is empty.');
                 return;
             }
 
-            const lines = csvText.split(/\r\n|\n/).filter(line => line.trim() !== '');
-            if (lines.length < 2) {
-                alert('The CSV file must contain a header row and at least one data row.');
-                showError('Invalid Data', 'The CSV file must contain a header row and at least one data row.');
+            // Handle BOM
+            if (jsonText.charCodeAt(0) === 0xFEFF) {
+                jsonText = jsonText.slice(1);
+            }
+
+            let jsonData;
+            try {
+                jsonData = JSON.parse(jsonText);
+            } catch (e) {
+                alert('Invalid JSON format.');
                 return;
             }
 
-            let headerLine = lines[0];
-
-            if (headerLine.charCodeAt(0) === 0xFEFF) {
-                headerLine = headerLine.slice(1);
+            if (!Array.isArray(jsonData)) {
+                alert('JSON root must be an array of test result objects.');
+                return;
             }
 
-            const headers = headerLine.split(',').map(h => h.trim().toLowerCase());
-            
+            if (jsonData.length === 0) {
+                alert('JSON array is empty.');
+                return;
+            }
+
+            // Check required keys on first element
             const requiredCols = ['run_id', 'test_name', 'status', 'run_date', 'start_time', 'end_time'];
-            const allowedCols = [...requiredCols, 'test_group_name'];
-
-            const missing = requiredCols.filter(col => !headers.includes(col));
+            const firstItem = jsonData[0];
+            const missing = requiredCols.filter(col => !Object.prototype.hasOwnProperty.call(firstItem, col));
+            
             if (missing.length > 0) {
-                alert(`Invalid CSV Format.\nMissing required columns: ${missing.join(', ')}`);
-                showError('Missing Columns', `Invalid CSV Format.\nMissing required columns:\n${missing.join(', ')}`);
+                alert(`Invalid JSON Format.\nMissing required keys in first item: ${missing.join(', ')}`);
                 return;
             }
-
-            const unknown = headers.filter(col => !allowedCols.includes(col));
-            if (unknown.length > 0) {
-                alert(`Invalid CSV Format.\nUnknown columns detected: ${unknown.join(', ')}\n\nPlease ensure only the following columns are present:\n${allowedCols.join(', ')}`);
-                showError('Unknown Columns', `Invalid CSV Format.\nUnknown columns detected: ${unknown.join(', ')}\n\nPlease ensure only the following columns are present:\n${allowedCols.join(', ')}`);
-                return;
-            }
-            const testNameIdx = headers.indexOf('test_name');
-            const statusIdx = headers.indexOf('status');
-            const runIdIdx = headers.indexOf('run_id');
-            const dateIdx = headers.indexOf('run_date');
-            const startIdx = headers.indexOf('start_time');
-            const endIdx = headers.indexOf('end_time');
-            const groupNameIdx = headers.indexOf('test_group_name');
 
             const testResults = {};
             const testGroups = {};
@@ -1618,42 +1593,34 @@
             let totalFailed = 0;
             let totalSkipped = 0;
 
-            for (let i = 1; i < lines.length; i++) {
-                const cols = lines[i].split(',');
-                if (cols.length <= Math.max(testNameIdx, statusIdx)) continue;
-                if (cols.length <= testNameIdx || cols.length <= statusIdx) continue;
-
-                const rawTestName = cols[testNameIdx].trim();
+            for (const item of jsonData) {
+                const rawTestName = item.test_name ? String(item.test_name).trim() : '';
                 if (!rawTestName) continue;
 
-                let status = cols[statusIdx].trim().toLowerCase();
-                // Normalize status values from CSV (pass/fail/skip -> passed/failed/skipped)
+                let status = item.status ? String(item.status).trim().toLowerCase() : '';
                 if (status === 'pass') status = 'passed';
                 else if (status === 'fail') status = 'failed';
                 else if (status === 'skip') status = 'skipped';
+
                 let groupName = '--';
-                if (groupNameIdx !== -1 && cols[groupNameIdx]) {
-                    const trimmed = cols[groupNameIdx].trim();
+                if (item.test_group_name) {
+                    const trimmed = String(item.test_group_name).trim();
                     if (trimmed) groupName = trimmed;
                 }
 
-                // Use composite key to distinguish tests with same name but different group
                 const testKey = `${rawTestName}|${groupName}`;
-                let runId = '';
-
-                if (runIdIdx !== -1 && cols[runIdIdx]) {
-                    runId = cols[runIdIdx].trim();
-                    if (runId) runIds.add(runId);
-                }
+                
+                let runId = item.run_id ? String(item.run_id).trim() : '';
+                if (runId) runIds.add(runId);
 
                 if (runId) {
-                    const currentStartTime = startIdx !== -1 ? cols[startIdx] : null;
-                    const currentEndTime = endIdx !== -1 ? cols[endIdx] : null;
+                    const currentStartTime = item.start_time || null;
+                    const currentEndTime = item.end_time || null;
 
                     if (!runStatsMap[runId]) {
                         runStatsMap[runId] = { 
-                            id: runId, 
-                            date: dateIdx !== -1 ? cols[dateIdx] : '', 
+                            id: runId,
+                            date: item.run_date || '',
                             passed: 0, failed: 0, skipped: 0, total: 0,
                             startTime: currentStartTime,
                             endTime: currentEndTime
@@ -1697,9 +1664,9 @@
                 testDetails[testKey].push({
                     runId: runId,
                     status: status,
-                    date: dateIdx !== -1 ? cols[dateIdx] : '-',
-                    start: startIdx !== -1 ? cols[startIdx] : '-',
-                    end: endIdx !== -1 ? cols[endIdx] : '-'
+                    date: item.run_date || '-',
+                    start: item.start_time || '-',
+                    end: item.end_time || '-'
                 });
 
                 if (runId) {
@@ -1742,7 +1709,6 @@
             updateInsights();
 
             document.getElementById('dashboard').classList.remove('hidden');
-            document.getElementById('emptyState').classList.add('hidden');
              document.getElementById('details').classList.remove('hidden');
         }
 
