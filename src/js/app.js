@@ -25,9 +25,10 @@ let advancedFilters = {
     durationMin: '',
     durationMax: ''
 };
-const itemsPerPage = 15;
+const itemsPerPage = 20;
 
 function switchTab(tabName) {
+    // Remove active class from all tabs
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`tab-${tabName}`).classList.add('active');
 
@@ -41,24 +42,12 @@ function switchTab(tabName) {
         document.getElementById('content-insights').classList.remove('hidden');
     } else if (tabName === 'tests') {
         document.getElementById('details').classList.remove('hidden');
+        // Force re-render after a brief delay to ensure layout is calculated
+        setTimeout(() => {
+            renderTable();
+        }, 0);
     } else if (tabName === 'deepThink') {
         document.getElementById('content-deepThink').classList.remove('hidden');
-    }
-}
-
-function toggleInsights() {
-    const container = document.getElementById('tabContentContainer');
-    const icon = document.getElementById('insightsToggleIcon');
-    const summary = document.getElementById('insightsSummary');
-
-    container.classList.toggle('collapsed');
-
-    if (container.classList.contains('collapsed')) {
-        icon.textContent = 'expand_more';
-        summary.classList.remove('hidden');
-    } else {
-        icon.textContent = 'expand_less';
-        summary.classList.add('hidden');
     }
 }
 
@@ -1227,11 +1216,6 @@ function updateInsights(runIds = []) {
     if (brokenRateNum > 5) brokenRateEl.classList.add('text-red');
     else if (brokenRateNum > 0) brokenRateEl.classList.add('text-warning');
     else brokenRateEl.classList.add('text-green');
-
-    document.getElementById('summaryRuns').textContent = totalRuns > 0 ? totalRuns : 1;
-    document.getElementById('summaryTests').textContent = totalTests;
-    document.getElementById('summaryFlaky').textContent = flakyRateText;
-    document.getElementById('summaryBroken').textContent = brokenRateText;
 
     document.getElementById('flakyCount').textContent = flakyCount;
     document.getElementById('brokenCount').textContent = brokenCount;
