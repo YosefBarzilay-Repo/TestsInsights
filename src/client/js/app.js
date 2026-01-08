@@ -1251,6 +1251,12 @@ function updateInsights(runIds = []) {
     const pctFailed = totalExecutions ? (totalFailed / totalExecutions) * 100 : 0;
     const pctSkipped = totalExecutions ? (totalSkipped / totalExecutions) * 100 : 0;
 
+    // Update filter bar counts
+    const runCountEl = document.getElementById('filterBarRunCount');
+    const testCountEl = document.getElementById('filterBarTestCount');
+    if (runCountEl) runCountEl.textContent = totalRuns;
+    if (testCountEl) testCountEl.textContent = totalTests;
+
     document.getElementById('countPassed').textContent = totalPassed;
     document.getElementById('countFailed').textContent = totalFailed;
     document.getElementById('countSkipped').textContent = totalSkipped;
@@ -1293,8 +1299,6 @@ function updateInsights(runIds = []) {
     document.getElementById('brokenCount').textContent = brokenCount;
     document.getElementById('totalTests').textContent = totalTests;
     document.getElementById('totalTestsBroken').textContent = totalTests;
-    document.getElementById('totalTestsDisplay').textContent = totalTests;
-    document.getElementById('totalRuns').textContent = totalRuns > 0 ? totalRuns : 1;
 
     // --- Group Status Deviation Logic ---
     const groupStats = {};

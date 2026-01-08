@@ -109,6 +109,14 @@
                     <button class="btn-icon" onclick="toggleFilterCompactMode()" title="Toggle Compact Mode">
                         <span class="material-symbols-outlined" id="compactModeIcon">unfold_less</span>
                     </button>
+                    <div id="runTestCounts" style="display: flex; align-items: center; gap: 1rem; margin-left: 1rem; padding-left: 1rem; border-left: 1px solid var(--border-color);">
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">
+                            <strong id="filterBarRunCount" style="font-size: 1rem; color: var(--text-main); font-weight: 600;">-</strong> Runs
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">
+                            <strong id="filterBarTestCount" style="font-size: 1rem; color: var(--text-main); font-weight: 600;">-</strong> Tests
+                        </div>
+                    </div>
                 <button class="btn btn-primary" disabled style="margin-left: auto; opacity: 0.5; cursor: not-allowed;">
                     <span class="material-symbols-outlined">sensors</span>
                     Live
@@ -144,43 +152,6 @@
                 <div id="tabContentContainer">
                     <div id="content-insights">
                         <div id="insightsContent" class="insights-grid">
-                            <!-- FR-08: Execution Summary Card -->
-                            <div class="card">
-                                <div class="card-title">Execution Summary</div>
-                                <div class="stats-grid">
-                                    <div class="stat-item">
-                                        <div class="stat-icon">
-                                            <!-- Play/Run Icon -->
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" stroke-linejoin="round">
-                                                <polygon points="5 3 19 12 5 21 5 3" />
-                                            </svg>
-                                        </div>
-                                        <div class="stat-content">
-                                            <div class="stat-value-small" id="totalRuns">-</div>
-                                            <div class="stat-label">Total Runs</div>
-                                        </div>
-                                    </div>
-                                    <div class="stat-item">
-                                        <div class="stat-icon">
-                                            <!-- Beaker Icon -->
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M4.5 3h15" />
-                                                <path d="M6 3v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V3" />
-                                                <path d="M6 14h12" />
-                                            </svg>
-                                        </div>
-                                        <div class="stat-content">
-                                            <div class="stat-value-small" id="totalTestsDisplay">-</div>
-                                            <div class="stat-label">Total Tests</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
                             <!-- Status Distribution Card -->
                             <div class="card">
                                 <div class="card-title"
