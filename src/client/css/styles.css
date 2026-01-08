@@ -1061,6 +1061,8 @@ td {
     border: 1px solid var(--border-color);
     pointer-events: none;
     z-index: 20;
+    transform: scale(0.6);
+    transform-origin: bottom right;
 }
 
 .trend-chart-container:hover .trend-chart-controls {

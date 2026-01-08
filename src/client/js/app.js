@@ -1995,3 +1995,52 @@ function exportDataToCsv() {
         });
     });
 })();
+
+let isFilterCompact = false;
+
+function toggleFilterCompactMode() {
+    isFilterCompact = !isFilterCompact;
+    const inputs = document.getElementById('filterInputsContainer');
+    const summary = document.getElementById('filterSummaryContainer');
+    const icon = document.getElementById('compactModeIcon');
+    const chartContainer = document.querySelector('.trend-chart-container');
+
+    if (isFilterCompact) {
+        inputs.classList.add('hidden');
+        summary.classList.remove('hidden');
+        if (chartContainer) chartContainer.classList.add('hidden');
+        icon.textContent = 'unfold_more';
+        updateFilterSummary();
+    } else {
+        inputs.classList.remove('hidden');
+        summary.classList.add('hidden');
+        if (chartContainer) chartContainer.classList.remove('hidden');
+        icon.textContent = 'unfold_less';
+    }
+}
+
+function updateFilterSummary() {
+    const type = document.getElementById('globalRunType').value;
+    const ver = document.getElementById('globalVersion').value;
+    const dateText = document.getElementById('dateFilterText').textContent;
+    const container = document.getElementById('filterSummaryContainer');
+    container.innerHTML = '';
+
+    const createBadge = (label, value) => {
+        const badge = document.createElement('span');
+        badge.style.cssText = 'background: #e5e7eb; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; color: #374151; border: 1px solid #d1d5db;';
+        badge.innerHTML = `<strong>${label}:</strong> ${value}`;
+        return badge;
+    };
+
+    let hasFilter = false;
+    if (type) { container.appendChild(createBadge('Type', type)); hasFilter = true; }
+    if (ver) { container.appendChild(createBadge('Version', ver)); hasFilter = true; }
+    if (dateText && dateText !== 'All Dates') { container.appendChild(createBadge('Date', dateText)); hasFilter = true; }
+    if (!hasFilter) {
+        const badge = document.createElement('span');
+        badge.style.cssText = 'color: #6b7280; font-style: italic; font-size: 0.85rem;';
+        badge.textContent = 'No filters applied';
+        container.appendChild(badge);
+    }
+}

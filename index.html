@@ -40,6 +40,7 @@
         <div id="dashboard" class="dashboard hidden">
             <div id="runFiltersBar" class="run-filters-bar" style="display: flex; flex-direction: column; gap: 1rem; align-items: stretch;">
                 <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                    <div id="filterInputsContainer" style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
                         <select id="globalRunType" class="form-input" style="width: auto;" onchange="applyGlobalRunFilters()">
                             <option value="">All Types</option>
                         </select>
@@ -103,6 +104,11 @@
                         </div>
                     </div>
                 </div>
+                    </div>
+                    <div id="filterSummaryContainer" class="hidden" style="display: flex; align-items: center; gap: 0.5rem;"></div>
+                    <button class="btn-icon" onclick="toggleFilterCompactMode()" title="Toggle Compact Mode">
+                        <span class="material-symbols-outlined" id="compactModeIcon">unfold_less</span>
+                    </button>
                 <button class="btn btn-primary" disabled style="margin-left: auto; opacity: 0.5; cursor: not-allowed;">
                     <span class="material-symbols-outlined">sensors</span>
                     Live
