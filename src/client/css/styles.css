@@ -216,7 +216,7 @@ body {
     width: 100%;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
 }
 
 .dashboard {
@@ -224,7 +224,7 @@ body {
     flex-direction: column;
     flex: 1;
     min-height: 0;
-    overflow: hidden;
+    overflow: visible;
     width: 100%;
 }
 
@@ -233,24 +233,18 @@ body {
     flex-direction: column;
     flex: 1;
     min-height: 0;
-    overflow: hidden;
 }
 
 /* Tab Content Container - CRITICAL FOR SCROLLING */
 #tabContentContainer {
     display: flex;
     flex-direction: column;
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
 }
 
 /* All tab content panels - CRITICAL FOR SCROLLING */
 #content-insights,
 #content-deepThink,
 #details {
-    flex: 1;
-    min-height: 0;
     display: flex;
     flex-direction: column;
 }
@@ -258,18 +252,15 @@ body {
 /* Specific styling for insights and deep think */
 #content-insights {
     padding: 1.5rem;
-    overflow-y: auto;
 }
 
 #content-deepThink {
     padding: 1.5rem;
-    overflow-y: auto;
 }
 
 /* Details needs no padding and overflow hidden for table scrolling */
 #details {
     padding: 0;
-    overflow: hidden;
 }
 
 .insights-grid {
@@ -338,20 +329,13 @@ body {
     box-shadow: none;
     border: none;
     margin-top: 0;
-    flex: 1;
-    min-height: 0;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
 }
 
 /* Table Scroll Wrapper - WHERE SCROLLING HAPPENS */
 .table-scroll-wrapper {
-    flex: 1;
-    height: 0;
-    overflow: auto;
-     max-height: 300px;
-
+    overflow-x: auto;
 }
 
 table {
