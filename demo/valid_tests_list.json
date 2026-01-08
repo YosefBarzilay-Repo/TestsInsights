@@ -3,7 +3,7 @@
     "run_id": "run_0001_20241201",
     "test_name": "test_api_upload_image_0000",
     "test_group_name": "",
-    "status": "pass",
+    "status": "flaky",
     "run_date": "2024-12-01",
     "start_time": "09:21:00",
     "end_time": "09:24:38"

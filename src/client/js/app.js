@@ -949,7 +949,7 @@ function renderTable() {
     thead.innerHTML = `
                 <tr>
                     <th>Test Name</th>
-                    <th>Test Group</th>
+                    <th>Group</th>
                     <th>Status</th>
                     <th>Run ID</th>
                     <th>Start Time</th>
@@ -1198,6 +1198,9 @@ function updateInsights(runIds = []) {
     document.getElementById('barPassed').style.width = pctPassed + '%';
     document.getElementById('barFailed').style.width = pctFailed + '%';
     document.getElementById('barSkipped').style.width = pctSkipped + '%';
+    document.getElementById('percentPassed').textContent = pctPassed.toFixed(1);
+    document.getElementById('percentFailed').textContent = pctFailed.toFixed(1);
+    document.getElementById('percentSkipped').textContent = pctSkipped.toFixed(1);
 
     const flakyRateNum = totalTests ? (flakyCount / totalTests) * 100 : 0;
     const flakyRateText = flakyRateNum.toFixed(1) + '%';
