@@ -768,6 +768,16 @@ function renderTable() {
     const isSearchActive = filterText !== '';
     const isAdvancedActive = Object.values(advancedFilters).some(v => v !== '');
 
+    // Load Settings
+    const settings = JSON.parse(localStorage.getItem('insightsSettings')) || {
+        continuousFailVal: 7,
+        continuousFailUnit: 'weeks',
+        newFailureVal: 7,
+        flakyThreshold: 1
+    };
+    const newFailureDays = parseInt(settings.newFailureVal) || 7;
+    const flakyThreshold = parseInt(settings.flakyThreshold) || 1;
+
     const clearBtn = document.getElementById('btnClearFilters');
     if (clearBtn) {
         if (isSearchActive || isAdvancedActive) {
@@ -826,7 +836,7 @@ function renderTable() {
             } else if (currentFilter === 'skipped-any') {
                 return statuses.has('skipped');
             } else if (currentFilter === 'new-failure') {
-                // Check if test started failing in the last 7 days
+                // Check if test started failing in the last X days
                 const details = globalTestDetails[name] || [];
                 const failures = details.filter(d => d.status === 'failed');
                 if (failures.length === 0) return false;
@@ -844,9 +854,9 @@ function renderTable() {
                 // Anchor date: latest run date in global stats
                 const dates = globalRunStats.map(r => r.date).filter(d => d).sort();
                 const latestDate = dates.length > 0 ? new Date(dates[dates.length - 1]) : new Date();
-                const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+                const windowMs = newFailureDays * 24 * 60 * 60 * 1000;
                 const diff = latestDate - earliestFailDate;
-                return diff >= 0 && diff <= sevenDaysMs;
+                return diff >= 0 && diff <= windowMs;
             }
             return true;
         });
@@ -897,9 +907,20 @@ function renderTable() {
 
         const totalRuns = passedCount + failedCount + skippedCount;
         const passRate = totalRuns ? (passedCount / totalRuns) * 100 : 0;
-        const isFlaky = passedCount > 0 && failedCount > 0;
-        const isBroken = !isFlaky && failedCount > 0;
-
+        
+        // Calculate Flaky (based on flips)
+        let flips = 0;
+        if (passedCount > 0 && failedCount > 0) {
+            const sortedDetails = details.slice().sort((a, b) => (a.runId > b.runId ? 1 : -1));
+            let lastStatus = null;
+            sortedDetails.forEach(d => {
+                if (d.status === 'skipped') return;
+                if (lastStatus && d.status !== lastStatus) flips++;
+                lastStatus = d.status;
+            });
+        }
+        const isFlaky = flips >= flakyThreshold;
+        const isBroken = !isFlaky && passedCount === 0 && failedCount > 0; // Simple definition for table row status
 
         let status = 'Passed'; // Default assumption if not broken/flaky
         if (isFlaky) status = 'Flaky';
@@ -1152,11 +1173,22 @@ function openTestDetails(testName) {
 function updateInsights(runIds = []) {
     let totalRuns, totalTests, totalPassed = 0, totalFailed = 0, totalSkipped = 0, flakyCount = 0, brokenCount = 0;
     let newFailureCount = 0;
+
+    // Load Settings
+    const settings = JSON.parse(localStorage.getItem('insightsSettings')) || {
+        continuousFailVal: 7,
+        continuousFailUnit: 'weeks',
+        newFailureVal: 7,
+        flakyThreshold: 1
+    };
+    const newFailureDays = parseInt(settings.newFailureVal) || 7;
+    const flakyThreshold = parseInt(settings.flakyThreshold) || 1;
+    const contFailVal = parseInt(settings.continuousFailVal) || 7;
+    const contFailUnit = settings.continuousFailUnit || 'weeks';
     
-    // Determine anchor date for "First Time Failure" (Last 7 days relative to latest run)
     const allDates = globalRunStats.map(r => r.date).filter(d => d).sort();
     const latestDate = allDates.length > 0 ? new Date(allDates[allDates.length - 1]) : new Date();
-    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+    const newFailureWindowMs = newFailureDays * 24 * 60 * 60 * 1000;
 
     if (runIds && runIds.length > 0) {
         const selectedRunData = globalRunStats.filter(r => runIds.includes(r.id));
@@ -1174,26 +1206,50 @@ function updateInsights(runIds = []) {
         totalTests = testsInRuns.size;
 
         testsInRuns.forEach(testName => {
-            const statuses = globalTestResults[testName];
-            if (statuses.has('passed') && statuses.has('failed')) {
-                flakyCount++;
-            }
-            if (!statuses.has('passed') && statuses.has('failed')) {
-                brokenCount++;
-            }
             const details = globalTestDetails[testName] || [];
-            let hasPass = false;
-            let hasFail = false;
+            // Filter and Sort
+            const runDetails = details.filter(d => runIds.includes(d.runId))
+                                      .sort((a, b) => (a.runId > b.runId ? 1 : -1));
 
-            details.forEach(d => {
-                if (runIds.includes(d.runId)) {
-                    if (d.status === 'passed') hasPass = true;
-                    else if (d.status === 'failed') hasFail = true;
-                }
+            // Flaky Check (Flips)
+            let flips = 0;
+            let lastStatus = null;
+            runDetails.forEach(d => {
+                if (d.status === 'skipped') return;
+                if (lastStatus && d.status !== lastStatus) flips++;
+                lastStatus = d.status;
             });
+            if (flips >= flakyThreshold) flakyCount++;
 
-            if (hasPass && hasFail) flakyCount++;
-            if (!hasPass && hasFail) brokenCount++;
+            // Broken Check (Continuous Failing)
+            // Check if latest is failed
+            if (runDetails.length > 0 && runDetails[runDetails.length - 1].status === 'failed') {
+                // Calculate streak
+                let streakStartDate = null;
+                let streakCount = 0;
+                for (let i = runDetails.length - 1; i >= 0; i--) {
+                    if (runDetails[i].status === 'failed') {
+                        streakCount++;
+                        streakStartDate = runDetails[i].date;
+                    } else if (runDetails[i].status === 'passed') {
+                        break;
+                    }
+                }
+                
+                let isBroken = false;
+                if (contFailUnit === 'runs') {
+                    if (streakCount >= contFailVal) isBroken = true;
+                } else {
+                    // Time based
+                    const lastDate = new Date(runDetails[runDetails.length - 1].date);
+                    const startDate = new Date(streakStartDate);
+                    const diffTime = Math.abs(lastDate - startDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                    const thresholdDays = contFailUnit === 'weeks' ? contFailVal * 7 : contFailVal;
+                    if (diffDays >= thresholdDays) isBroken = true;
+                }
+                if (isBroken) brokenCount++;
+            }
 
             // First Time Failure Check
             const allDetails = globalTestDetails[testName] || [];
@@ -1206,7 +1262,7 @@ function updateInsights(runIds = []) {
                     if (!earliestFailDate || d < earliestFailDate) earliestFailDate = d;
                 });
                 const diff = earliestFailDate ? (latestDate - earliestFailDate) : -1;
-                if (diff >= 0 && diff <= sevenDaysMs) newFailureCount++;
+                if (diff >= 0 && diff <= newFailureWindowMs) newFailureCount++;
             }
         });
 
@@ -1221,14 +1277,47 @@ function updateInsights(runIds = []) {
         });
 
         for (const testName in globalTestResults) {
-            const statuses = globalTestResults[testName];
-            if (statuses.has('passed') && statuses.has('failed')) {
-                flakyCount++;
-            }
-            if (!statuses.has('passed') && statuses.has('failed')) {
-                brokenCount++;
-            }
+            const details = globalTestDetails[testName] || [];
+            // Sort
+            const sortedDetails = details.slice().sort((a, b) => (a.runId > b.runId ? 1 : -1));
 
+            // Flaky Check
+            let flips = 0;
+            let lastStatus = null;
+            sortedDetails.forEach(d => {
+                if (d.status === 'skipped') return;
+                if (lastStatus && d.status !== lastStatus) flips++;
+                lastStatus = d.status;
+            });
+            if (flips >= flakyThreshold) flakyCount++;
+
+            // Broken Check
+            if (sortedDetails.length > 0 && sortedDetails[sortedDetails.length - 1].status === 'failed') {
+                let streakStartDate = null;
+                let streakCount = 0;
+                for (let i = sortedDetails.length - 1; i >= 0; i--) {
+                    if (sortedDetails[i].status === 'failed') {
+                        streakCount++;
+                        streakStartDate = sortedDetails[i].date;
+                    } else if (sortedDetails[i].status === 'passed') {
+                        break;
+                    }
+                }
+                
+                let isBroken = false;
+                if (contFailUnit === 'runs') {
+                    if (streakCount >= contFailVal) isBroken = true;
+                } else {
+                    const lastDate = new Date(sortedDetails[sortedDetails.length - 1].date);
+                    const startDate = new Date(streakStartDate);
+                    const diffTime = Math.abs(lastDate - startDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    const thresholdDays = contFailUnit === 'weeks' ? contFailVal * 7 : contFailVal;
+                    if (diffDays >= thresholdDays) isBroken = true;
+                }
+                if (isBroken) brokenCount++;
+            }
+            
             // First Time Failure Check
             const allDetails = globalTestDetails[testName] || [];
             const failures = allDetails.filter(d => d.status === 'failed');
@@ -1240,7 +1329,7 @@ function updateInsights(runIds = []) {
                     if (!earliestFailDate || d < earliestFailDate) earliestFailDate = d;
                 });
                 const diff = earliestFailDate ? (latestDate - earliestFailDate) : -1;
-                if (diff >= 0 && diff <= sevenDaysMs) newFailureCount++;
+                if (diff >= 0 && diff <= newFailureWindowMs) newFailureCount++;
             }
         }
     }
