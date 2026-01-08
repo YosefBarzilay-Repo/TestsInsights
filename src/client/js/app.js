@@ -1226,6 +1226,82 @@ function updateInsights(runIds = []) {
     document.getElementById('totalTestsBroken').textContent = totalTests;
     document.getElementById('totalTestsDisplay').textContent = totalTests;
     document.getElementById('totalRuns').textContent = totalRuns > 0 ? totalRuns : 1;
+
+    // --- Group Status Deviation Logic ---
+    const groupStats = {};
+    const targetRunIds = (runIds && runIds.length > 0) ? new Set(runIds) : null;
+
+    for (const [testName, details] of Object.entries(globalTestDetails)) {
+        const rawGroup = globalTestGroups[testName];
+        const group = (rawGroup && rawGroup !== '--') ? rawGroup : 'Unassigned';
+
+        if (!groupStats[group]) groupStats[group] = { passed: 0, failed: 0, skipped: 0, total: 0 };
+
+        details.forEach(d => {
+            if (targetRunIds && !targetRunIds.has(d.runId)) return;
+            if (d.status === 'passed') groupStats[group].passed++;
+            else if (d.status === 'failed') groupStats[group].failed++;
+            else if (d.status === 'skipped') groupStats[group].skipped++;
+            groupStats[group].total++;
+        });
+    }
+
+    const groupContainer = document.getElementById('groupDeviationContainer');
+    if (groupContainer) {
+        groupContainer.innerHTML = '';
+        const sortedGroups = Object.entries(groupStats).sort((a, b) => {
+            if (b[1].failed !== a[1].failed) return b[1].failed - a[1].failed; // Sort by failures desc
+            return b[1].total - a[1].total; // Then by total desc
+        });
+
+        if (sortedGroups.length === 0) {
+            groupContainer.innerHTML = '<div style="color:#9ca3af; font-size:0.9rem;">No data available</div>';
+        } else {
+            const table = document.createElement('table');
+            table.style.width = '100%';
+            table.style.borderCollapse = 'collapse';
+            table.style.fontSize = '0.85rem';
+
+            const thead = document.createElement('thead');
+            thead.innerHTML = `
+                <tr style="text-align: left; border-bottom: 1px solid #e5e7eb;">
+                    <th style="padding: 0.5rem; font-weight: 600; color: #374151; position: sticky; top: 0; background: #fff; z-index: 1;">Group</th>
+                    <th style="padding: 0.5rem; font-weight: 600; color: #374151; text-align: right; position: sticky; top: 0; background: #fff; z-index: 1;">P / F / S</th>
+                    <th style="padding: 0.5rem; font-weight: 600; color: #374151; width: 40%; position: sticky; top: 0; background: #fff; z-index: 1;">Distribution</th>
+                </tr>
+            `;
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+            sortedGroups.forEach(([groupName, stats]) => {
+                if (stats.total === 0) return;
+                const pPass = (stats.passed / stats.total) * 100;
+                const pFail = (stats.failed / stats.total) * 100;
+                const pSkip = (stats.skipped / stats.total) * 100;
+
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #f3f4f6';
+                tr.innerHTML = `
+                    <td style="padding: 0.5rem; font-weight: 500; color: #374151;">${groupName}</td>
+                    <td style="padding: 0.5rem; text-align: right;">
+                        <span class="text-green">${stats.passed}</span> / 
+                        <span class="text-red">${stats.failed}</span> / 
+                        <span style="color: #9ca3af;">${stats.skipped}</span>
+                    </td>
+                    <td style="padding: 0.5rem; vertical-align: middle;">
+                        <div class="progress-track" style="height: 6px; width: 100%; margin: 0;">
+                            <div class="progress-fill bg-green" style="width: ${pPass}%"></div>
+                            <div class="progress-fill bg-red" style="width: ${pFail}%"></div>
+                            <div class="progress-fill bg-grey" style="width: ${pSkip}%"></div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            groupContainer.appendChild(table);
+        }
+    }
 }
 
 function toggleRunFilter(runId, event) {
