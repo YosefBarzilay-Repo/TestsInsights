@@ -134,36 +134,6 @@
                 <div id="tabContentContainer">
                     <div id="content-insights">
                         <div id="insightsContent" class="insights-grid">
-                            <!-- Status Distribution Card -->
-                            <div class="card">
-                                <div class="card-title"
-                                    style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span>Status Distribution</span>
-                                    <span id="totalExecutionsClickable" class="clickable-legend"
-                                        style="font-size: 0.75rem; color: #6b7280; text-transform: none; font-weight: normal;">Total:
-                                        <strong id="totalExecutions" style="color: #1f2937;">-</strong></span>
-                                </div>
-                                <div class="status-legend">
-                                    <div id="passedFilterClickable" class="legend-item clickable-legend">
-                                        <span class="legend-dot bg-green"></span>
-                                        <span>Passed: <strong id="percentPassed">-</strong>% (<span id="countPassed">-</span>)</span>
-                                    </div>
-                                    <div id="failedFilterClickable" class="legend-item clickable-legend">
-                                        <span class="legend-dot bg-red"></span>
-                                        <span>Failed: <strong id="percentFailed">-</strong>% (<span id="countFailed">-</span>)</span>
-                                    </div>
-                                    <div id="skippedFilterClickable" class="legend-item clickable-legend">
-                                        <span class="legend-dot bg-grey"></span>
-                                        <span>Skipped: <strong id="percentSkipped">-</strong>% (<span id="countSkipped">-</span>)</span>
-                                    </div>
-                                </div>
-                                <div class="progress-track">
-                                    <div id="barPassed" class="progress-fill bg-green" style="width: 0%"></div>
-                                    <div id="barFailed" class="progress-fill bg-red" style="width: 0%"></div>
-                                    <div id="barSkipped" class="progress-fill bg-grey" style="width: 0%"></div>
-                                </div>
-                            </div>
-
                             <!-- FR-08: Execution Summary Card -->
                             <div class="card">
                                 <div class="card-title">Execution Summary</div>
@@ -201,6 +171,36 @@
                                 </div>
                             </div>
 
+                            <!-- Status Distribution Card -->
+                            <div class="card">
+                                <div class="card-title"
+                                    style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span>Status Distribution</span>
+                                    <span id="totalExecutionsClickable" class="clickable-legend"
+                                        style="font-size: 0.75rem; color: #6b7280; text-transform: none; font-weight: normal;">Total:
+                                        <strong id="totalExecutions" style="color: #1f2937;">-</strong></span>
+                                </div>
+                                <div class="status-legend">
+                                    <div id="passedFilterClickable" class="legend-item clickable-legend">
+                                        <span class="legend-dot bg-green"></span>
+                                        <span>Passed: <strong id="percentPassed">-</strong>% (<span id="countPassed">-</span>)</span>
+                                    </div>
+                                    <div id="failedFilterClickable" class="legend-item clickable-legend">
+                                        <span class="legend-dot bg-red"></span>
+                                        <span>Failed: <strong id="percentFailed">-</strong>% (<span id="countFailed">-</span>)</span>
+                                    </div>
+                                    <div id="skippedFilterClickable" class="legend-item clickable-legend">
+                                        <span class="legend-dot bg-grey"></span>
+                                        <span>Skipped: <strong id="percentSkipped">-</strong>% (<span id="countSkipped">-</span>)</span>
+                                    </div>
+                                </div>
+                                <div class="progress-track">
+                                    <div id="barPassed" class="progress-fill bg-green" style="width: 0%"></div>
+                                    <div id="barFailed" class="progress-fill bg-red" style="width: 0%"></div>
+                                    <div id="barSkipped" class="progress-fill bg-grey" style="width: 0%"></div>
+                                </div>
+                            </div>
+
                             <!-- FR-06 & FR-08: Flaky Tests Card -->
                             <div class="card">
                                 <div class="card-title">Flaky Tests</div>
@@ -221,8 +221,17 @@
                                 </div>
                             </div>
 
+                            <!-- First Time Failure Card -->
+                            <div class="card">
+                                <div class="card-title">First Time Failure</div>
+                                <div class="card-value" id="newFailureRate">-</div>
+                                <div class="card-subtext">
+                                    <span id="newFailureCount" class="clickable-count">-</span> tests started failing in last 7 days
+                                </div>
+                            </div>
+
                             <!-- Group Status Deviation Card -->
-                            <div class="card" style="grid-column: 1 / -1;">
+                            <div class="card">
                                 <div class="card-title">Group Status Deviation</div>
                                 <div id="groupDeviationContainer" style="margin-top: 1rem; max-height: 300px; overflow-y: auto; padding-right: 5px;"></div>
                             </div>

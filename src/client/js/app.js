@@ -361,6 +361,9 @@ document.getElementById('flakyCount').addEventListener('click', function () {
 document.getElementById('brokenCount').addEventListener('click', function () {
     setFilter(currentFilter === 'broken' ? 'all' : 'broken');
 });
+document.getElementById('newFailureCount').addEventListener('click', function () {
+    setFilter(currentFilter === 'new-failure' ? 'all' : 'new-failure');
+});
 
 document.getElementById('passedFilterClickable').addEventListener('click', () => {
     setFilter(currentFilter === 'passed-only' ? 'all' : 'passed-only');
@@ -396,6 +399,7 @@ function setFilter(filter) {
     document.getElementById('flakyCount').classList.toggle('filter-active', filter === 'flaky');
     // Update broken count link style
     document.getElementById('brokenCount').classList.toggle('filter-active', filter === 'broken');
+    document.getElementById('newFailureCount').classList.toggle('filter-active', filter === 'new-failure');
 
     // NEW: update status distribution legend styles
     document.getElementById('passedFilterClickable').classList.toggle('filter-active', filter === 'passed-only');
@@ -821,6 +825,28 @@ function renderTable() {
                 return statuses.size === 1 && statuses.has('passed');
             } else if (currentFilter === 'skipped-any') {
                 return statuses.has('skipped');
+            } else if (currentFilter === 'new-failure') {
+                // Check if test started failing in the last 7 days
+                const details = globalTestDetails[name] || [];
+                const failures = details.filter(d => d.status === 'failed');
+                if (failures.length === 0) return false;
+
+                // Find earliest failure date
+                let earliestFailDate = null;
+                failures.forEach(f => {
+                    if (!f.date || f.date === '-') return;
+                    const d = new Date(f.date);
+                    if (!earliestFailDate || d < earliestFailDate) earliestFailDate = d;
+                });
+
+                if (!earliestFailDate) return false;
+
+                // Anchor date: latest run date in global stats
+                const dates = globalRunStats.map(r => r.date).filter(d => d).sort();
+                const latestDate = dates.length > 0 ? new Date(dates[dates.length - 1]) : new Date();
+                const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+                const diff = latestDate - earliestFailDate;
+                return diff >= 0 && diff <= sevenDaysMs;
             }
             return true;
         });
@@ -1125,6 +1151,12 @@ function openTestDetails(testName) {
 
 function updateInsights(runIds = []) {
     let totalRuns, totalTests, totalPassed = 0, totalFailed = 0, totalSkipped = 0, flakyCount = 0, brokenCount = 0;
+    let newFailureCount = 0;
+    
+    // Determine anchor date for "First Time Failure" (Last 7 days relative to latest run)
+    const allDates = globalRunStats.map(r => r.date).filter(d => d).sort();
+    const latestDate = allDates.length > 0 ? new Date(allDates[allDates.length - 1]) : new Date();
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
 
     if (runIds && runIds.length > 0) {
         const selectedRunData = globalRunStats.filter(r => runIds.includes(r.id));
@@ -1162,6 +1194,20 @@ function updateInsights(runIds = []) {
 
             if (hasPass && hasFail) flakyCount++;
             if (!hasPass && hasFail) brokenCount++;
+
+            // First Time Failure Check
+            const allDetails = globalTestDetails[testName] || [];
+            const failures = allDetails.filter(d => d.status === 'failed');
+            if (failures.length > 0) {
+                let earliestFailDate = null;
+                failures.forEach(f => {
+                    if (!f.date || f.date === '-') return;
+                    const d = new Date(f.date);
+                    if (!earliestFailDate || d < earliestFailDate) earliestFailDate = d;
+                });
+                const diff = earliestFailDate ? (latestDate - earliestFailDate) : -1;
+                if (diff >= 0 && diff <= sevenDaysMs) newFailureCount++;
+            }
         });
 
     } else { // Global stats
@@ -1181,6 +1227,20 @@ function updateInsights(runIds = []) {
             }
             if (!statuses.has('passed') && statuses.has('failed')) {
                 brokenCount++;
+            }
+
+            // First Time Failure Check
+            const allDetails = globalTestDetails[testName] || [];
+            const failures = allDetails.filter(d => d.status === 'failed');
+            if (failures.length > 0) {
+                let earliestFailDate = null;
+                failures.forEach(f => {
+                    if (!f.date || f.date === '-') return;
+                    const d = new Date(f.date);
+                    if (!earliestFailDate || d < earliestFailDate) earliestFailDate = d;
+                });
+                const diff = earliestFailDate ? (latestDate - earliestFailDate) : -1;
+                if (diff >= 0 && diff <= sevenDaysMs) newFailureCount++;
             }
         }
     }
@@ -1219,6 +1279,15 @@ function updateInsights(runIds = []) {
     if (brokenRateNum > 5) brokenRateEl.classList.add('text-red');
     else if (brokenRateNum > 0) brokenRateEl.classList.add('text-warning');
     else brokenRateEl.classList.add('text-green');
+
+    const newFailureRateNum = totalTests ? (newFailureCount / totalTests) * 100 : 0;
+    const newFailureRateText = newFailureRateNum.toFixed(1) + '%';
+    const newFailureRateEl = document.getElementById('newFailureRate');
+    newFailureRateEl.textContent = newFailureRateText;
+    newFailureRateEl.className = 'card-value';
+    if (newFailureRateNum > 0) newFailureRateEl.classList.add('text-red');
+    else newFailureRateEl.classList.add('text-green');
+    document.getElementById('newFailureCount').textContent = newFailureCount;
 
     document.getElementById('flakyCount').textContent = flakyCount;
     document.getElementById('brokenCount').textContent = brokenCount;
@@ -1329,6 +1398,7 @@ function toggleRunFilter(runId, event) {
     currentFilter = 'all';
     document.getElementById('flakyCount').classList.remove('filter-active');
     document.getElementById('brokenCount').classList.remove('filter-active');
+    document.getElementById('newFailureCount').classList.remove('filter-active');
     document.getElementById('passedFilterClickable').classList.remove('filter-active');
     document.getElementById('failedFilterClickable').classList.remove('filter-active');
     document.getElementById('skippedFilterClickable').classList.remove('filter-active');
@@ -1615,6 +1685,7 @@ function clearRunSelection() {
     // Reset UI states
     document.getElementById('flakyCount').classList.remove('filter-active');
     document.getElementById('brokenCount').classList.remove('filter-active');
+    document.getElementById('newFailureCount').classList.remove('filter-active');
     document.getElementById('passedFilterClickable').classList.remove('filter-active');
     document.getElementById('failedFilterClickable').classList.remove('filter-active');
     document.getElementById('skippedFilterClickable').classList.remove('filter-active');
