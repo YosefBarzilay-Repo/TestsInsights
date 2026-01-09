@@ -1368,6 +1368,22 @@ function openTestDetails(testName) {
     // Populate Table
     details.forEach(d => {
         const row = document.createElement('tr');
+
+        let durationStr = '-';
+        if (d.start && d.end && d.start !== '-' && d.end !== '-') {
+            const s = parseTimeSeconds(d.start);
+            const e = parseTimeSeconds(d.end);
+            let dur = e - s;
+            if (dur < 0) dur += 86400;
+
+            if (dur < 60) durationStr = dur.toFixed(1) + 's';
+            else {
+                const m = Math.floor(dur / 60);
+                const sRem = (dur % 60).toFixed(0);
+                durationStr = `${m}m ${sRem}s`;
+            }
+        }
+
         let pillClass = 'pill-other';
         if (['passed', 'failed', 'skipped'].includes(d.status)) {
             pillClass = `pill-${d.status}`;
@@ -1376,6 +1392,7 @@ function openTestDetails(testName) {
                     <td>${d.runId}</td>
                     <td>${d.date}</td>
                     <td>${d.start} - ${d.end}</td>
+                    <td style="font-family: var(--font-mono);">${durationStr}</td>
                     <td><span class="status-pill ${pillClass}"></span>${d.status}</td>
                 `;
         tbody.appendChild(row);
