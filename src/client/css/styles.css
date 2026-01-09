@@ -287,11 +287,11 @@ body {
 }
 
 .insights-content-wrapper {
-    padding: 2rem;
+    padding: 1rem;
 }
 
 #content-deepThink {
-    padding: 2rem;
+    padding: 0;
 }
 
 /* Details needs no padding and overflow hidden for table scrolling */
@@ -307,7 +307,7 @@ body {
 
 .card {
     background: var(--bg-surface);
-    padding: 1.5rem;
+    padding: 1.25rem;
     border-radius: var(--radius);
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
@@ -339,10 +339,29 @@ body {
 }
 
 .card-title {
-    font-size: 15px;
+    font-size: 0.75rem;
     font-weight: 600;
-    color: var(--text-main);
-    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+}
+
+.metric-card {
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.metric-card .card-title {
+    margin-bottom: 0.25rem;
+}
+
+.metric-card .card-value {
+    font-size: 2rem;
+    line-height: 1;
+    margin-bottom: 0.25rem;
 }
 
 .card-value {
@@ -460,7 +479,7 @@ td {
 
 /* Toolbar Styles */
 .toolbar {
-    padding: 1rem 2rem;
+    padding: 0.5rem 1rem;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
@@ -468,44 +487,13 @@ td {
     justify-content: space-between;
     align-items: center;
     flex-shrink: 0;
+    min-height: 50px;
 }
 
 @media (min-width: 640px) {
     .toolbar {
         flex-direction: row;
     }
-}
-
-.search-container {
-    display: flex;
-    align-items: center;
-    background-color: var(--bg-body);
-    border-radius: var(--radius);
-    padding: 0.5rem 0.75rem;
-    flex: 1;
-    max-width: 28rem;
-    width: 100%;
-    border: 1px solid transparent;
-    transition: border-color 0.2s;
-}
-
-.search-container:focus-within {
-    border-color: var(--primary);
-}
-
-.search-icon {
-    color: var(--text-muted);
-    margin-right: 0.5rem;
-    font-size: 1.25rem;
-}
-
-.search-input {
-    background: transparent;
-    border: none;
-    outline: none;
-    width: 100%;
-    font-size: 13px;
-    color: var(--text-main);
 }
 
 .actions-container {
@@ -515,6 +503,7 @@ td {
     overflow-x: auto;
     width: 100%;
     padding-bottom: 4px;
+    min-height: 32px;
 }
 
 @media (min-width: 640px) {

@@ -61,22 +61,33 @@
                         </button>
                     </div>
                     <div>
-                        <label class="form-label" style="margin-bottom: 0.25rem;">Run Type</label>
-                        <select id="globalRunType" class="form-input" onchange="applyGlobalRunFilters()"></select>
+                        <div style="position: relative;">
+                            <input type="text" id="globalRunId" class="form-input" list="globalRunIdOptions" onchange="applyGlobalRunFilters()" placeholder="Run ID" style="padding-right: 30px;">
+                            <datalist id="globalRunIdOptions"></datalist>
+                            <span id="clearRunIdBtn" class="material-symbols-outlined hidden" onclick="clearFilter('globalRunId')" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 16px; cursor: pointer; color: var(--text-muted);">close</span>
+                        </div>
                     </div>
                     <div>
-                        <label class="form-label" style="margin-bottom: 0.25rem;">Version</label>
-                        <select id="globalVersion" class="form-input" onchange="applyGlobalRunFilters()"></select>
+                        <div style="position: relative;">
+                            <select id="globalRunType" class="form-input" onchange="applyGlobalRunFilters()" style="padding-right: 30px;"></select>
+                            <span id="clearRunTypeBtn" class="material-symbols-outlined hidden" onclick="clearFilter('globalRunType')" style="position: absolute; right: 25px; top: 50%; transform: translateY(-50%); font-size: 16px; cursor: pointer; color: var(--text-muted);">close</span>
+                        </div>
                     </div>
                     <div>
-                        <label class="form-label" style="margin-bottom: 0.25rem;">Date Range</label>
+                        <div style="position: relative;">
+                            <select id="globalVersion" class="form-input" onchange="applyGlobalRunFilters()" style="padding-right: 30px;"></select>
+                            <span id="clearVersionBtn" class="material-symbols-outlined hidden" onclick="clearFilter('globalVersion')" style="position: absolute; right: 25px; top: 50%; transform: translateY(-50%); font-size: 16px; cursor: pointer; color: var(--text-muted);">close</span>
+                        </div>
+                    </div>
+                    <div>
                         <div class="custom-dropdown" style="position: relative; width: 100%;">
-                            <button id="dateFilterBtn" class="form-input date-filter-btn" onclick="toggleDateDropdown(event)" style="width: 100%;">
-                                <span id="dateFilterText"
-                                    style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Date Range</span>
-                                <span class="material-symbols-outlined"
-                                    style="font-size: 1.2rem; color: var(--text-muted);">calendar_month</span>
-                            </button>
+                            <div style="position: relative;">
+                                <button id="dateFilterBtn" class="form-input date-filter-btn" onclick="toggleDateDropdown(event)" style="width: 100%; padding-right: 30px;">
+                                    <span id="dateFilterText" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Date Range</span>
+                                    <span class="material-symbols-outlined" style="font-size: 1.2rem; color: var(--text-muted);">calendar_month</span>
+                                </button>
+                                <span id="clearDateBtn" class="material-symbols-outlined hidden" onclick="clearDateRange(event)" style="position: absolute; right: 30px; top: 50%; transform: translateY(-50%); font-size: 16px; cursor: pointer; color: var(--text-muted); z-index: 10;">close</span>
+                            </div>
                             <div id="dateFilterMenu" class="dropdown-menu"
                                 style="display: none; position: absolute; top: 100%; left: 0; width: 100%; padding: 1rem; margin-top: 0.5rem; z-index: 102;">
                                 <div style="margin-bottom: 1rem;">
@@ -162,39 +173,30 @@
                     </p>
                 </div>
                 <div id="tabContentContainer" class="hidden">
+                    <div class="toolbar">
+                        <div id="commonFilterDisplay" style="font-size: 12px; color: var(--text-main);"></div>
+                        <div class="actions-container">
+                            <button id="btnInsightsSettings" class="btn-icon hidden" onclick="openSettingsModal()" title="Configuration">
+                                <span class="material-symbols-outlined">settings</span>
+                            </button>
+                            <button id="btnClearFilters" class="btn-icon hidden" onclick="clearAllFilters()" title="Clear Filters">
+                                <span class="material-symbols-outlined">filter_alt_off</span>
+                            </button>
+                            <button id="btnAdvancedFilter" class="btn-icon hidden" onclick="openAdvancedFilter()" title="Filter">
+                                <span class="material-symbols-outlined">filter_alt</span>
+                            </button>
+                            <div id="testsSeparator" class="separator hidden"></div>
+                            <button id="btnExportCsv" class="btn-icon hidden" title="Export CSV">
+                                <span class="material-symbols-outlined">download</span>
+                            </button>
+                        </div>
+                    </div>
                         <div id="content-insights">
-                            <div class="toolbar">
-                                <div></div>
-                                <div class="actions-container">
-                                    <button class="btn-icon" onclick="openSettingsModal()" title="Configuration">
-                                        <span class="material-symbols-outlined">settings</span>
-                                    </button>
-                                </div>
-                            </div>
                             <div class="insights-content-wrapper">
                                 <div id="insightsContent" class="insights-grid"></div>
                             </div>
                         </div>
                         <div id="details" class="table-container hidden">
-                            <div class="toolbar">
-                                <div class="search-container">
-                                    <span class="material-symbols-outlined search-icon">search</span>
-                                    <input type="text" id="searchInput" class="search-input"
-                                        placeholder="Search by test name..." />
-                                </div>
-                                <div class="actions-container">
-                                    <button id="btnClearFilters" class="btn-icon hidden" onclick="clearAllFilters()" title="Clear Filters">
-                                        <span class="material-symbols-outlined">filter_alt_off</span>
-                                    </button>
-                                    <button class="btn-icon" onclick="openAdvancedFilter()" title="Filter">
-                                        <span class="material-symbols-outlined">filter_alt</span>
-                                    </button>
-                                    <div class="separator"></div>
-                                    <button class="btn-icon" id="btnExportCsv" title="Export CSV">
-                                        <span class="material-symbols-outlined">download</span>
-                                    </button>
-                                </div>
-                            </div>
                             <div class="table-scroll-wrapper">
                                 <table>
                                     <thead>

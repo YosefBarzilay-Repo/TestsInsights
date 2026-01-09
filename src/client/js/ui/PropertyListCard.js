@@ -14,7 +14,7 @@ window.UI.PropertyListCard = function({ title, items }) {
     return `
         <div class="card">
             <div class="card-title">${title}</div>
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                 ${rows}
             </div>
         </div>

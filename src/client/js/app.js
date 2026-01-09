@@ -42,11 +42,22 @@ function switchTab(tabName) {
     document.getElementById('details').classList.add('hidden');
     document.getElementById('content-deepThink').classList.add('hidden');
 
+    // Reset Toolbar Buttons
+    document.getElementById('btnInsightsSettings').classList.add('hidden');
+    document.getElementById('btnAdvancedFilter').classList.add('hidden');
+    document.getElementById('btnExportCsv').classList.add('hidden');
+    document.getElementById('testsSeparator').classList.add('hidden');
+    document.getElementById('btnClearFilters').classList.add('hidden');
+
     // Show selected content
     if (tabName === 'insights') {
         document.getElementById('content-insights').classList.remove('hidden');
+        document.getElementById('btnInsightsSettings').classList.remove('hidden');
     } else if (tabName === 'tests') {
         document.getElementById('details').classList.remove('hidden');
+        document.getElementById('btnAdvancedFilter').classList.remove('hidden');
+        document.getElementById('btnExportCsv').classList.remove('hidden');
+        document.getElementById('testsSeparator').classList.remove('hidden');
         // Force re-render after a brief delay to ensure layout is calculated
         setTimeout(() => {
             renderTable();
@@ -80,7 +91,31 @@ function dismissCard(checkbox) {
     }
 }
 
+function clearDeepThink() {
+    const container = document.getElementById('deepThinkResults');
+    const intro = document.getElementById('deepThinkIntro');
+    if (container) {
+        container.innerHTML = '';
+        container.style.display = 'none';
+    }
+    if (intro) intro.style.display = 'block';
+
+    const btn = document.getElementById('btnGenerateAnalysis');
+    if (btn) {
+        btn.innerHTML = '<span class="material-symbols-outlined">auto_awesome</span> Generate Analysis';
+        btn.disabled = false;
+    }
+    document.getElementById('btnExportDeepThink')?.classList.add('hidden');
+}
+
 function generateDeepAnalysis() {
+    if (!isAnyFilterActive()) {
+        const container = document.getElementById('deepThinkResults');
+        container.innerHTML = '<div style="padding: 1rem; color: var(--text-muted); text-align: center;">No filter selected. Please select a filter to analyze.</div>';
+        container.style.display = 'block';
+        document.getElementById('deepThinkIntro').style.display = 'none';
+        return;
+    }
     const container = document.getElementById('deepThinkResults');
     const intro = document.getElementById('deepThinkIntro');
     const btn = document.getElementById('btnGenerateAnalysis');
@@ -355,7 +390,7 @@ function renderDashboard() {
     if (!window.UI.PropertyListCard) {
         window.UI.PropertyListCard = ({ title, items }) =>
             fallbackCard(title, items.map(item => `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.35rem; font-size: 0.9rem;">
                     <span style="color: var(--text-muted);">${item.label}</span>
                     <span>
                         <span id="${item.valueId}">-</span>
@@ -367,7 +402,7 @@ function renderDashboard() {
     if (!window.UI.DistributionCard) {
         window.UI.DistributionCard = ({ title, totalId, items }) =>
             fallbackCard(title, `
-                <div style="margin-bottom: 0.75rem; font-size: 0.9rem;">Total: <span id="${totalId}" class="clickable-count">-</span></div>
+                <div style="margin-bottom: 0.5rem; font-size: 0.9rem;">Total: <span id="${totalId}" class="clickable-count">-</span></div>
                 ${items.map(item => `
                     <div id="${item.clickId}" class="clickable-legend" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 0.25rem;">
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
@@ -387,15 +422,16 @@ function renderDashboard() {
 
     if (!window.UI.MetricCard) {
         window.UI.MetricCard = ({ title, valueId, subtextHtml, valueClass }) =>
-            fallbackCard(title, `
+            `<div class="card metric-card">
+                <div class="card-title">${title}</div>
                 <div id="${valueId}" class="card-value ${valueClass || ''}">-</div>
                 <div class="card-subtext">${subtextHtml || ''}</div>
-            `);
+            </div>`;
     }
 
     if (!window.UI.TableWidgetCard) {
         window.UI.TableWidgetCard = ({ title, containerId }) =>
-            fallbackCard(title, `<div id="${containerId}" style="max-height: 300px; overflow-y: auto;"></div>`);
+            fallbackCard(title, `<div id="${containerId}" style="max-height: 300px; overflow-y: auto; margin-top: 0.5rem;"></div>`);
     }
 
     let html = '';
@@ -481,14 +517,6 @@ function renderDashboard() {
 }
 
 function initEventListeners() {
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', function (e) {
-            currentPage = 1;
-            renderTable();
-        });
-    }
-
     const addListener = (id, event, handler) => {
         const el = document.getElementById(id);
         if (el) el.addEventListener(event, handler);
@@ -573,6 +601,79 @@ window.addEventListener('DOMContentLoaded', () => {
         });
 });
 
+function isAnyFilterActive() {
+    const type = document.getElementById('globalRunType')?.value;
+    const ver = document.getElementById('globalVersion')?.value;
+    const runId = document.getElementById('globalRunId')?.value;
+    const fromDate = document.getElementById('filterDateFrom')?.value;
+    const toDate = document.getElementById('filterDateTo')?.value;
+    const lastDays = document.getElementById('filterLastDays')?.value;
+
+    if (type || ver || runId || fromDate || toDate || lastDays) return true;
+    if (activeRunFilters.length > 0) return true;
+    if (currentFilter !== 'all') return true;
+
+    return false;
+}
+
+function updateFilterDisplay() {
+    const parts = [];
+
+    // 1. Main Filter
+    if (currentFilter !== 'all') {
+        const names = {
+            'flaky': 'Flaky Tests',
+            'broken': 'Continuous Failing',
+            'new-failure': 'New Failures',
+            'passed-only': 'Passed Tests',
+            'failing': 'Failed Tests',
+            'skipped-any': 'Skipped Tests'
+        };
+        parts.push(`<b>Status:</b> ${names[currentFilter] || currentFilter}`);
+    }
+
+    // 2. Run Selection
+    if (activeRunFilters.length > 0) {
+        if (activeRunFilters.length <= 5) {
+            parts.push(`<b>Run:</b> ${activeRunFilters.join(', ')}`);
+        } else {
+            parts.push(`<b>Runs:</b> ${activeRunFilters.length} selected`);
+        }
+    }
+
+    // 3. Global Filters
+    const typeEl = document.getElementById('globalRunType');
+    if (typeEl && typeEl.value) parts.push(`<b>Type:</b> ${typeEl.value}`);
+
+    const verEl = document.getElementById('globalVersion');
+    if (verEl && verEl.value) parts.push(`<b>Ver:</b> ${verEl.value}`);
+
+    const runIdEl = document.getElementById('globalRunId');
+    if (runIdEl && runIdEl.value) parts.push(`<b>Run ID:</b> ${runIdEl.value}`);
+
+    // 4. Date Filters
+    const lastDays = document.getElementById('filterLastDays')?.value;
+    const fromDate = document.getElementById('filterDateFrom')?.value;
+    const toDate = document.getElementById('filterDateTo')?.value;
+
+    if (lastDays) {
+        parts.push(`<b>Date:</b> Last ${lastDays} Days`);
+    } else if (fromDate && toDate) {
+        parts.push(`<b>Date:</b> ${fromDate} - ${toDate}`);
+    } else if (fromDate) {
+        parts.push(`<b>Date:</b> From ${fromDate}`);
+    } else if (toDate) {
+        parts.push(`<b>Date:</b> Until ${toDate}`);
+    }
+
+    let html = parts.join('<span style="margin-left: 12px;"></span>');
+    if (parts.length === 0) {
+        html = 'No filter selected';
+    }
+    const el = document.getElementById('commonFilterDisplay');
+    if (el) el.innerHTML = html;
+}
+
 function setFilter(filter) {
     currentFilter = filter;
     isComparisonMode = false;
@@ -594,8 +695,10 @@ function setFilter(filter) {
     toggleActive('skippedFilterClickable', filter === 'skipped-any');
     toggleActive('totalExecutionsClickable', filter === 'all');
 
+    updateFilterDisplay();
+
     currentPage = 1;
-    updateInsights(activeRunFilters);
+    updateInsights(activeRunFilters.length > 0 ? activeRunFilters : currentVisibleRunIds);
 
     document.getElementById('compareRunsBtn').disabled = !(activeRunFilters.length >= 2 && activeRunFilters.length <= 3);
     document.getElementById('clearRunFilterBtn').disabled = activeRunFilters.length === 0;
@@ -817,9 +920,13 @@ function processJSON(jsonText, renderInitialData = true) {
     // Populate Global Filter Dropdowns
     const typeSelect = document.getElementById('globalRunType');
     const verSelect = document.getElementById('globalVersion');
+    const runIdInput = document.getElementById('globalRunId');
+    const runIdList = document.getElementById('globalRunIdOptions');
     const statusSelect = document.getElementById('filterStatus');
     typeSelect.innerHTML = '<option value="">Run Type</option>';
     verSelect.innerHTML = '<option value="">Version</option>';
+    if (runIdInput) runIdInput.value = '';
+    if (runIdList) runIdList.innerHTML = '';
     if (statusSelect) statusSelect.innerHTML = '<option value="">All</option>';
 
     Array.from(runTypes).sort().forEach(t => {
@@ -834,6 +941,13 @@ function processJSON(jsonText, renderInitialData = true) {
         opt.textContent = v;
         verSelect.appendChild(opt);
     });
+    if (runIdList) {
+        globalRunStats.forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r.id;
+            runIdList.appendChild(opt);
+        });
+    }
     if (statusSelect) {
         Array.from(uniqueStatuses).sort().forEach(s => {
             const opt = document.createElement('option');
@@ -1042,11 +1156,18 @@ function renderTable() {
     const thead = document.querySelector('#details table thead');
     const tbody = document.getElementById('testTableBody');
     tbody.innerHTML = '';
-    const filterText = document.getElementById('searchInput').value.toLowerCase();
 
-    // Check if any filter is active
-    const isSearchActive = filterText !== '';
     const isAdvancedActive = Object.values(advancedFilters).some(v => v !== '');
+
+    if (!isAnyFilterActive() && !isAdvancedActive) {
+        tbody.innerHTML = '';
+        document.getElementById('pageStart').textContent = 0;
+        document.getElementById('pageEnd').textContent = 0;
+        document.getElementById('totalItems').textContent = 0;
+        document.getElementById('btnPrev').disabled = true;
+        document.getElementById('btnNext').disabled = true;
+        return;
+    }
 
     // Load Settings
     const settings = JSON.parse(localStorage.getItem('insightsSettings')) || {
@@ -1059,8 +1180,9 @@ function renderTable() {
     const flakyThreshold = parseInt(settings.flakyThreshold) || 1;
 
     const clearBtn = document.getElementById('btnClearFilters');
+    const isTestsTab = document.getElementById('tab-tests').classList.contains('active');
     if (clearBtn) {
-        if (isSearchActive || isAdvancedActive) {
+        if (isTestsTab && isAdvancedActive) {
             clearBtn.classList.remove('hidden');
         } else {
             clearBtn.classList.add('hidden');
@@ -1087,9 +1209,6 @@ function renderTable() {
         runTests.forEach(testName => testsInEffectiveRuns.add(testName));
     });
     tests = tests.filter(name => testsInEffectiveRuns.has(name));
-
-    // Then apply search filter
-    tests = tests.filter(name => name.toLowerCase().includes(filterText));
 
 
     // Apply Toolbar Filters
@@ -1426,7 +1545,12 @@ function filterByGroupStatus(group, status) {
     applyAdvancedFilters();
 }
 
-function updateInsights(runIds = []) {
+function updateInsights(runIds = null) {
+    clearDeepThink();
+    if (!isAnyFilterActive()) {
+        runIds = [];
+    }
+
     let totalRuns, totalTests, totalPassed = 0, totalFailed = 0, totalSkipped = 0, flakyCount = 0, brokenCount = 0;
     let newFailureCount = 0, criticalCount = 0;
 
@@ -1446,7 +1570,10 @@ function updateInsights(runIds = []) {
     const latestDate = allDates.length > 0 ? new Date(allDates[allDates.length - 1]) : new Date();
     const newFailureWindowMs = newFailureDays * 24 * 60 * 60 * 1000;
 
-    if (runIds && runIds.length > 0) {
+    if (runIds !== null && runIds.length === 0) {
+        totalRuns = 0;
+        totalTests = 0;
+    } else if (runIds && runIds.length > 0) {
         const selectedRunData = globalRunStats.filter(r => runIds.includes(r.id));
         const testsInRuns = new Set();
 
@@ -1685,7 +1812,7 @@ function updateInsights(runIds = []) {
 
     // Calculate Time Stats
     let timeStatsRuns = [];
-    if (runIds && runIds.length > 0) {
+    if (runIds !== null) {
         timeStatsRuns = globalRunStats.filter(r => runIds.includes(r.id));
     } else {
         timeStatsRuns = globalRunStats;
@@ -1748,7 +1875,7 @@ function updateInsights(runIds = []) {
 
     // --- Group Status Deviation Logic ---
     const groupStats = {};
-    const targetRunIds = (runIds && runIds.length > 0) ? new Set(runIds) : null;
+    const targetRunIds = (runIds !== null) ? new Set(runIds) : null;
 
     for (const [testName, details] of Object.entries(globalTestDetails)) {
         const rawGroup = globalTestGroups[testName];
@@ -1855,6 +1982,8 @@ function toggleRunFilter(runId, event) {
     document.getElementById('skippedFilterClickable').classList.remove('filter-active');
     document.getElementById('totalExecutionsClickable').classList.remove('filter-active');
 
+    updateFilterDisplay();
+
     const compareBtn = document.getElementById('compareRunsBtn');
     if (activeRunFilters.length >= 2 && activeRunFilters.length <= 3) {
         compareBtn.disabled = false;
@@ -1888,11 +2017,21 @@ function handleDateRangeChange() {
     applyGlobalRunFilters();
 }
 
-function clearDateRange() {
+function clearDateRange(e) {
+    if (e) e.stopPropagation();
     document.getElementById('filterDateFrom').value = '';
     document.getElementById('filterDateTo').value = '';
+    document.getElementById('filterLastDays').value = '';
     updateDateFilterText();
     applyGlobalRunFilters();
+}
+
+function clearFilter(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.value = '';
+        applyGlobalRunFilters();
+    }
 }
 
 function updateDateFilterText() {
@@ -1912,6 +2051,12 @@ function updateDateFilterText() {
     } else {
         btnText.textContent = 'Date Range';
     }
+
+    const clearBtn = document.getElementById('clearDateBtn');
+    if (clearBtn) {
+        if (lastDays || fromDate || toDate) clearBtn.classList.remove('hidden');
+        else clearBtn.classList.add('hidden');
+    }
 }
 
 function handleLastDaysInput() {
@@ -1927,6 +2072,7 @@ function handleLastDaysInput() {
 function applyGlobalRunFilters() {
     const type = document.getElementById('globalRunType').value;
     const ver = document.getElementById('globalVersion').value;
+    const runId = document.getElementById('globalRunId')?.value;
     const fromDate = document.getElementById('filterDateFrom').value;
     const toDate = document.getElementById('filterDateTo').value;
     const lastDaysInput = document.getElementById('filterLastDays');
@@ -1955,8 +2101,20 @@ function applyGlobalRunFilters() {
             if (toDate && r.date > toDate) dateMatch = false;
         }
 
-        return (!type || r.runType === type) && (!ver || r.version === ver) && dateMatch;
+        return (!type || r.runType === type) && (!ver || r.version === ver) && (!runId || String(r.id).includes(runId)) && dateMatch;
     });
+
+    // Update Clear Buttons Visibility
+    const setClearVisibility = (id, visible) => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (visible) el.classList.remove('hidden');
+            else el.classList.add('hidden');
+        }
+    };
+    setClearVisibility('clearRunIdBtn', !!runId);
+    setClearVisibility('clearRunTypeBtn', !!type);
+    setClearVisibility('clearVersionBtn', !!ver);
 
     currentVisibleRunIds = visibleRuns.map(r => r.id);
 
@@ -1968,6 +2126,7 @@ function applyGlobalRunFilters() {
     renderTrendChart('trendChartSmall', visibleRuns);
     renderTrendChart('trendChartLarge', visibleRuns);
 
+    updateFilterDisplay();
     updateInsights(activeRunFilters.length > 0 ? activeRunFilters : currentVisibleRunIds);
     renderTable();
 }
@@ -1980,6 +2139,11 @@ function toggleComparisonMode() {
 function renderTrendChart(containerId, data) {
     const container = document.getElementById(containerId);
     if (!container) return;
+
+    if (!isAnyFilterActive()) {
+        data = [];
+    }
+
     container.innerHTML = '';
     container.style.position = 'relative';
     container.style.display = 'block';
@@ -2098,6 +2262,8 @@ function clearRunSelection() {
     currentFilter = 'all';
     isComparisonMode = false;
 
+    updateFilterDisplay();
+
     // Reset UI states
     document.getElementById('flakyCount').classList.remove('filter-active');
     document.getElementById('brokenCount').classList.remove('filter-active');
@@ -2117,8 +2283,6 @@ function clearRunSelection() {
 }
 
 function clearAllFilters() {
-    document.getElementById('searchInput').value = '';
-
     // Reset Advanced Filters inputs
     document.getElementById('filterTestName').value = '';
     document.getElementById('filterTestGroup').value = '';
@@ -2271,8 +2435,6 @@ function exportDataToCsv() {
     const tableRows = [];
 
 
-    const filterText = document.getElementById('searchInput').value.toLowerCase();
-
 
     let tests = Object.keys(globalTestHistory);
 
@@ -2284,9 +2446,6 @@ function exportDataToCsv() {
         });
         tests = tests.filter(name => testsInSelectedRuns.has(name));
     }
-
-
-    tests = tests.filter(name => name.toLowerCase().includes(filterText));
 
 
     if (currentFilter !== 'all') {
