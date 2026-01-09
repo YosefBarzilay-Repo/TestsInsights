@@ -182,6 +182,9 @@
                             <button id="btnClearFilters" class="btn-icon hidden" onclick="clearAllFilters()" title="Clear Filters">
                                 <span class="material-symbols-outlined">filter_alt_off</span>
                             </button>
+                            <button id="btnCompareRuns" class="btn-icon hidden" onclick="openRunComparisonModal()" title="Compare Runs">
+                                <span class="material-symbols-outlined">compare_arrows</span>
+                            </button>
                             <button id="btnAdvancedFilter" class="btn-icon hidden" onclick="openAdvancedFilter()" title="Filter">
                                 <span class="material-symbols-outlined">filter_alt</span>
                             </button>
@@ -263,9 +266,42 @@
                 </div>
             </div>
 
+            <!-- Run Comparison Modal -->
+            <div id="runComparisonModal" class="modal-overlay hidden">
+                <div class="modal-content" style="max-width: 900px;">
+                    <div class="modal-header">
+                        <h2>Select 2 or 3 Runs to Compare</h2>
+                        <button class="close-btn" onclick="closeRunComparisonModal()">&times;</button>
+                    </div>
+                    <div style="max-height: 600px; overflow-y: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr>
+                                    <th style="padding: 8px; border-bottom: 1px solid var(--border-color);"></th>
+                                    <th style="text-align: left; padding: 8px; border-bottom: 1px solid var(--border-color);">Run ID</th>
+                                    <th style="text-align: left; padding: 8px; border-bottom: 1px solid var(--border-color);">Date</th>
+                                    <th style="text-align: left; padding: 8px; border-bottom: 1px solid var(--border-color);">Time</th>
+                                    <th style="text-align: right; padding: 8px; border-bottom: 1px solid var(--border-color);">Duration</th>
+                                    <th style="text-align: right; padding: 8px; border-bottom: 1px solid var(--border-color);">Total</th>
+                                    <th style="text-align: right; padding: 8px; border-bottom: 1px solid var(--border-color);">Passed</th>
+                                    <th style="text-align: right; padding: 8px; border-bottom: 1px solid var(--border-color);">Failed</th>
+                                    <th style="text-align: right; padding: 8px; border-bottom: 1px solid var(--border-color);">Skipped</th>
+                                </tr>
+                            </thead>
+                            <tbody id="runsListTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div class="modal-footer" style="display: flex; justify-content: flex-end; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                        <button class="btn btn-secondary" onclick="closeRunComparisonModal()">Cancel</button>
+                        <button id="modalCompareBtn" class="btn btn-primary" onclick="triggerRunComparison()" disabled style="margin-left: 0.5rem;">Compare (0)</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Detailed View Modal -->
             <div id="detailModal" class="modal-overlay hidden">
-                <div class="modal-content">
+                <div class="modal-content">                  
+                    
                     <div class="modal-header">
                         <h2 id="modalTitle">Test Details</h2>
                         <button class="close-btn" onclick="closeModal()">&times;</button>

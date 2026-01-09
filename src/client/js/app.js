@@ -48,7 +48,8 @@ function switchTab(tabName) {
     document.getElementById('btnAdvancedFilter').classList.add('hidden');
     document.getElementById('btnExportCsv').classList.add('hidden');
     document.getElementById('testsSeparator').classList.add('hidden');
-    document.getElementById('btnClearFilters').classList.add('hidden');
+    document.getElementById('btnClearFilters').classList.add('hidden'); // This is for advanced filters
+    document.getElementById('btnCompareRuns').classList.add('hidden');
 
     // Show selected content
     if (tabName === 'insights') {
@@ -56,6 +57,7 @@ function switchTab(tabName) {
         document.getElementById('btnInsightsSettings').classList.remove('hidden');
     } else if (tabName === 'tests') {
         document.getElementById('details').classList.remove('hidden');
+        document.getElementById('btnCompareRuns').classList.remove('hidden');
         document.getElementById('btnAdvancedFilter').classList.remove('hidden');
         document.getElementById('btnExportCsv').classList.remove('hidden');
         document.getElementById('testsSeparator').classList.remove('hidden');
@@ -705,11 +707,8 @@ function setFilter(filter) {
     currentPage = 1;
     updateInsights(activeRunFilters.length > 0 ? activeRunFilters : currentVisibleRunIds);
 
-    document.getElementById('compareRunsBtn').disabled = !(activeRunFilters.length >= 2 && activeRunFilters.length <= 3);
-    document.getElementById('clearRunFilterBtn').disabled = activeRunFilters.length === 0;
     renderTable();
-    renderTrendChart('trendChartSmall', globalRunStats);
-    renderTrendChart('trendChartLarge', globalRunStats);
+    applyGlobalRunFilters(); // Re-apply filters to update charts and tables
 }
 
 function processJSON(jsonText, renderInitialData = true) {
@@ -1254,14 +1253,6 @@ function renderTable() {
 
     let tests = Object.keys(globalTestHistory);
 
-    if (activeRunFilters.length > 0) {
-        const testsInSelectedRuns = new Set();
-        activeRunFilters.forEach(runId => {
-            const runTests = runToTestsMap[runId] || new Set();
-            runTests.forEach(testName => testsInSelectedRuns.add(testName));
-        });
-        tests = tests.filter(name => testsInSelectedRuns.has(name));
-    }
     const effectiveRunIds = activeRunFilters.length > 0 ? activeRunFilters : currentVisibleRunIds;
     const effectiveRunIdsSet = new Set(effectiveRunIds);
 
@@ -1534,8 +1525,47 @@ function renderTable() {
 }
 
 function openTestDetails(testName) {
-    const details = globalTestDetails[testName];
-    if (!details) return;
+    let details = globalTestDetails[testName] || [];
+    if (details.length === 0) return;
+
+    // 1. Filter by Run Filters (Global & Selection)
+    const effectiveRunIds = activeRunFilters.length > 0 ? activeRunFilters : currentVisibleRunIds;
+    const effectiveRunIdsSet = new Set(effectiveRunIds);
+    details = details.filter(d => effectiveRunIdsSet.has(d.runId));
+
+    // 2. Filter by Advanced Filters
+    if (advancedFilters.runId) {
+        details = details.filter(d => String(d.runId).includes(advancedFilters.runId));
+    }
+    if (advancedFilters.status) {
+        details = details.filter(d => d.status.toLowerCase() === advancedFilters.status.toLowerCase());
+    }
+    if (advancedFilters.startTimeMin) {
+        const min = parseTimeSeconds(advancedFilters.startTimeMin + ':00');
+        details = details.filter(d => d.start !== '-' && parseTimeSeconds(d.start) >= min);
+    }
+    if (advancedFilters.startTimeMax) {
+        const max = parseTimeSeconds(advancedFilters.startTimeMax + ':59');
+        details = details.filter(d => d.start !== '-' && parseTimeSeconds(d.start) <= max);
+    }
+    if (advancedFilters.durationMin) {
+        const min = parseFloat(advancedFilters.durationMin);
+        details = details.filter(d => {
+            if (d.start === '-' || d.end === '-') return false;
+            let dur = parseTimeSeconds(d.end) - parseTimeSeconds(d.start);
+            if (dur < 0) dur += 86400;
+            return dur >= min;
+        });
+    }
+    if (advancedFilters.durationMax) {
+        const max = parseFloat(advancedFilters.durationMax);
+        details = details.filter(d => {
+            if (d.start === '-' || d.end === '-') return false;
+            let dur = parseTimeSeconds(d.end) - parseTimeSeconds(d.start);
+            if (dur < 0) dur += 86400;
+            return dur <= max;
+        });
+    }
 
     const displayName = globalTestNames[testName] || testName;
     const group = globalTestGroups[testName] || '--';
@@ -1544,7 +1574,12 @@ function openTestDetails(testName) {
     tbody.innerHTML = '';
 
     // Sort details by runId (assuming numeric or string sort works for ID)
-    details.sort((a, b) => (a.runId > b.runId) ? 1 : -1);
+    details.sort((a, b) => {
+        const numA = parseFloat(a.runId);
+        const numB = parseFloat(b.runId);
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        return (a.runId > b.runId) ? 1 : -1;
+    });
 
     // Populate Table
     details.forEach(d => {
@@ -2046,25 +2081,12 @@ function toggleRunFilter(runId, event) {
 
     updateFilterDisplay();
 
-    const compareBtn = document.getElementById('compareRunsBtn');
-    if (activeRunFilters.length >= 2 && activeRunFilters.length <= 3) {
-        compareBtn.disabled = false;
-        compareBtn.title = "Compare Selected Runs";
-    } else {
-        compareBtn.disabled = true;
-        compareBtn.title = activeRunFilters.length > 3 ? "Select max 3 runs to compare" : "Select 2-3 runs to compare";
-        if (isComparisonMode) {
-            isComparisonMode = false;
-        }
-    }
-
     updateInsights(activeRunFilters);
     updateInsights(activeRunFilters.length > 0 ? activeRunFilters : currentVisibleRunIds);
-    document.getElementById('clearRunFilterBtn').disabled = activeRunFilters.length === 0;
 
     renderTable();
-    renderTrendChart('trendChartSmall', globalRunStats);
-    renderTrendChart('trendChartLarge', globalRunStats);
+    // Re-render charts based on the current global filter context, but highlighting the new selection
+    applyGlobalRunFilters();
 }
 
 function toggleDateDropdown(e) {
@@ -2193,11 +2215,6 @@ function applyGlobalRunFilters() {
     renderTable();
 }
 
-function toggleComparisonMode() {
-    isComparisonMode = !isComparisonMode;
-    renderTable();
-}
-
 function renderTrendChart(containerId, data) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -2267,6 +2284,78 @@ function closeTrendModal() {
     document.getElementById('trendModal').classList.add('hidden');
 }
 
+function openRunComparisonModal() {
+    const tbody = document.getElementById('runsListTableBody'); // This is inside runComparisonModal now
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const runIdsToShow = activeRunFilters.length > 0 ? activeRunFilters : currentVisibleRunIds;
+    const runsData = globalRunStats.filter(r => runIdsToShow.includes(r.id));
+
+    // Sort by ID descending (newest first)
+    runsData.sort((a, b) => {
+        const numA = parseFloat(a.id);
+        const numB = parseFloat(b.id);
+        if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
+        return b.id.localeCompare(a.id);
+    });
+
+    runsData.forEach(run => {
+        const tr = document.createElement('tr');
+
+        const d = run.durationSeconds || 0;
+        let durStr = d.toFixed(1) + 's';
+        if (d > 60) {
+            const m = Math.floor(d / 60);
+            const s = (d % 60).toFixed(0);
+            durStr = `${m}m ${s}s`;
+        }
+
+        const timeStr = (run.startTime && run.endTime) ? `${run.startTime} - ${run.endTime}` : '-';
+
+        tr.innerHTML = `
+            <td style="padding: 8px; border-bottom: 1px solid var(--border-color); text-align: center;"><input type="checkbox" class="run-compare-checkbox" value="${run.id}" onchange="handleRunSelectionChange()"></td>
+            <td style="padding: 8px; border-bottom: 1px solid var(--border-color);">${run.id}</td>
+            <td style="padding: 8px; border-bottom: 1px solid var(--border-color);">${run.date || '-'}</td>
+            <td style="padding: 8px; border-bottom: 1px solid var(--border-color); font-size: 0.85rem;">${timeStr}</td>
+            <td style="padding: 8px; border-bottom: 1px solid var(--border-color); text-align: right; font-family: var(--font-mono);">${durStr}</td>
+            <td style="padding: 8px; border-bottom: 1px solid var(--border-color); text-align: right;">${run.total}</td>
+            <td style="padding: 8px; border-bottom: 1px solid var(--border-color); text-align: right; color: var(--status-pass);">${run.passed}</td>
+            <td style="padding: 8px; border-bottom: 1px solid var(--border-color); text-align: right; color: var(--status-fail);">${run.failed}</td>
+            <td style="padding: 8px; border-bottom: 1px solid var(--border-color); text-align: right; color: var(--status-skip);">${run.skipped}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    handleRunSelectionChange(); // Set initial button state
+    document.getElementById('runComparisonModal').classList.remove('hidden');
+}
+
+function closeRunComparisonModal() {
+    document.getElementById('runComparisonModal').classList.add('hidden');
+}
+
+function handleRunSelectionChange() {
+    const checkboxes = document.querySelectorAll('.run-compare-checkbox:checked');
+    const selectedCount = checkboxes.length;
+    const compareBtn = document.getElementById('modalCompareBtn');
+
+    compareBtn.textContent = `Compare (${selectedCount})`;
+    compareBtn.disabled = !(selectedCount >= 2 && selectedCount <= 3);
+}
+
+function triggerRunComparison() {
+    const checkboxes = document.querySelectorAll('.run-compare-checkbox:checked');
+    activeRunFilters = Array.from(checkboxes).map(cb => cb.value);
+    
+    isComparisonMode = true;
+    currentPage = 1;
+    renderTable();
+    closeRunComparisonModal();
+    updateFilterDisplay();
+    // No need to re-render charts, as comparison is a table-only view
+}
+
 function openAdvancedFilter() {
     document.getElementById('filterTestName').value = advancedFilters.testName;
     document.getElementById('filterTestGroup').value = advancedFilters.testGroup;
@@ -2334,12 +2423,10 @@ function clearRunSelection() {
     document.getElementById('failedFilterClickable').classList.remove('filter-active');
     document.getElementById('skippedFilterClickable').classList.remove('filter-active');
     document.getElementById('totalExecutionsClickable').classList.remove('filter-active');
+    
+    // Re-apply global filters to reset the view
+    applyGlobalRunFilters();
 
-    document.getElementById('compareRunsBtn').disabled = true;
-    document.getElementById('clearRunFilterBtn').disabled = true;
-
-    renderTrendChart('trendChartSmall', globalRunStats);
-    renderTrendChart('trendChartLarge', globalRunStats);
     updateInsights(currentVisibleRunIds);
     renderTable();
 }
@@ -2416,6 +2503,9 @@ document.getElementById('detailModal').addEventListener('click', function (e) {
 });
 document.getElementById('trendModal').addEventListener('click', function (e) {
     if (e.target === this) closeTrendModal();
+});
+document.getElementById('runComparisonModal').addEventListener('click', function (e) {
+    if (e.target === this) closeRunComparisonModal();
 });
 document.getElementById('advancedFilterModal').addEventListener('click', function (e) {
     if (e.target === this) closeAdvancedFilter();
@@ -2500,30 +2590,26 @@ function exportDataToCsv() {
 
     let tests = Object.keys(globalTestHistory);
 
-    if (activeRunFilters.length > 0) {
-        const testsInSelectedRuns = new Set();
-        activeRunFilters.forEach(runId => {
-            const runTests = runToTestsMap[runId] || new Set();
-            runTests.forEach(testName => testsInSelectedRuns.add(testName));
-        });
-        tests = tests.filter(name => testsInSelectedRuns.has(name));
-    }
+    const effectiveRunIds = activeRunFilters.length > 0 ? activeRunFilters : currentVisibleRunIds;
+    const effectiveRunIdsSet = new Set(effectiveRunIds);
+
+    const testsInEffectiveRuns = new Set();
+    effectiveRunIds.forEach(runId => {
+        const runTests = runToTestsMap[runId] || new Set();
+        runTests.forEach(testName => testsInEffectiveRuns.add(testName));
+    });
+    tests = tests.filter(name => testsInEffectiveRuns.has(name));
 
 
     if (currentFilter !== 'all') {
         tests = tests.filter(name => {
-            let statuses;
-            if (activeRunFilters.length > 0) {
-                statuses = new Set();
-                const details = globalTestDetails[name] || [];
-                details.forEach(d => {
-                    if (activeRunFilters.includes(d.runId)) {
-                        statuses.add(d.status);
-                    }
-                });
-            } else {
-                statuses = globalTestResults[name];
-            }
+            const statuses = new Set();
+            const details = globalTestDetails[name] || [];
+            details.forEach(d => {
+                if (effectiveRunIdsSet.has(d.runId)) {
+                    statuses.add(d.status);
+                }
+            });
 
             if (currentFilter === 'flaky') {
                 return statuses.has('passed') && statuses.has('failed');
@@ -2556,9 +2642,7 @@ function exportDataToCsv() {
         let runId = '-';
 
         let details = globalTestDetails[testName] || [];
-        if (activeRunFilters.length > 0) {
-            details = details.filter(d => activeRunFilters.includes(d.runId));
-        }
+        details = details.filter(d => effectiveRunIdsSet.has(d.runId));
 
         if (details.length > 0) {
             const latest = details.reduce((prev, current) => {
