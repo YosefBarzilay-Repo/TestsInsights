@@ -117,6 +117,12 @@
                     <div class="dropdown-item">My Daily Check</div>
                     <div class="dropdown-item">Critical Failures</div>
                     <div class="dropdown-item">Performance Watch</div>
+                    <div style="border-top: 1px solid var(--border-color); margin-top: 0.5rem; padding: 0.5rem;">
+                        <button class="btn btn-primary" disabled style="width: 100%; justify-content: center; opacity: 0.5; cursor: not-allowed;">
+                            <span class="material-symbols-outlined">save</span>
+                            Save Filter
+                        </button>
+                    </div>
                 </div>
             </div>
             <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;">
@@ -180,13 +186,32 @@
                                     </div>
                                 </div>
 
+                                <!-- Execution Time Card -->
+                                <div class="card">
+                                    <div class="card-title">Execution Time</div>
+                                    <div style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="color: var(--text-secondary); font-size: 0.9rem;">Average</span>
+                                            <span id="statAvgTime" style="font-weight: 600; color: var(--text-main); font-size: 1.1rem;">-</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="color: var(--text-secondary); font-size: 0.9rem;">Max</span>
+                                            <span id="statMaxTime" style="font-weight: 600; color: var(--text-main); font-size: 1.1rem;">-</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="color: var(--text-secondary); font-size: 0.9rem;">Min</span>
+                                            <span id="statMinTime" style="font-weight: 600; color: var(--text-main); font-size: 1.1rem;">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Status Distribution Card -->
                                 <div class="card">
                                     <div class="card-title"
                                         style="display: flex; justify-content: space-between; align-items: center;">
                                         <span>Status Distribution</span>
                                         <span id="totalExecutionsClickable" class="clickable-legend"
-                                            style="font-size: 0.75rem; color: var(--text-muted); text-transform: none; font-weight: normal;">Total:
+                                            style="font-size: 0.75rem; color: var(--text-secondary); text-transform: none; font-weight: normal;">Total:
                                             <strong id="totalExecutions" style="color: var(--text-main);">-</strong></span>
                                     </div>
                                     <div class="status-legend">

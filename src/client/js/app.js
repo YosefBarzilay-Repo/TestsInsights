@@ -1451,6 +1451,41 @@ function updateInsights(runIds = []) {
     document.getElementById('totalTests').textContent = totalTests;
     document.getElementById('totalTestsBroken').textContent = totalTests;
 
+    // Calculate Time Stats
+    let timeStatsRuns = [];
+    if (runIds && runIds.length > 0) {
+        timeStatsRuns = globalRunStats.filter(r => runIds.includes(r.id));
+    } else {
+        timeStatsRuns = globalRunStats;
+    }
+
+    let avgTime = '-', maxTime = '-', minTime = '-';
+    const durations = timeStatsRuns.map(r => r.durationSeconds).filter(d => typeof d === 'number');
+
+    if (durations.length > 0) {
+        const total = durations.reduce((a, b) => a + b, 0);
+        const avg = total / durations.length;
+        const min = Math.min(...durations);
+        const max = Math.max(...durations);
+
+        const fmt = (s) => {
+            if (s < 60) return s.toFixed(1) + 's';
+            const m = Math.floor(s / 60);
+            return `${m}m ${(s % 60).toFixed(0)}s`;
+        };
+
+        avgTime = fmt(avg);
+        minTime = fmt(min);
+        maxTime = fmt(max);
+    }
+
+    const elAvg = document.getElementById('statAvgTime');
+    const elMax = document.getElementById('statMaxTime');
+    const elMin = document.getElementById('statMinTime');
+    if (elAvg) elAvg.textContent = avgTime;
+    if (elMax) elMax.textContent = maxTime;
+    if (elMin) elMin.textContent = minTime;
+
     // --- Group Status Deviation Logic ---
     const groupStats = {};
     const targetRunIds = (runIds && runIds.length > 0) ? new Set(runIds) : null;
@@ -1695,16 +1730,6 @@ function renderTrendChart(containerId, data) {
     const barsContainer = document.createElement('div');
     barsContainer.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: flex-end; gap: 1px;';
 
-    // SVG Overlay for Trend Line
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("width", "100%");
-    svg.setAttribute("height", "100%");
-    svg.setAttribute("viewBox", "0 0 100 100");
-    svg.setAttribute("preserveAspectRatio", "none");
-    svg.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;';
-
-    const maxDuration = Math.max(...data.map(r => r.durationSeconds || 0), 1);
-
     data.forEach((run, index) => {
         const bar = document.createElement('div');
         bar.className = 'chart-bar';
@@ -1741,34 +1766,6 @@ function renderTrendChart(containerId, data) {
     });
 
     container.appendChild(barsContainer);
-    container.appendChild(svg);
-
-    // Draw Trend Line
-    const points = data.map((run, index) => {
-        const xPercent = ((index + 0.5) / data.length) * 100;
-        // Scale duration to 90% height (leaving 10% top padding)
-        const scaledY = 100 - ((run.durationSeconds || 0) / maxDuration) * 90;
-        return `${xPercent},${scaledY}`;
-    }).join(' ');
-
-    const polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-    polyline.setAttribute("points", points);
-    polyline.setAttribute("fill", "none");
-    polyline.setAttribute("stroke", "var(--text-main)");
-    polyline.setAttribute("stroke-width", "2");
-    polyline.setAttribute("vector-effect", "non-scaling-stroke");
-    polyline.setAttribute("stroke-opacity", "0.7");
-    svg.appendChild(polyline);
-
-    // Add dots
-    data.forEach((run, index) => {
-        const xPercent = ((index + 0.5) / data.length) * 100;
-        const scaledY = 100 - ((run.durationSeconds || 0) / maxDuration) * 90;
-
-        const dot = document.createElement('div');
-        dot.style.cssText = `position: absolute; left: ${xPercent}%; top: ${scaledY}%; width: 6px; height: 6px; background-color: var(--text-main); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 11;`;
-        container.appendChild(dot);
-    });
 }
 
 function openTrendModal() {

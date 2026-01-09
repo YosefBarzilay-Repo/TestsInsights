@@ -14,9 +14,10 @@
     --border-color: #1D546C;
 
     /* Status Colors */
-    --status-pass: #4ade80;
-    --status-fail: #f87171;
-    --status-skip: #fbbf24;
+    --status-pass: #12ae00;
+    --status-fail: #d20303;
+    --status-skip: #c4c4c4;
+    --status-warning: #cbb100;
     --status-info: #94a3b8;
 
     --radius: 0.375rem;
@@ -124,7 +125,7 @@ body {
 
 .rec-icon-yellow {
     background-color: #fef9c3;
-    color: var(--status-skip);
+    color: var(--status-warning);
 }
 
 .rec-icon-green {
@@ -325,7 +326,7 @@ body {
 
 .card-subtext {
     font-size: 12px;
-    color: var(--text-muted);
+    color: var(--text-secondary);
     margin-top: 0.25rem;
 }
 
@@ -419,7 +420,7 @@ td {
 }
 
 .text-yellow {
-    color: var(--status-skip);
+    color: var(--status-warning);
 }
 
 .text-red {
@@ -693,7 +694,7 @@ td {
 
 .bg-warning-subtle {
     background-color: rgba(217, 119, 6, 0.1);
-    color: var(--status-skip);
+    color: var(--status-warning);
 }
 
 .bg-danger-subtle {
@@ -785,7 +786,7 @@ td {
     justify-content: space-between;
     margin-bottom: 0.75rem;
     font-size: 13px;
-    color: #4b5563;
+    color: var(--text-secondary);
 }
 
 .legend-item {
@@ -827,7 +828,7 @@ td {
 }
 
 .text-warning {
-    color: var(--status-skip);
+    color: var(--status-warning);
 }
 
 .text-danger {
