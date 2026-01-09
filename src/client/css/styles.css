@@ -209,6 +209,19 @@ body {
     letter-spacing: -0.015em;
 }
 
+.beta-badge {
+    font-size: 0.65rem;
+    background-color: rgba(77, 171, 247, 0.15);
+    color: var(--primary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    border: 1px solid rgba(77, 171, 247, 0.3);
+}
+
 .import-btn {
     display: flex;
     align-items: center;
@@ -266,6 +279,10 @@ body {
 
 /* Specific styling for insights and deep think */
 #content-insights {
+    padding: 0;
+}
+
+.insights-content-wrapper {
     padding: 2rem;
 }
 
@@ -502,8 +519,10 @@ td {
 .btn {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
-    padding: 0.375rem 0.625rem;
+    height: 32px;
+    padding: 0 0.75rem;
     border-radius: var(--radius);
     font-size: 13px;
     font-weight: 500;
@@ -852,7 +871,9 @@ td {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0.375rem;
+    padding: 0;
+    width: 32px;
+    height: 32px;
     border-radius: var(--radius);
     background-color: var(--bg-body);
     color: var(--text-secondary);

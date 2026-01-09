@@ -27,7 +27,7 @@
                     <line x1="6" y1="20" x2="6" y2="14"></line>
                 </svg>
             </div>
-            <h2 class="header-title">TestInsights</h2>
+            <h2 class="header-title">TestInsights <span class="beta-badge">BETA</span></h2>
         </div>
         <div class="header-center">
             <div class="custom-dropdown" style="position: relative;">
@@ -154,10 +154,6 @@
             </div>
         </div>
         <div class="header-right">
-            <button class="btn-icon-header" title="Settings" onclick="openSettingsModal()"
-                style="background: transparent; border: none; cursor: pointer;">
-                <span class="material-symbols-outlined">settings</span>
-            </button>
         </div>
     </header>
 
@@ -185,7 +181,16 @@
                 </div>
                 <div id="tabContentContainer" class="hidden">
                         <div id="content-insights">
-                            <div id="insightsContent" class="insights-grid">
+                            <div class="toolbar">
+                                <div></div>
+                                <div class="actions-container">
+                                    <button class="btn-icon" onclick="openSettingsModal()" title="Configuration">
+                                        <span class="material-symbols-outlined">settings</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="insights-content-wrapper">
+                                <div id="insightsContent" class="insights-grid">
                                 <!-- Trend Chart Card (Spans 2 columns) -->
                                 <div class="card col-span-2" style="min-height: 200px; display: flex; flex-direction: column;">
                                     <div class="card-title">Execution Trend</div>
@@ -320,6 +325,7 @@
                                     </div>
                                 </div>
                             </div>
+                            </div>
                         </div>
                         <div id="details" class="table-container hidden">
                             <div class="toolbar">
@@ -329,16 +335,11 @@
                                         placeholder="Search by test name..." />
                                 </div>
                                 <div class="actions-container">
-                                    <button id="btnClearFilters" class="btn btn-secondary hidden"
-                                        onclick="clearAllFilters()">
-                                        <span class="material-symbols-outlined"
-                                            style="font-size: 18px;">filter_alt_off</span>
-                                        <span>Clear</span>
+                                    <button id="btnClearFilters" class="btn-icon hidden" onclick="clearAllFilters()" title="Clear Filters">
+                                        <span class="material-symbols-outlined">filter_alt_off</span>
                                     </button>
-                                    <button class="btn btn-secondary" onclick="openAdvancedFilter()">
-                                        <span class="material-symbols-outlined"
-                                            style="font-size: 18px;">filter_alt</span>
-                                        <span>Filter</span>
+                                    <button class="btn-icon" onclick="openAdvancedFilter()" title="Filter">
+                                        <span class="material-symbols-outlined">filter_alt</span>
                                     </button>
                                     <div class="separator"></div>
                                     <button class="btn-icon" id="btnExportCsv" title="Export CSV">
@@ -399,13 +400,6 @@
                         </div>
                     </div>
             </div>
-            <footer
-                style="text-align: center; padding: 1rem; font-size: 0.75rem; color: #9ca3af; flex-shrink: 0; background-color: var(--bg-surface); position: relative; z-index: 10; border-top: 1px solid var(--border-color);">
-                Created by <a href="mailto:yosefb11@gmail.com"
-                    style="color: inherit; text-decoration: underline;">Yosef
-                    Barzilay</a>
-            </footer>
-
             <!-- Trend Modal -->
             <div id="trendModal" class="modal-overlay hidden">
                 <div class="modal-content"
@@ -579,6 +573,13 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <footer
+        style="text-align: center; padding: 1rem; font-size: 0.75rem; color: #9ca3af; flex-shrink: 0; background-color: var(--bg-surface); position: relative; z-index: 10; border-top: 1px solid var(--border-color);">
+        Created by <a href="mailto:yosefb11@gmail.com" style="color: inherit; text-decoration: underline;">Yosef
+            Barzilay</a>
+    </footer>
 
         <script>
             // Insights Configuration Logic
