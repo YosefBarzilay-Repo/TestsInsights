@@ -328,7 +328,216 @@ function generateDeepAnalysis() {
     }, 800);
 }
 
+function renderDashboard() {
+    const container = document.getElementById('insightsContent');
+    if (!container) return;
+
+    if (!window.UI) window.UI = {};
+
+    // Fallback for UI components if they failed to load
+    const fallbackCard = (title, content) => `<div class="card"><div class="card-title">${title}</div>${content}</div>`;
+
+    if (!window.UI.SplitMetricCard) {
+        window.UI.SplitMetricCard = ({ title, leftId, leftLabel, rightId, rightLabel }) =>
+            fallbackCard(title, `
+                <div style="display: flex; justify-content: space-around; text-align: center;">
+                    <div><div id="${leftId}" class="card-value">-</div><div class="card-subtext">${leftLabel}</div></div>
+                    <div style="width: 1px; background: var(--border-color);"></div>
+                    <div><div id="${rightId}" class="card-value">-</div><div class="card-subtext">${rightLabel}</div></div>
+                </div>`);
+    }
+
+    if (!window.UI.ChartCard) {
+        window.UI.ChartCard = ({ title, chartId, extraClasses }) =>
+            `<div class="card ${extraClasses || ''}"><div class="card-title">${title}</div><div id="${chartId}" style="height: 100px; width: 100%;"></div></div>`;
+    }
+
+    if (!window.UI.PropertyListCard) {
+        window.UI.PropertyListCard = ({ title, items }) =>
+            fallbackCard(title, items.map(item => `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                    <span style="color: var(--text-muted);">${item.label}</span>
+                    <span>
+                        <span id="${item.valueId}">-</span>
+                        ${item.linkId ? `<span id="${item.linkId}" class="clickable-count" style="margin-left:5px; display:none;"></span>` : ''}
+                    </span>
+                </div>`).join(''));
+    }
+
+    if (!window.UI.DistributionCard) {
+        window.UI.DistributionCard = ({ title, totalId, items }) =>
+            fallbackCard(title, `
+                <div style="margin-bottom: 0.75rem; font-size: 0.9rem;">Total: <span id="${totalId}" class="clickable-count">-</span></div>
+                ${items.map(item => `
+                    <div id="${item.clickId}" class="clickable-legend" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 0.25rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div class="${item.colorClass}" style="width: 8px; height: 8px; border-radius: 50%;"></div>
+                            <span>${item.label}</span>
+                        </div>
+                        <div>
+                            <span id="${item.countId}" style="font-weight: 600;">-</span>
+                            <span id="${item.percentId}" style="color: var(--text-muted); font-size: 0.8rem; margin-left: 0.5rem;">-</span>
+                        </div>
+                    </div>
+                    <div style="height: 4px; background: var(--bg-body); border-radius: 2px; overflow: hidden; margin-bottom: 0.75rem;">
+                        <div id="${item.barId}" class="${item.colorClass}" style="width: 0%; height: 100%;"></div>
+                    </div>
+                `).join('')}`);
+    }
+
+    if (!window.UI.MetricCard) {
+        window.UI.MetricCard = ({ title, valueId, subtextHtml, valueClass }) =>
+            fallbackCard(title, `
+                <div id="${valueId}" class="card-value ${valueClass || ''}">-</div>
+                <div class="card-subtext">${subtextHtml || ''}</div>
+            `);
+    }
+
+    if (!window.UI.TableWidgetCard) {
+        window.UI.TableWidgetCard = ({ title, containerId }) =>
+            fallbackCard(title, `<div id="${containerId}" style="max-height: 300px; overflow-y: auto;"></div>`);
+    }
+
+    let html = '';
+
+    // 1. Total Scope
+    html += window.UI.SplitMetricCard({
+        title: 'Total Scope',
+        leftId: 'filterBarRunCount', leftLabel: 'Runs',
+        rightId: 'filterBarTestCount', rightLabel: 'Tests'
+    });
+
+    // 2. Trend Chart
+    html += window.UI.ChartCard({
+        title: 'Execution Trend',
+        chartId: 'trendChartSmall',
+        extraClasses: 'col-span-2'
+    });
+
+    // 3. Execution Time
+    html += window.UI.PropertyListCard({
+        title: 'Execution Time',
+        items: [
+            { label: 'Average', valueId: 'statAvgTime' },
+            { label: 'Max', valueId: 'statMaxTime', linkId: 'statMaxRunLink' },
+            { label: 'Min', valueId: 'statMinTime', linkId: 'statMinRunLink' }
+        ]
+    });
+
+    // 4. Status Distribution
+    html += window.UI.DistributionCard({
+        title: 'Status Distribution',
+        totalId: 'totalExecutions',
+        items: [
+            { label: 'Passed', colorClass: 'bg-green', clickId: 'passedFilterClickable', percentId: 'percentPassed', countId: 'countPassed', barId: 'barPassed' },
+            { label: 'Failed', colorClass: 'bg-red', clickId: 'failedFilterClickable', percentId: 'percentFailed', countId: 'countFailed', barId: 'barFailed' },
+            { label: 'Skipped', colorClass: 'bg-grey', clickId: 'skippedFilterClickable', percentId: 'percentSkipped', countId: 'countSkipped', barId: 'barSkipped' }
+        ]
+    });
+
+    // 5. Overall Stability
+    html += window.UI.MetricCard({
+        title: 'Overall Stability Score',
+        valueId: 'stabilityScore',
+        subtextHtml: 'Based on flaky and broken test rates'
+    });
+
+    // 6. Critical Issues
+    html += window.UI.MetricCard({
+        title: 'Critical Issues',
+        valueId: 'criticalIssuesCount',
+        valueClass: 'text-red',
+        subtextHtml: 'Tests consistently failing'
+    });
+
+    // 7. Flaky Tests
+    html += window.UI.MetricCard({
+        title: 'Flaky Tests',
+        valueId: 'flakyRate',
+        subtextHtml: '<span id="flakyCount" class="clickable-count">-</span> flaky tests of <span id="totalTests">-</span> total'
+    });
+
+    // 8. Continuous Failing
+    html += window.UI.MetricCard({
+        title: 'Continuous Failing',
+        valueId: 'brokenRate',
+        subtextHtml: '<span id="brokenCount" class="clickable-count">-</span> failing tests of <span id="totalTestsBroken">-</span> total'
+    });
+
+    // 9. First Time Failure
+    html += window.UI.MetricCard({
+        title: 'First Time Failure',
+        valueId: 'newFailureRate',
+        subtextHtml: '<span id="newFailureCount" class="clickable-count">-</span> tests started failing in last <span id="displayNewFailureDays">7</span> days'
+    });
+
+    // 10. Group Deviation
+    html += window.UI.TableWidgetCard({
+        title: 'Group Status Deviation',
+        containerId: 'groupDeviationContainer'
+    });
+
+    container.innerHTML = html;
+}
+
+function initEventListeners() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function (e) {
+            currentPage = 1;
+            renderTable();
+        });
+    }
+
+    const addListener = (id, event, handler) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener(event, handler);
+    };
+
+    addListener('flakyCount', 'click', function () {
+        setFilter(currentFilter === 'flaky' ? 'all' : 'flaky');
+    });
+
+    addListener('brokenCount', 'click', function () {
+        setFilter(currentFilter === 'broken' ? 'all' : 'broken');
+    });
+    addListener('newFailureCount', 'click', function () {
+        setFilter(currentFilter === 'new-failure' ? 'all' : 'new-failure');
+    });
+
+    addListener('passedFilterClickable', 'click', () => {
+        setFilter(currentFilter === 'passed-only' ? 'all' : 'passed-only');
+    });
+    addListener('failedFilterClickable', 'click', () => {
+        setFilter(currentFilter === 'failing' ? 'all' : 'failing');
+    });
+    addListener('skippedFilterClickable', 'click', () => {
+        setFilter(currentFilter === 'skipped-any' ? 'all' : 'skipped-any');
+    });
+    addListener('totalExecutionsClickable', 'click', () => {
+        setFilter('all');
+    });
+
+    addListener('btnExportCsv', 'click', exportDataToCsv);
+
+    addListener('btnPrev', 'click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            renderTable();
+        }
+    });
+    addListener('btnNext', 'click', () => {
+        currentPage++;
+        renderTable();
+    });
+}
+
 window.addEventListener('DOMContentLoaded', () => {
+    // Render the dashboard structure first
+    renderDashboard();
+    // Then attach listeners to the newly created elements
+    initEventListeners();
+
     // Initialize empty view
     renderTable();
     updateInsights();
@@ -364,63 +573,26 @@ window.addEventListener('DOMContentLoaded', () => {
         });
 });
 
-document.getElementById('searchInput').addEventListener('input', function (e) {
-    currentPage = 1;
-    renderTable();
-});
-
-document.getElementById('flakyCount').addEventListener('click', function () {
-    setFilter(currentFilter === 'flaky' ? 'all' : 'flaky');
-});
-
-document.getElementById('brokenCount').addEventListener('click', function () {
-    setFilter(currentFilter === 'broken' ? 'all' : 'broken');
-});
-document.getElementById('newFailureCount').addEventListener('click', function () {
-    setFilter(currentFilter === 'new-failure' ? 'all' : 'new-failure');
-});
-
-document.getElementById('passedFilterClickable').addEventListener('click', () => {
-    setFilter(currentFilter === 'passed-only' ? 'all' : 'passed-only');
-});
-document.getElementById('failedFilterClickable').addEventListener('click', () => {
-    setFilter(currentFilter === 'failing' ? 'all' : 'failing');
-});
-document.getElementById('skippedFilterClickable').addEventListener('click', () => {
-    setFilter(currentFilter === 'skipped-any' ? 'all' : 'skipped-any');
-});
-document.getElementById('totalExecutionsClickable').addEventListener('click', () => {
-    setFilter('all');
-});
-
-document.getElementById('btnExportCsv').addEventListener('click', exportDataToCsv);
-
-document.getElementById('btnPrev').addEventListener('click', () => {
-    if (currentPage > 1) {
-        currentPage--;
-        renderTable();
-    }
-});
-document.getElementById('btnNext').addEventListener('click', () => {
-    currentPage++;
-    renderTable();
-});
-
 function setFilter(filter) {
     currentFilter = filter;
     isComparisonMode = false;
 
+    const toggleActive = (id, isActive) => {
+        const el = document.getElementById(id);
+        if (el) el.classList.toggle('filter-active', isActive);
+    };
+
     // Update flaky count link style
-    document.getElementById('flakyCount').classList.toggle('filter-active', filter === 'flaky');
+    toggleActive('flakyCount', filter === 'flaky');
     // Update broken count link style
-    document.getElementById('brokenCount').classList.toggle('filter-active', filter === 'broken');
-    document.getElementById('newFailureCount').classList.toggle('filter-active', filter === 'new-failure');
+    toggleActive('brokenCount', filter === 'broken');
+    toggleActive('newFailureCount', filter === 'new-failure');
 
     // NEW: update status distribution legend styles
-    document.getElementById('passedFilterClickable').classList.toggle('filter-active', filter === 'passed-only');
-    document.getElementById('failedFilterClickable').classList.toggle('filter-active', filter === 'failing');
-    document.getElementById('skippedFilterClickable').classList.toggle('filter-active', filter === 'skipped-any');
-    document.getElementById('totalExecutionsClickable').classList.toggle('filter-active', filter === 'all');
+    toggleActive('passedFilterClickable', filter === 'passed-only');
+    toggleActive('failedFilterClickable', filter === 'failing');
+    toggleActive('skippedFilterClickable', filter === 'skipped-any');
+    toggleActive('totalExecutionsClickable', filter === 'all');
 
     currentPage = 1;
     updateInsights(activeRunFilters);
@@ -996,50 +1168,6 @@ function renderTable() {
         });
     }
 
-    // Pre-calculate metrics for filtering
-    const testMetrics = {};
-    tests.forEach(testName => {
-        // Calculate metrics based on effective runs
-        const details = globalTestDetails[testName] || [];
-        let passedCount = 0;
-        let failedCount = 0;
-        let skippedCount = 0;
-
-        details.forEach(d => {
-            if (effectiveRunIdsSet.has(d.runId)) {
-                if (d.status === 'passed') passedCount++;
-                else if (d.status === 'failed') failedCount++;
-                else if (d.status === 'skipped') skippedCount++;
-            }
-        });
-
-        const totalRuns = passedCount + failedCount + skippedCount;
-        const passRate = totalRuns ? (passedCount / totalRuns) * 100 : 0;
-        
-        // Calculate Flaky (based on flips)
-        let flips = 0;
-        if (passedCount > 0 && failedCount > 0) {
-            const sortedDetails = details.slice().sort((a, b) => (a.runId > b.runId ? 1 : -1));
-            let lastStatus = null;
-            sortedDetails.forEach(d => {
-                if (d.status === 'skipped') return;
-                if (lastStatus && d.status !== lastStatus) flips++;
-                lastStatus = d.status;
-            });
-        }
-        const isFlaky = flips >= flakyThreshold;
-        const isBroken = !isFlaky && passedCount === 0 && failedCount > 0; // Simple definition for table row status
-
-        let status = 'Passed'; // Default assumption if not broken/flaky
-        if (isFlaky) status = 'Flaky';
-        else if (isBroken) status = 'Broken';
-        else if (globalTestResults[testName].has('skipped') && !globalTestResults[testName].has('passed') && !globalTestResults[testName].has('failed')) status = 'Skipped';
-        else if (failedCount > 0) status = 'Failed'; // Catch-all
-
-        testMetrics[testName] = { status, passRate, passedCount, failedCount, skippedCount, isFlaky, isBroken };
-    });
-
-
     // Pagination Logic
     const totalItems = tests.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
@@ -1114,28 +1242,11 @@ function renderTable() {
                     <th>Start Time</th>
                     <th>End Time</th>
                     <th class="text-right">Duration</th>
-                    <th class="text-right" style="width: 10rem;">Deviation (P/F/S)</th>
                 </tr>
             `;
 
     for (const testName of paginatedTests) {
         const row = document.createElement('tr');
-
-        // Use pre-calculated metrics
-        const m = testMetrics[testName];
-        let { passRate, passedCount, failedCount, skippedCount, isFlaky, isBroken } = m;
-
-        // Determine Status & Styles
-        let barColor = '';
-
-        if (passRate >= 90) {
-            barColor = 'var(--status-pass)'; // Green
-        } else if (passRate >= 60) {
-            barColor = 'var(--status-skip)'; // Yellow/Amber
-        } else {
-            barColor = 'var(--status-fail)'; // Red
-        }
-
 
         // Calculate Time & Duration (Latest Run)
         let startTime = '-';
@@ -1235,16 +1346,6 @@ function renderTable() {
         durCell.className = 'text-right';
         durCell.style.fontFamily = 'var(--font-mono)';
         row.appendChild(durCell);
-
-        // 3. Deviation Column
-        const deviationCell = document.createElement('td');
-        deviationCell.className = 'text-right';
-        deviationCell.innerHTML = `
-                    <span class="text-green" style="font-weight: 500;">${passedCount}</span> / 
-                    <span class="text-red" style="font-weight: 500;">${failedCount}</span> / 
-                    <span style="color: var(--text-muted); font-weight: 500;">${skippedCount}</span>
-                `;
-        row.appendChild(deviationCell);
 
 
         tbody.appendChild(row);
@@ -1494,48 +1595,63 @@ function updateInsights(runIds = []) {
     if (runCountEl) runCountEl.textContent = totalRuns;
     if (testCountEl) testCountEl.textContent = totalTests;
 
-    document.getElementById('countPassed').textContent = totalPassed;
-    document.getElementById('countFailed').textContent = totalFailed;
-    document.getElementById('countSkipped').textContent = totalSkipped;
-    document.getElementById('totalExecutions').textContent = totalExecutions;
-    document.getElementById('barPassed').style.width = pctPassed + '%';
-    document.getElementById('barFailed').style.width = pctFailed + '%';
-    document.getElementById('barSkipped').style.width = pctSkipped + '%';
-    document.getElementById('percentPassed').textContent = pctPassed.toFixed(1);
-    document.getElementById('percentFailed').textContent = pctFailed.toFixed(1);
-    document.getElementById('percentSkipped').textContent = pctSkipped.toFixed(1);
+    const setText = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+    const setWidth = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.style.width = val;
+    };
+
+    setText('countPassed', totalPassed);
+    setText('countFailed', totalFailed);
+    setText('countSkipped', totalSkipped);
+    setText('totalExecutions', totalExecutions);
+    setWidth('barPassed', pctPassed + '%');
+    setWidth('barFailed', pctFailed + '%');
+    setWidth('barSkipped', pctSkipped + '%');
+    setText('percentPassed', pctPassed.toFixed(1));
+    setText('percentFailed', pctFailed.toFixed(1));
+    setText('percentSkipped', pctSkipped.toFixed(1));
 
     const flakyRateNum = totalTests ? (flakyCount / totalTests) * 100 : 0;
     const flakyRateText = flakyRateNum.toFixed(1) + '%';
     const rateEl = document.getElementById('flakyRate');
-    rateEl.textContent = flakyRateText;
-    rateEl.className = 'card-value';
-    if (flakyRateNum > 5) rateEl.classList.add('text-red');
-    else if (flakyRateNum > 0) rateEl.classList.add('text-warning');
-    else rateEl.classList.add('text-green');
+    if (rateEl) {
+        rateEl.textContent = flakyRateText;
+        rateEl.className = 'card-value';
+        if (flakyRateNum > 5) rateEl.classList.add('text-red');
+        else if (flakyRateNum > 0) rateEl.classList.add('text-warning');
+        else rateEl.classList.add('text-green');
+    }
 
     const brokenRateNum = totalTests ? (brokenCount / totalTests) * 100 : 0;
     const brokenRateText = brokenRateNum.toFixed(1) + '%';
     const brokenRateEl = document.getElementById('brokenRate');
-    brokenRateEl.textContent = brokenRateText;
-    brokenRateEl.className = 'card-value';
-    if (brokenRateNum > 5) brokenRateEl.classList.add('text-red');
-    else if (brokenRateNum > 0) brokenRateEl.classList.add('text-warning');
-    else brokenRateEl.classList.add('text-green');
+    if (brokenRateEl) {
+        brokenRateEl.textContent = brokenRateText;
+        brokenRateEl.className = 'card-value';
+        if (brokenRateNum > 5) brokenRateEl.classList.add('text-red');
+        else if (brokenRateNum > 0) brokenRateEl.classList.add('text-warning');
+        else brokenRateEl.classList.add('text-green');
+    }
 
     const newFailureRateNum = totalTests ? (newFailureCount / totalTests) * 100 : 0;
     const newFailureRateText = newFailureRateNum.toFixed(1) + '%';
     const newFailureRateEl = document.getElementById('newFailureRate');
-    newFailureRateEl.textContent = newFailureRateText;
-    newFailureRateEl.className = 'card-value';
-    if (newFailureRateNum > 0) newFailureRateEl.classList.add('text-red');
-    else newFailureRateEl.classList.add('text-green');
-    document.getElementById('newFailureCount').textContent = newFailureCount;
+    if (newFailureRateEl) {
+        newFailureRateEl.textContent = newFailureRateText;
+        newFailureRateEl.className = 'card-value';
+        if (newFailureRateNum > 0) newFailureRateEl.classList.add('text-red');
+        else newFailureRateEl.classList.add('text-green');
+    }
+    setText('newFailureCount', newFailureCount);
 
-    document.getElementById('flakyCount').textContent = flakyCount;
-    document.getElementById('brokenCount').textContent = brokenCount;
-    document.getElementById('totalTests').textContent = totalTests;
-    document.getElementById('totalTestsBroken').textContent = totalTests;
+    setText('flakyCount', flakyCount);
+    setText('brokenCount', brokenCount);
+    setText('totalTests', totalTests);
+    setText('totalTestsBroken', totalTests);
 
     // Critical Issues & Stability Score
     const stabilityScore = totalTests ? Math.max(0, 100 - ((flakyCount + criticalCount) / totalTests * 100)).toFixed(1) : 0;
@@ -1846,6 +1962,7 @@ function toggleComparisonMode() {
 
 function renderTrendChart(containerId, data) {
     const container = document.getElementById(containerId);
+    if (!container) return;
     container.innerHTML = '';
     container.style.position = 'relative';
     container.style.display = 'block';

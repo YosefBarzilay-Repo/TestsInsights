@@ -172,157 +172,7 @@
                                 </div>
                             </div>
                             <div class="insights-content-wrapper">
-                                <div id="insightsContent" class="insights-grid">
-                                <!-- Scope Overview Card -->
-                                <div class="card">
-                                    <div class="card-title">Total Scope</div>
-                                    <div style="display: flex; justify-content: space-around; align-items: center; height: 100%; padding: 0.5rem 0;">
-                                        <div style="text-align: center;">
-                                            <div class="card-value" id="filterBarRunCount">-</div>
-                                            <div class="card-subtext">Runs</div>
-                                        </div>
-                                        <div style="width: 1px; height: 40px; background: var(--border-color);"></div>
-                                        <div style="text-align: center;">
-                                            <div class="card-value" id="filterBarTestCount">-</div>
-                                            <div class="card-subtext">Tests</div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Trend Chart Card (Spans 2 columns) -->
-                                <div class="card col-span-2" style="min-height: 200px; display: flex; flex-direction: column;">
-                                    <div class="card-title">Execution Trend</div>
-                                    <div class="trend-chart-container" style="flex: 1; height: auto;">
-                                        <div id="trendChartSmall"
-                                            style="width: 100%; height: 100%; display: flex; align-items: flex-end;">
-                                        </div>
-                                        <div class="trend-chart-controls">
-                                            <button id="compareRunsBtn" class="btn-icon"
-                                                onclick="toggleComparisonMode(); switchTab('tests')" title="Select 2-3 runs to compare"
-                                                disabled>
-                                                <span class="material-symbols-outlined">compare_arrows</span>
-                                            </button>
-                                            <button id="clearRunFilterBtn" class="btn-icon" onclick="clearRunSelection()"
-                                                title="Clear Selection" disabled>
-                                                <span class="material-symbols-outlined">close</span>
-                                            </button>
-                                            <button class="btn-icon" onclick="openTrendModal()" title="Enlarge" disabled>
-                                                <span class="material-symbols-outlined">open_in_full</span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Execution Time Card -->
-                                <div class="card">
-                                    <div class="card-title">Execution Time</div>
-                                    <div style="display: flex; flex-direction: column; gap: 1rem;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                                            <span style="color: var(--text-secondary); font-size: 0.9rem;">Average</span>
-                                            <span id="statAvgTime" style="font-weight: 600; color: var(--text-main); font-size: 1.1rem;">-</span>
-                                        </div>
-                                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                                            <span style="color: var(--text-secondary); font-size: 0.9rem;">Max</span>
-                                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                <span id="statMaxRunLink" class="clickable-count" style="font-size: 0.85rem; display: none;"></span>
-                                                <span id="statMaxTime" style="font-weight: 600; color: var(--text-main); font-size: 1.1rem;">-</span>
-                                            </div>
-                                        </div>
-                                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                                            <span style="color: var(--text-secondary); font-size: 0.9rem;">Min</span>
-                                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                <span id="statMinRunLink" class="clickable-count" style="font-size: 0.85rem; display: none;"></span>
-                                                <span id="statMinTime" style="font-weight: 600; color: var(--text-main); font-size: 1.1rem;">-</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Status Distribution Card -->
-                                <div class="card">
-                                    <div class="card-title"
-                                        style="display: flex; justify-content: space-between; align-items: center;">
-                                        <span>Status Distribution</span>
-                                        <span id="totalExecutionsClickable" class="clickable-legend"
-                                            style="font-size: 0.75rem; color: var(--text-secondary); text-transform: none; font-weight: normal;">Total:
-                                            <strong id="totalExecutions" style="color: var(--text-main);">-</strong></span>
-                                    </div>
-                                    <div class="status-legend">
-                                        <div id="passedFilterClickable" class="legend-item clickable-legend">
-                                            <span class="legend-dot bg-green"></span>
-                                            <span>Passed: <strong id="percentPassed">-</strong>% (<span
-                                                    id="countPassed">-</span>)</span>
-                                        </div>
-                                        <div id="failedFilterClickable" class="legend-item clickable-legend">
-                                            <span class="legend-dot bg-red"></span>
-                                            <span>Failed: <strong id="percentFailed">-</strong>% (<span
-                                                    id="countFailed">-</span>)</span>
-                                        </div>
-                                        <div id="skippedFilterClickable" class="legend-item clickable-legend">
-                                            <span class="legend-dot bg-grey"></span>
-                                            <span>Skipped: <strong id="percentSkipped">-</strong>% (<span
-                                                    id="countSkipped">-</span>)</span>
-                                        </div>
-                                    </div>
-                                    <div class="progress-track">
-                                        <div id="barPassed" class="progress-fill bg-green" style="width: 0%"></div>
-                                        <div id="barFailed" class="progress-fill bg-red" style="width: 0%"></div>
-                                        <div id="barSkipped" class="progress-fill bg-grey" style="width: 0%"></div>
-                                    </div>
-                                </div>
-
-                                <!-- Overall Stability Score -->
-                                <div class="card">
-                                    <div class="card-title">Overall Stability Score</div>
-                                    <div class="card-value" id="stabilityScore">-</div>
-                                    <div class="card-subtext">Based on flaky and broken test rates</div>
-                                </div>
-
-                                <!-- Critical Issues -->
-                                <div class="card">
-                                    <div class="card-title">Critical Issues</div>
-                                    <div class="card-value text-red" id="criticalIssuesCount">-</div>
-                                    <div class="card-subtext">Tests consistently failing</div>
-                                </div>
-
-                                <!-- FR-06 & FR-08: Flaky Tests Card -->
-                                <div class="card">
-                                    <div class="card-title">Flaky Tests</div>
-                                    <div class="card-value" id="flakyRate">-</div>
-                                    <div class="card-subtext">
-                                        <span id="flakyCount" class="clickable-count">-</span> flaky tests of <span
-                                            id="totalTests">-</span> total
-                                    </div>
-                                </div>
-
-                                <!-- Continuous Failing Tests Card -->
-                                <div class="card">
-                                    <div class="card-title">Continuous Failing</div>
-                                    <div class="card-value" id="brokenRate">-</div>
-                                    <div class="card-subtext">
-                                        <span id="brokenCount" class="clickable-count">-</span> failing tests of <span
-                                            id="totalTestsBroken">-</span> total
-                                    </div>
-                                </div>
-
-                                <!-- First Time Failure Card -->
-                                <div class="card">
-                                    <div class="card-title">First Time Failure</div>
-                                    <div class="card-value" id="newFailureRate">-</div>
-                                    <div class="card-subtext">
-                                        <span id="newFailureCount" class="clickable-count">-</span> tests started
-                                        failing in last <span id="displayNewFailureDays">7</span> days
-                                    </div>
-                                </div>
-
-                                <!-- Group Status Deviation Card -->
-                                <div class="card">
-                                    <div class="card-title">Group Status Deviation</div>
-                                    <div id="groupDeviationContainer"
-                                        style="margin-top: 1rem; max-height: 300px; overflow-y: auto; padding-right: 5px;">
-                                    </div>
-                                </div>
-                            </div>
+                                <div id="insightsContent" class="insights-grid"></div>
                             </div>
                         </div>
                         <div id="details" class="table-container hidden">
@@ -350,7 +200,6 @@
                                     <thead>
                                         <tr>
                                             <th>Test Name</th>
-                                            <th class="text-right" style="width: 10rem;">Deviation (P/F/S)</th>
                                         </tr>
                                     </thead>
                                     <tbody id="testTableBody"></tbody>
@@ -635,6 +484,12 @@
                 }
             });
         </script>
+        <script src="src/client/js/ui/MetricCard.js"></script>
+        <script src="src/client/js/ui/SplitMetricCard.js"></script>
+        <script src="src/client/js/ui/PropertyListCard.js"></script>
+        <script src="src/client/js/ui/DistributionCard.js"></script>
+        <script src="src/client/js/ui/ChartCard.js"></script>
+        <script src="src/client/js/ui/TableWidgetCard.js"></script>
         <script src="src/client/js/app.js"></script>
 </body>
 
