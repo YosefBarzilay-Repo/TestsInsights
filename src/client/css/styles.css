@@ -286,7 +286,7 @@ body {
 
 .card {
     background: var(--bg-surface);
-    padding: 1rem;
+    padding: 1.5rem;
     border-radius: var(--radius);
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-sm);
@@ -321,7 +321,7 @@ body {
     font-size: 15px;
     font-weight: 600;
     color: var(--text-main);
-    margin-bottom: 0.25rem;
+    margin-bottom: 1rem;
 }
 
 .card-value {
@@ -366,7 +366,7 @@ table {
 
 th,
 td {
-    padding: 8px 12px;
+    padding: 12px 16px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
 }

@@ -1244,6 +1244,28 @@ function openTestDetails(testName) {
     renderChart(details);
 }
 
+function filterByGroupStatus(group, status) {
+    switchTab('tests');
+
+    // Reset Advanced Filters inputs
+    document.getElementById('filterTestName').value = '';
+    document.getElementById('filterTestGroup').value = '';
+    document.getElementById('filterRunId').value = '';
+    document.getElementById('filterStatus').value = '';
+    document.getElementById('filterStartTimeMin').value = '';
+    document.getElementById('filterStartTimeMax').value = '';
+    document.getElementById('filterDurationMin').value = '';
+    document.getElementById('filterDurationMax').value = '';
+
+    // Set specific inputs
+    const groupInput = document.getElementById('filterTestGroup');
+    groupInput.value = (group === 'Unassigned') ? '--' : group;
+
+    document.getElementById('filterStatus').value = status;
+
+    applyAdvancedFilters();
+}
+
 function updateInsights(runIds = []) {
     let totalRuns, totalTests, totalPassed = 0, totalFailed = 0, totalSkipped = 0, flakyCount = 0, brokenCount = 0;
     let newFailureCount = 0;
@@ -1472,6 +1494,7 @@ function updateInsights(runIds = []) {
     }
 
     let avgTime = '-', maxTime = '-', minTime = '-';
+    let maxRunId = null, minRunId = null;
     const durations = timeStatsRuns.map(r => r.durationSeconds).filter(d => typeof d === 'number');
 
     if (durations.length > 0) {
@@ -1479,6 +1502,11 @@ function updateInsights(runIds = []) {
         const avg = total / durations.length;
         const min = Math.min(...durations);
         const max = Math.max(...durations);
+
+        const minRun = timeStatsRuns.find(r => r.durationSeconds === min);
+        const maxRun = timeStatsRuns.find(r => r.durationSeconds === max);
+        if (minRun) minRunId = minRun.id;
+        if (maxRun) maxRunId = maxRun.id;
 
         const fmt = (s) => {
             if (s < 60) return s.toFixed(1) + 's';
@@ -1494,9 +1522,31 @@ function updateInsights(runIds = []) {
     const elAvg = document.getElementById('statAvgTime');
     const elMax = document.getElementById('statMaxTime');
     const elMin = document.getElementById('statMinTime');
+    const elMaxLink = document.getElementById('statMaxRunLink');
+    const elMinLink = document.getElementById('statMinRunLink');
+
     if (elAvg) elAvg.textContent = avgTime;
     if (elMax) elMax.textContent = maxTime;
     if (elMin) elMin.textContent = minTime;
+
+    if (elMaxLink) {
+        if (maxRunId) {
+            elMaxLink.textContent = `Run ${maxRunId}`;
+            elMaxLink.style.display = 'inline';
+            elMaxLink.onclick = (e) => toggleRunFilter(maxRunId, e);
+        } else {
+            elMaxLink.style.display = 'none';
+        }
+    }
+    if (elMinLink) {
+        if (minRunId) {
+            elMinLink.textContent = `Run ${minRunId}`;
+            elMinLink.style.display = 'inline';
+            elMinLink.onclick = (e) => toggleRunFilter(minRunId, e);
+        } else {
+            elMinLink.style.display = 'none';
+        }
+    }
 
     // --- Group Status Deviation Logic ---
     const groupStats = {};
@@ -1536,9 +1586,9 @@ function updateInsights(runIds = []) {
             const thead = document.createElement('thead');
             thead.innerHTML = `
                 <tr style="text-align: left; border-bottom: 1px solid var(--border-color);">
-                    <th style="padding: 0.5rem; font-weight: 600; color: var(--text-main); position: sticky; top: 0; background: var(--bg-surface); z-index: 1;">Group</th>
-                    <th style="padding: 0.5rem; font-weight: 600; color: var(--text-main); text-align: right; position: sticky; top: 0; background: var(--bg-surface); z-index: 1;">P / F / S</th>
-                    <th style="padding: 0.5rem; font-weight: 600; color: var(--text-main); width: 40%; position: sticky; top: 0; background: var(--bg-surface); z-index: 1;">Distribution</th>
+                    <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--text-main); position: sticky; top: 0; background: var(--bg-surface); z-index: 1;">Group</th>
+                    <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--text-main); text-align: right; position: sticky; top: 0; background: var(--bg-surface); z-index: 1;">P / F / S</th>
+                    <th style="padding: 0.75rem 1rem; font-weight: 600; color: var(--text-main); width: 40%; position: sticky; top: 0; background: var(--bg-surface); z-index: 1;">Distribution</th>
                 </tr>
             `;
             table.appendChild(thead);
@@ -1549,17 +1599,18 @@ function updateInsights(runIds = []) {
                 const pPass = (stats.passed / stats.total) * 100;
                 const pFail = (stats.failed / stats.total) * 100;
                 const pSkip = (stats.skipped / stats.total) * 100;
+                const safeGroupName = groupName.replace(/'/g, "\\'");
 
                 const tr = document.createElement('tr');
                 tr.style.borderBottom = '1px solid var(--border-color)';
                 tr.innerHTML = `
-                    <td style="padding: 0.5rem; font-weight: 500; color: var(--text-main);">${groupName}</td>
-                    <td style="padding: 0.5rem; text-align: right;">
-                        <span class="text-green">${stats.passed}</span> / 
-                        <span class="text-red">${stats.failed}</span> / 
-                        <span style="color: var(--text-muted);">${stats.skipped}</span>
+                    <td style="padding: 0.75rem 1rem; font-weight: 500; color: var(--text-main);">${groupName}</td>
+                    <td style="padding: 0.75rem 1rem; text-align: right;">
+                        <span class="text-green" style="cursor: pointer; text-decoration: underline;" onclick="filterByGroupStatus('${safeGroupName}', 'passed')">${stats.passed}</span> / 
+                        <span class="text-red" style="cursor: pointer; text-decoration: underline;" onclick="filterByGroupStatus('${safeGroupName}', 'failed')">${stats.failed}</span> / 
+                        <span style="color: var(--text-muted); cursor: pointer; text-decoration: underline;" onclick="filterByGroupStatus('${safeGroupName}', 'skipped')">${stats.skipped}</span>
                     </td>
-                    <td style="padding: 0.5rem; vertical-align: middle;">
+                    <td style="padding: 0.75rem 1rem; vertical-align: middle;">
                         <div class="progress-track" style="height: 6px; width: 100%; margin: 0;">
                             <div class="progress-fill bg-green" style="width: ${pPass}%"></div>
                             <div class="progress-fill bg-red" style="width: ${pFail}%"></div>
