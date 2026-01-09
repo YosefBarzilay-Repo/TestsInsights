@@ -114,9 +114,24 @@
                 </button>
                 <div id="savedFiltersMenu" class="dropdown-menu"
                     style="display: none; position: absolute; top: 100%; left: 0; min-width: 200px; z-index: 101;">
-                    <div class="dropdown-item">My Daily Check</div>
-                    <div class="dropdown-item">Critical Failures</div>
-                    <div class="dropdown-item">Performance Watch</div>
+                    <div class="dropdown-item" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>My Daily Check</span>
+                        <button class="btn-icon" style="padding: 0; width: 24px; height: 24px; background: transparent;" onclick="toggleSavedFilterSettings(event)">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">more_vert</span>
+                        </button>
+                    </div>
+                    <div class="dropdown-item" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Critical Failures</span>
+                        <button class="btn-icon" style="padding: 0; width: 24px; height: 24px; background: transparent;" onclick="toggleSavedFilterSettings(event)">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">more_vert</span>
+                        </button>
+                    </div>
+                    <div class="dropdown-item" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Performance Watch</span>
+                        <button class="btn-icon" style="padding: 0; width: 24px; height: 24px; background: transparent;" onclick="toggleSavedFilterSettings(event)">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">more_vert</span>
+                        </button>
+                    </div>
                     <div style="border-top: 1px solid var(--border-color); margin-top: 0.5rem; padding: 0.5rem;">
                         <button class="btn btn-primary" disabled style="width: 100%; justify-content: center; opacity: 0.5; cursor: not-allowed;">
                             <span class="material-symbols-outlined">save</span>
@@ -251,6 +266,20 @@
                                         <div id="barFailed" class="progress-fill bg-red" style="width: 0%"></div>
                                         <div id="barSkipped" class="progress-fill bg-grey" style="width: 0%"></div>
                                     </div>
+                                </div>
+
+                                <!-- Overall Stability Score -->
+                                <div class="card">
+                                    <div class="card-title">Overall Stability Score</div>
+                                    <div class="card-value" id="stabilityScore">-</div>
+                                    <div class="card-subtext">Based on flaky and broken test rates</div>
+                                </div>
+
+                                <!-- Critical Issues -->
+                                <div class="card">
+                                    <div class="card-title">Critical Issues</div>
+                                    <div class="card-value text-red" id="criticalIssuesCount">-</div>
+                                    <div class="card-subtext">Tests consistently failing</div>
                                 </div>
 
                                 <!-- FR-06 & FR-08: Flaky Tests Card -->

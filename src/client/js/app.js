@@ -26,6 +26,7 @@ let advancedFilters = {
     durationMax: ''
 };
 const itemsPerPage = 20;
+let activeSavedFilterSettingsBtn = null;
 
 function switchTab(tabName) {
     const btn = document.getElementById(`tab-${tabName}`);
@@ -162,24 +163,10 @@ function generateDeepAnalysis() {
 
         let html = '';
 
-        let scoreColor = stabilityScore > 80 ? 'text-green' : (stabilityScore > 50 ? 'text-warning' : 'text-red');
-
         html += `
-                    <div class="insights-grid" style="margin-bottom: 2rem;">
-                        <div class="card" style="border: 1px solid var(--border-color); box-shadow: none;">
-                            <div class="card-title">Overall Stability Score</div>
-                            <div class="card-value ${scoreColor}">${stabilityScore}/100</div>
-                            <div class="card-subtext">Based on flaky and broken test rates</div>
-                        </div>
-                        <div class="card" style="border: 1px solid var(--border-color); box-shadow: none;">
-                            <div class="card-title">Critical Issues</div>
-                            <div class="card-value text-red">${brokenTests.length}</div>
-                            <div class="card-subtext">Tests consistently failing</div>
-                        </div>
-                    </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <h4 style="margin: 0;">AI Recommendations</h4>
-                        <button class="btn btn-secondary" onclick="exportDeepThinkToCsv()" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;">
+                        <button class="btn btn-secondary" onclick="exportDeepThinkToCsv()" style="padding: 0.25rem 0.75rem; font-size: 0.8rem;" id="btnExportDeepThink">
                             <span class="material-symbols-outlined" style="font-size: 1.1rem;">download</span>
                             Export
                         </button>
@@ -769,6 +756,53 @@ function toggleSavedFiltersMenu(e) {
     menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
 }
 
+function toggleSavedFilterSettings(e) {
+    e.stopPropagation();
+    
+    const btn = e.currentTarget;
+    const existing = document.getElementById('savedFilterSettingsMenu');
+
+    if (existing) {
+        existing.remove();
+        if (activeSavedFilterSettingsBtn === btn) {
+            activeSavedFilterSettingsBtn = null;
+            return;
+        }
+    }
+
+    activeSavedFilterSettingsBtn = btn;
+    const rect = btn.getBoundingClientRect();
+
+    const menu = document.createElement('div');
+    menu.id = 'savedFilterSettingsMenu';
+    menu.className = 'dropdown-menu';
+    menu.style.display = 'block';
+    menu.style.position = 'fixed';
+    menu.style.top = rect.top + 'px';
+    menu.style.left = rect.right + 'px';
+    menu.style.minWidth = '150px';
+    menu.style.zIndex = '10000';
+
+    const actions = ['Make as default', 'Share', 'Delete'];
+    actions.forEach(action => {
+        const item = document.createElement('div');
+        item.className = 'dropdown-item';
+        item.textContent = action;
+        item.style.color = 'var(--text-muted)';
+        item.style.cursor = 'not-allowed';
+        item.onclick = (ev) => ev.stopPropagation();
+        menu.appendChild(item);
+    });
+
+    document.body.appendChild(menu);
+
+    setTimeout(() => document.addEventListener('click', function closeMenu() {
+        if (menu.parentNode) menu.parentNode.removeChild(menu);
+        activeSavedFilterSettingsBtn = null;
+        document.removeEventListener('click', closeMenu);
+    }), 0);
+}
+
 // Close dropdown when clicking outside
 document.addEventListener('click', function (e) {
     const dropdown = document.getElementById('filterDropdown');
@@ -1268,7 +1302,7 @@ function filterByGroupStatus(group, status) {
 
 function updateInsights(runIds = []) {
     let totalRuns, totalTests, totalPassed = 0, totalFailed = 0, totalSkipped = 0, flakyCount = 0, brokenCount = 0;
-    let newFailureCount = 0;
+    let newFailureCount = 0, criticalCount = 0;
 
     // Load Settings
     const settings = JSON.parse(localStorage.getItem('insightsSettings')) || {
@@ -1360,6 +1394,11 @@ function updateInsights(runIds = []) {
                 const diff = earliestFailDate ? (latestDate - earliestFailDate) : -1;
                 if (diff >= 0 && diff <= newFailureWindowMs) newFailureCount++;
             }
+
+            // Critical Issues Check (Never Passed in selection)
+            const hasPassed = runDetails.some(d => d.status === 'passed');
+            const hasFailed = runDetails.some(d => d.status === 'failed');
+            if (!hasPassed && hasFailed) criticalCount++;
         });
 
     } else { // Global stats
@@ -1427,6 +1466,11 @@ function updateInsights(runIds = []) {
                 const diff = earliestFailDate ? (latestDate - earliestFailDate) : -1;
                 if (diff >= 0 && diff <= newFailureWindowMs) newFailureCount++;
             }
+
+            // Critical Issues Check (Never Passed)
+            const hasPassed = sortedDetails.some(d => d.status === 'passed');
+            const hasFailed = sortedDetails.some(d => d.status === 'failed');
+            if (!hasPassed && hasFailed) criticalCount++;
         }
     }
 
@@ -1484,6 +1528,19 @@ function updateInsights(runIds = []) {
     document.getElementById('brokenCount').textContent = brokenCount;
     document.getElementById('totalTests').textContent = totalTests;
     document.getElementById('totalTestsBroken').textContent = totalTests;
+
+    // Critical Issues & Stability Score
+    const stabilityScore = totalTests ? Math.max(0, 100 - ((flakyCount + criticalCount) / totalTests * 100)).toFixed(1) : 0;
+    const scoreEl = document.getElementById('stabilityScore');
+    if (scoreEl) {
+        scoreEl.textContent = stabilityScore + '/100';
+        scoreEl.className = 'card-value';
+        if (stabilityScore > 80) scoreEl.classList.add('text-green');
+        else if (stabilityScore > 50) scoreEl.classList.add('text-warning');
+        else scoreEl.classList.add('text-red');
+    }
+    const criticalEl = document.getElementById('criticalIssuesCount');
+    if (criticalEl) criticalEl.textContent = criticalCount;
 
     // Calculate Time Stats
     let timeStatsRuns = [];
