@@ -28,6 +28,7 @@ let advancedFilters = {
 };
 const itemsPerPage = 20;
 let activeSavedFilterSettingsBtn = null;
+let globalRunMetadata = {};
 
 function switchTab(tabName) {
     const btn = document.getElementById(`tab-${tabName}`);
@@ -584,21 +585,25 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('dashboard').classList.remove('hidden');
 
     // Load demo data
-    fetch('demo/valid_tests_list.json')
-        .then(response => {
-            if (!response.ok) throw new Error("Failed to load data");
-            return response.text();
-        })
-        .then(text => {
-            try {
-                processJSON(text, false);
-            } catch (err) {
-                console.error(err);
-            }
-        })
-        .catch(err => {
+    Promise.all([
+        fetch('demo/runs_table.json').then(r => r.json()),
+        fetch('demo/valid_tests_list.json').then(r => r.text())
+    ])
+    .then(([runsData, testsText]) => {
+        if (Array.isArray(runsData)) {
+            runsData.forEach(r => {
+                if (r.run_id) globalRunMetadata[r.run_id] = r;
+            });
+        }
+        try {
+            processJSON(testsText, false);
+        } catch (err) {
             console.error(err);
-        });
+        }
+    })
+    .catch(err => {
+        console.error("Failed to load data", err);
+    });
 });
 
 function isAnyFilterActive() {
@@ -643,13 +648,13 @@ function updateFilterDisplay() {
 
     // 3. Global Filters
     const typeEl = document.getElementById('globalRunType');
-    if (typeEl && typeEl.value) parts.push(`<b>Type:</b> ${typeEl.value}`);
+    if (typeEl && typeEl.value) parts.push(`<b>Run Type:</b> ${typeEl.value}`);
 
     const verEl = document.getElementById('globalVersion');
-    if (verEl && verEl.value) parts.push(`<b>Ver:</b> ${verEl.value}`);
+    if (verEl && verEl.value) parts.push(`<b>Version:</b> ${verEl.value}`);
 
     const runIdEl = document.getElementById('globalRunId');
-    if (runIdEl && runIdEl.value) parts.push(`<b>Run ID:</b> ${runIdEl.value}`);
+    if (runIdEl && runIdEl.value) parts.push(`<b>Run:</b> ${runIdEl.value}`);
 
     // 4. Date Filters
     const lastDays = document.getElementById('filterLastDays')?.value;
@@ -757,7 +762,6 @@ function processJSON(jsonText, renderInitialData = true) {
     const runStatsMap = {};
     const localRunToTestsMap = {};
     const runIds = new Set();
-    const mockRunMetadata = {};
     let totalPassed = 0;
     let totalFailed = 0;
     let totalSkipped = 0;
@@ -784,20 +788,10 @@ function processJSON(jsonText, renderInitialData = true) {
         let runType = item.run_type || item.type || '';
         let version = item.version || item.build_number || '';
 
-        if (runId) {
-            if (!mockRunMetadata[runId]) {
-                const mTypes = ['Nightly', 'CI', 'Sanity', 'Regression'];
-                const mVers = ['1.0.0', '1.0.1', '1.1.0', '1.2.0-beta'];
-                let hash = 0;
-                for (let i = 0; i < runId.length; i++) hash = (hash << 5) - hash + runId.charCodeAt(i);
-                hash = Math.abs(hash);
-                mockRunMetadata[runId] = {
-                    type: mTypes[hash % mTypes.length],
-                    version: mVers[(hash >> 2) % mVers.length]
-                };
-            }
-            if (!runType) runType = mockRunMetadata[runId].type;
-            if (!version) version = mockRunMetadata[runId].version;
+        if (runId && globalRunMetadata[runId]) {
+            const meta = globalRunMetadata[runId];
+            if (!runType) runType = meta.type;
+            if (!version) version = meta.version;
         }
 
         if (runType) runTypes.add(runType);
@@ -812,14 +806,39 @@ function processJSON(jsonText, renderInitialData = true) {
             const currentEndTime = item.end_time || null;
 
             if (!runStatsMap[runId]) {
+                let runDate = item.run_date || '';
+                let rStart = currentStartTime;
+                let rEnd = currentEndTime;
+                let rStatus = '';
+                let rUrl = '';
+
+                if (globalRunMetadata[runId]) {
+                    const meta = globalRunMetadata[runId];
+                    if (!runDate && meta.start_time) {
+                        runDate = meta.start_time.split(' ')[0];
+                    }
+                    if (meta.start_time) {
+                        const parts = meta.start_time.split(' ');
+                        if (parts.length > 1) rStart = parts[1];
+                    }
+                    if (meta.end_time) {
+                        const parts = meta.end_time.split(' ');
+                        if (parts.length > 1) rEnd = parts[1];
+                    }
+                    if (meta.status) rStatus = meta.status;
+                    if (meta.url) rUrl = meta.url;
+                }
+
                 runStatsMap[runId] = {
                     id: runId,
-                    date: item.run_date || '',
+                    date: runDate,
                     passed: 0, failed: 0, skipped: 0, total: 0,
-                    startTime: currentStartTime,
-                    endTime: currentEndTime,
+                    startTime: rStart,
+                    endTime: rEnd,
                     runType: runType,
-                    version: version
+                    version: version,
+                    status: rStatus,
+                    url: rUrl
                 };
             }
             runStatsMap[runId].total++;
@@ -878,6 +897,49 @@ function processJSON(jsonText, renderInitialData = true) {
             localRunToTestsMap[runId].add(testKey);
         }
     }
+
+    // Ensure all runs from metadata are present in filters and stats
+    if (globalRunMetadata) {
+        Object.values(globalRunMetadata).forEach(meta => {
+            if (!meta.run_id) return;
+            
+            // Populate Filters
+            if (meta.type) runTypes.add(meta.type);
+            if (meta.version) versions.add(meta.version);
+            
+            // Populate Run Stats (for Run ID filter and Charts)
+            if (!runStatsMap[meta.run_id]) {
+                let runDate = meta.run_date || '';
+                let rStart = null;
+                let rEnd = null;
+                
+                if (!runDate && meta.start_time) {
+                    runDate = meta.start_time.split(' ')[0];
+                }
+                if (meta.start_time) {
+                    const parts = meta.start_time.split(' ');
+                    if (parts.length > 1) rStart = parts[1];
+                }
+                if (meta.end_time) {
+                    const parts = meta.end_time.split(' ');
+                    if (parts.length > 1) rEnd = parts[1];
+                }
+
+                runStatsMap[meta.run_id] = {
+                    id: meta.run_id,
+                    date: runDate,
+                    passed: 0, failed: 0, skipped: 0, total: 0,
+                    startTime: rStart,
+                    endTime: rEnd,
+                    runType: meta.type || '',
+                    version: meta.version || '',
+                    status: meta.status || '',
+                    url: meta.url || ''
+                };
+            }
+        });
+    }
+
     globalTestHistory = testHistory;
     globalTestResults = testResults;
     globalTestGroups = testGroups;
@@ -2049,7 +2111,7 @@ function updateDateFilterText() {
     } else if (toDate) {
         btnText.textContent = `Until ${toDate}`;
     } else {
-        btnText.textContent = 'Date Range';
+        btnText.textContent = 'Date';
     }
 
     const clearBtn = document.getElementById('clearDateBtn');

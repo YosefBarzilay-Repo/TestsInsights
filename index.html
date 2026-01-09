@@ -62,7 +62,7 @@
                     </div>
                     <div>
                         <div style="position: relative;">
-                            <input type="text" id="globalRunId" class="form-input" list="globalRunIdOptions" onchange="applyGlobalRunFilters()" placeholder="Run ID" style="padding-right: 30px;">
+                            <input type="text" id="globalRunId" class="form-input" list="globalRunIdOptions" onchange="applyGlobalRunFilters()" placeholder="Run" style="padding-right: 30px;">
                             <datalist id="globalRunIdOptions"></datalist>
                             <span id="clearRunIdBtn" class="material-symbols-outlined hidden" onclick="clearFilter('globalRunId')" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 16px; cursor: pointer; color: var(--text-muted);">close</span>
                         </div>
@@ -83,7 +83,7 @@
                         <div class="custom-dropdown" style="position: relative; width: 100%;">
                             <div style="position: relative;">
                                 <button id="dateFilterBtn" class="form-input date-filter-btn" onclick="toggleDateDropdown(event)" style="width: 100%; padding-right: 30px;">
-                                    <span id="dateFilterText" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Date Range</span>
+                                    <span id="dateFilterText" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Date</span>
                                     <span class="material-symbols-outlined" style="font-size: 1.2rem; color: var(--text-muted);">calendar_month</span>
                                 </button>
                                 <span id="clearDateBtn" class="material-symbols-outlined hidden" onclick="clearDateRange(event)" style="position: absolute; right: 30px; top: 50%; transform: translateY(-50%); font-size: 16px; cursor: pointer; color: var(--text-muted); z-index: 10;">close</span>
@@ -110,7 +110,7 @@
                                         <button class="btn-icon" style="padding: 2px; height: 20px; width: 20px;"
                                             onclick="clearDateSelection()" title="Clear Selection">
                                             <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">DATE
-                                                RANGE</label>
+                                                </label>
                                             <button class="btn-icon" style="padding: 2px; height: 20px; width: 20px;"
                                                 onclick="clearDateRange()" title="Clear Range">
                                                 <span class="material-symbols-outlined" style="font-size: 14px;">close</span>
