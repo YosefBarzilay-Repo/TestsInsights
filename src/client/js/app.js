@@ -330,6 +330,24 @@ function generateDeepAnalysis() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+    // Initialize empty view
+    renderTable();
+    updateInsights();
+    renderTrendChart('trendChartSmall', []);
+    
+    // Initialize empty filters
+    const typeSelect = document.getElementById('globalRunType');
+    const verSelect = document.getElementById('globalVersion');
+    if(typeSelect) typeSelect.innerHTML = '<option value="">Run Type</option>';
+    if(verSelect) verSelect.innerHTML = '<option value="">Version</option>';
+    
+    const datesList = document.getElementById('availableDatesList');
+    if (datesList) datesList.innerHTML = '<div style="color:#9ca3af; font-size:0.75rem;">No dates found</div>';
+
+    // Show dashboard
+    document.getElementById('dashboard').classList.remove('hidden');
+
+    // Load demo data
     fetch('demo/valid_tests_list.json')
         .then(response => {
             if (!response.ok) throw new Error("Failed to load data");
@@ -337,15 +355,13 @@ window.addEventListener('DOMContentLoaded', () => {
         })
         .then(text => {
             try {
-                processJSON(text);
+                processJSON(text, false);
             } catch (err) {
                 console.error(err);
-                alert('Error processing JSON data');
             }
         })
         .catch(err => {
             console.error(err);
-            alert('Could not fetch data file: ' + err.message);
         });
 });
 
@@ -417,7 +433,7 @@ function setFilter(filter) {
     renderTrendChart('trendChartLarge', globalRunStats);
 }
 
-function processJSON(jsonText) {
+function processJSON(jsonText, renderInitialData = true) {
     if (!jsonText || !jsonText.trim()) {
         alert('The uploaded JSON file is empty.');
         return;
@@ -593,6 +609,8 @@ function processJSON(jsonText) {
     globalRunTypes = runTypes;
     globalVersions = versions;
     runToTestsMap = localRunToTestsMap;
+    activeRunFilters = [];
+    isComparisonMode = false;
 
     globalRunStats = Object.values(runStatsMap).sort((a, b) => {
         const numA = parseFloat(a.id);
@@ -615,13 +633,17 @@ function processJSON(jsonText) {
     });
 
     // Initialize visible runs
-    currentVisibleRunIds = globalRunStats.map(r => r.id);
+    if (renderInitialData) {
+        currentVisibleRunIds = globalRunStats.map(r => r.id);
+    } else {
+        currentVisibleRunIds = [];
+    }
 
     // Populate Global Filter Dropdowns
     const typeSelect = document.getElementById('globalRunType');
     const verSelect = document.getElementById('globalVersion');
-    typeSelect.innerHTML = '<option value="">All Types</option>';
-    verSelect.innerHTML = '<option value="">All Versions</option>';
+    typeSelect.innerHTML = '<option value="">Run Type</option>';
+    verSelect.innerHTML = '<option value="">Version</option>';
 
     Array.from(runTypes).sort().forEach(t => {
         const opt = document.createElement('option');
@@ -671,9 +693,19 @@ function processJSON(jsonText) {
 
     columnFilters = {};
 
-    setFilter('all');
-    updateInsights();
-    updateInsights(currentVisibleRunIds);
+    if (renderInitialData) {
+        setFilter('all');
+        updateInsights();
+        updateInsights(currentVisibleRunIds);
+    } else {
+        currentFilter = 'all';
+        const totalClickable = document.getElementById('totalExecutionsClickable');
+        if (totalClickable) totalClickable.classList.add('filter-active');
+        
+        renderTable();
+        renderTrendChart('trendChartSmall', []);
+        renderTrendChart('trendChartLarge', []);
+    }
 
     document.getElementById('dashboard').classList.remove('hidden');
 }
@@ -1552,7 +1584,7 @@ function updateDateFilterText() {
     } else if (toDate) {
         btnText.textContent = `Until ${toDate}`;
     } else {
-        btnText.textContent = 'All Dates';
+        btnText.textContent = 'Date Range';
     }
 }
 
@@ -2129,7 +2161,7 @@ function updateFilterSummary() {
     let hasFilter = false;
     if (type) { container.appendChild(createBadge('Type', type)); hasFilter = true; }
     if (ver) { container.appendChild(createBadge('Version', ver)); hasFilter = true; }
-    if (dateText && dateText !== 'All Dates') { container.appendChild(createBadge('Date', dateText)); hasFilter = true; }
+    if (dateText && dateText !== 'Date Range') { container.appendChild(createBadge('Date', dateText)); hasFilter = true; }
     if (!hasFilter) {
         const badge = document.createElement('span');
         badge.style.cssText = 'color: #6b7280; font-style: italic; font-size: 0.85rem;';

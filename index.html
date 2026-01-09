@@ -47,18 +47,15 @@
                         style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
                         <select id="globalRunType" class="form-input" style="width: auto;"
                             onchange="applyGlobalRunFilters()">
-                            <option value="">All Types</option>
                         </select>
                         <select id="globalVersion" class="form-input" style="width: auto;"
                             onchange="applyGlobalRunFilters()">
-                            <option value="">All Versions</option>
                         </select>
                         <div class="custom-dropdown" style="position: relative;">
                             <button id="dateFilterBtn" class="form-input date-filter-btn"
                                 onclick="toggleDateDropdown(event)">
                                 <span id="dateFilterText"
-                                    style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">All
-                                    Dates</span>
+                                style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Date Range</span>
                                 <span class="material-symbols-outlined"
                                     style="font-size: 1.2rem; color: #6b7280;">calendar_month</span>
                             </button>
@@ -149,7 +146,7 @@
                                 title="Clear Selection" disabled>
                                 <span class="material-symbols-outlined">close</span>
                             </button>
-                            <button class="btn-icon" onclick="openTrendModal()" title="Enlarge">
+                            <button class="btn-icon" onclick="openTrendModal()" title="Enlarge" disabled>
                                 <span class="material-symbols-outlined">open_in_full</span>
                             </button>
                         </div>
