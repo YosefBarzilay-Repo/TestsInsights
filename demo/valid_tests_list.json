@@ -12,7 +12,7 @@
     "run_id": "run_0001_20241201",
     "test_name": "test_unit_backup_restore_0001",
     "test_group_name": "unit",
-    "status": "pass",
+    "status": "different run",
     "run_date": "2024-12-01",
     "start_time": "09:21:02",
     "end_time": "09:24:21"
@@ -99007,15 +99007,6 @@
     "run_date": "2024-12-04",
     "start_time": "20:56:00",
     "end_time": "21:00:03"
-  },
-  {
-    "run_id": "run_0012_20241204",
-    "test_name": "test_unit_backup_restore_0001",
-    "test_group_name": "unit",
-    "status": "pass",
-    "run_date": "2024-12-04",
-    "start_time": "20:56:02",
-    "end_time": "21:00:21"
   },
   {
     "run_id": "run_0012_20241204",

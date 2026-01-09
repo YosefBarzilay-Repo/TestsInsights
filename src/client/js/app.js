@@ -5,6 +5,7 @@ let globalTestNames = {};
 let runToTestsMap = {};
 let globalRunTypes = new Set();
 let globalVersions = new Set();
+let globalStatuses = new Set();
 let globalRunStats = [];
 let globalTestDetails = {}; // Stores full row data per test
 let currentFilter = 'all'; // 'all', 'flaky', 'failing'
@@ -477,6 +478,7 @@ function processJSON(jsonText, renderInitialData = true) {
     const testDetails = {};
     const runTypes = new Set();
     const versions = new Set();
+    const uniqueStatuses = new Set();
     const runStatsMap = {};
     const localRunToTestsMap = {};
     const runIds = new Set();
@@ -493,6 +495,8 @@ function processJSON(jsonText, renderInitialData = true) {
         if (status === 'pass') status = 'passed';
         else if (status === 'fail') status = 'failed';
         else if (status === 'skip') status = 'skipped';
+
+        if (status) uniqueStatuses.add(status);
 
         let groupName = '--';
         if (item.test_group_name) {
@@ -606,6 +610,7 @@ function processJSON(jsonText, renderInitialData = true) {
     globalTestDetails = testDetails;
     globalRunTypes = runTypes;
     globalVersions = versions;
+    globalStatuses = uniqueStatuses;
     runToTestsMap = localRunToTestsMap;
     activeRunFilters = [];
     isComparisonMode = false;
@@ -640,8 +645,10 @@ function processJSON(jsonText, renderInitialData = true) {
     // Populate Global Filter Dropdowns
     const typeSelect = document.getElementById('globalRunType');
     const verSelect = document.getElementById('globalVersion');
+    const statusSelect = document.getElementById('filterStatus');
     typeSelect.innerHTML = '<option value="">Run Type</option>';
     verSelect.innerHTML = '<option value="">Version</option>';
+    if (statusSelect) statusSelect.innerHTML = '<option value="">All</option>';
 
     Array.from(runTypes).sort().forEach(t => {
         const opt = document.createElement('option');
@@ -655,6 +662,14 @@ function processJSON(jsonText, renderInitialData = true) {
         opt.textContent = v;
         verSelect.appendChild(opt);
     });
+    if (statusSelect) {
+        Array.from(uniqueStatuses).sort().forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s;
+            opt.textContent = s.charAt(0).toUpperCase() + s.slice(1);
+            statusSelect.appendChild(opt);
+        });
+    }
 
     const uniqueDates = new Set(globalRunStats.map(r => r.date).filter(d => d));
     const sortedDates = Array.from(uniqueDates).sort();
@@ -1074,7 +1089,11 @@ function renderTable() {
                 cell.className = 'text-center';
                 const runDetail = globalTestDetails[testName].find(d => d.runId === runId);
                 if (runDetail) {
-                    cell.innerHTML = `<span class="status-pill pill-${runDetail.status}"></span>${runDetail.status}`;
+                    let pillClass = 'pill-other';
+                    if (['passed', 'failed', 'skipped'].includes(runDetail.status)) {
+                        pillClass = `pill-${runDetail.status}`;
+                    }
+                    cell.innerHTML = `<span class="status-pill ${pillClass}"></span>${runDetail.status}`;
                 } else {
                     cell.innerHTML = '<span style="color:#ccc">-</span>';
                 }
@@ -1176,7 +1195,7 @@ function renderTable() {
         // Status
         const statusCell = document.createElement('td');
         let iconName = 'help';
-        let iconColor = 'var(--text-muted)';
+        let iconColor = 'var(--status-info)';
         
         if (currentStatus === 'passed') { iconName = 'check_circle'; iconColor = 'var(--status-pass)'; }
         else if (currentStatus === 'failed') { iconName = 'cancel'; iconColor = 'var(--status-fail)'; }
@@ -1248,11 +1267,15 @@ function openTestDetails(testName) {
     // Populate Table
     details.forEach(d => {
         const row = document.createElement('tr');
+        let pillClass = 'pill-other';
+        if (['passed', 'failed', 'skipped'].includes(d.status)) {
+            pillClass = `pill-${d.status}`;
+        }
         row.innerHTML = `
                     <td>${d.runId}</td>
                     <td>${d.date}</td>
                     <td>${d.start} - ${d.end}</td>
-                    <td><span class="status-pill pill-${d.status}"></span>${d.status}</td>
+                    <td><span class="status-pill ${pillClass}"></span>${d.status}</td>
                 `;
         tbody.appendChild(row);
     });
