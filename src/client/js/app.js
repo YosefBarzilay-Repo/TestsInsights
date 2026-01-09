@@ -741,19 +741,10 @@ function openFilter(event, column) {
 function toggleMainFilterMenu(e) {
     e.stopPropagation();
     const menu = document.getElementById('mainFilterMenu');
-    document.getElementById('savedFiltersMenu').style.display = 'none';
     const dateMenu = document.getElementById('dateFilterMenu');
     if (dateMenu) dateMenu.style.display = 'none';
     
     menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
-}
-
-function toggleSavedFiltersMenu(e) {
-    e.stopPropagation();
-    const menu = document.getElementById('savedFiltersMenu');
-    document.getElementById('mainFilterMenu').style.display = 'none';
-    
-    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
 }
 
 function toggleSavedFilterSettings(e) {
@@ -820,12 +811,6 @@ document.addEventListener('click', function (e) {
     const mainBtn = document.getElementById('mainFilterBtn');
     if (mainMenu && mainMenu.style.display === 'flex' && !mainMenu.contains(e.target) && !mainBtn.contains(e.target)) {
         mainMenu.style.display = 'none';
-    }
-
-    const savedMenu = document.getElementById('savedFiltersMenu');
-    const savedBtn = document.getElementById('savedFiltersBtn');
-    if (savedMenu && savedMenu.style.display === 'block' && !savedMenu.contains(e.target) && !savedBtn.contains(e.target)) {
-        savedMenu.style.display = 'none';
     }
 });
 
