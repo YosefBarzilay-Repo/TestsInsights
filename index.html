@@ -152,14 +152,23 @@
             <div class="content-section">
                 <div class="tabs-header">
                     <div style="display: flex; gap: 1.5rem;">
-                            <button id="tab-insights" class="tab-btn active"
+                            <button id="tab-insights" class="tab-btn active disabled"
                                 onclick="switchTab('insights')">Insights</button>
-                            <button id="tab-tests" class="tab-btn" onclick="switchTab('tests')">Tests</button>
-                            <button id="tab-deepThink" class="tab-btn" onclick="switchTab('deepThink')">Deep
+                            <button id="tab-tests" class="tab-btn disabled" onclick="switchTab('tests')">Tests</button>
+                            <button id="tab-deepThink" class="tab-btn disabled" onclick="switchTab('deepThink')">Deep
                                 Think</button>
                     </div>
                 </div>
-                <div id="tabContentContainer">
+                <div id="emptyState" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem; text-align: center; flex: 1;">
+                    <div style="background: var(--bg-body); padding: 2rem; border-radius: 50%; margin-bottom: 1.5rem; border: 1px solid var(--border-color);">
+                        <span class="material-symbols-outlined" style="font-size: 48px; color: var(--primary);">filter_alt</span>
+                    </div>
+                    <h3 style="font-size: 1.5rem; font-weight: 600; color: var(--text-main); margin-bottom: 0.5rem;">Select a Filter</h3>
+                    <p style="color: var(--text-secondary); max-width: 400px; line-height: 1.6;">
+                        Please select filters from the menu to view results and trends.
+                    </p>
+                </div>
+                <div id="tabContentContainer" class="hidden">
                         <div id="content-insights">
                             <div id="insightsContent" class="insights-grid">
                                 <!-- Trend Chart Card (Spans 2 columns) -->

@@ -68,6 +68,12 @@ body {
     border-bottom-color: var(--primary);
 }
 
+.tab-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 @keyframes spin {
     100% {
         transform: rotate(360deg);

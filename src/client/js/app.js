@@ -28,6 +28,9 @@ let advancedFilters = {
 const itemsPerPage = 20;
 
 function switchTab(tabName) {
+    const btn = document.getElementById(`tab-${tabName}`);
+    if (btn.classList.contains('disabled')) return;
+
     // Remove active class from all tabs
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     document.getElementById(`tab-${tabName}`).classList.add('active');
@@ -49,6 +52,14 @@ function switchTab(tabName) {
     } else if (tabName === 'deepThink') {
         document.getElementById('content-deepThink').classList.remove('hidden');
     }
+}
+
+function unlockDashboard() {
+    document.getElementById('emptyState').classList.add('hidden');
+    document.getElementById('tabContentContainer').classList.remove('hidden');
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('disabled');
+    });
 }
 
 function parseTimeSeconds(timeStr) {
@@ -697,6 +708,7 @@ function processJSON(jsonText, renderInitialData = true) {
         setFilter('all');
         updateInsights();
         updateInsights(currentVisibleRunIds);
+        unlockDashboard();
     } else {
         currentFilter = 'all';
         const totalClickable = document.getElementById('totalExecutionsClickable');
@@ -1701,6 +1713,8 @@ function applyGlobalRunFilters() {
 
     // Clean up selection if it's no longer visible
     activeRunFilters = activeRunFilters.filter(id => currentVisibleRunIds.includes(id));
+
+    unlockDashboard();
 
     renderTrendChart('trendChartSmall', visibleRuns);
     renderTrendChart('trendChartLarge', visibleRuns);
