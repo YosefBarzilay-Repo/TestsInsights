@@ -155,12 +155,12 @@ function generateDeepAnalysis() {
 
         html += `
                     <div class="insights-grid" style="margin-bottom: 2rem;">
-                        <div class="card" style="border: 1px solid #e5e7eb; box-shadow: none;">
+                        <div class="card" style="border: 1px solid var(--border-color); box-shadow: none;">
                             <div class="card-title">Overall Stability Score</div>
                             <div class="card-value ${scoreColor}">${stabilityScore}/100</div>
                             <div class="card-subtext">Based on flaky and broken test rates</div>
                         </div>
-                        <div class="card" style="border: 1px solid #e5e7eb; box-shadow: none;">
+                        <div class="card" style="border: 1px solid var(--border-color); box-shadow: none;">
                             <div class="card-title">Critical Issues</div>
                             <div class="card-value text-red">${brokenTests.length}</div>
                             <div class="card-subtext">Tests consistently failing</div>
@@ -184,16 +184,16 @@ function generateDeepAnalysis() {
                                     <div class="recommendation-title">Fix Broken Tests First</div>
                                 </div>
                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;" title="Mark as resolved">
-                                    <span style="font-size: 0.75rem; color: #9ca3af;">Done</span>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Done</span>
                                     <input type="checkbox" onchange="dismissCard(this)" style="width: 1.1rem; height: 1.1rem; cursor: pointer; accent-color: #10b981;">
                                 </label>
                             </div>
-                            <div style="color: #4b5563; font-size: 0.95rem; line-height: 1.5;">
+                            <div style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">
                                 ${brokenTests.length} tests are consistently failing. These provide no value and block the pipeline.
                             </div>
                             <div class="recommendation-action">
                                 <span class="material-symbols-outlined" style="color: var(--primary);">lightbulb</span>
-                                <span style="font-size: 0.9rem; font-weight: 500; color: #374151;"><strong>Recommendation:</strong> Quarantine or fix these tests immediately.</span>
+                                <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);"><strong>Recommendation:</strong> Quarantine or fix these tests immediately.</span>
                             </div>
                         </div>`;
         }
@@ -207,19 +207,19 @@ function generateDeepAnalysis() {
                                     <div class="recommendation-title">Address Flakiness</div>
                                 </div>
                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;" title="Mark as resolved">
-                                    <span style="font-size: 0.75rem; color: #9ca3af;">Done</span>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Done</span>
                                     <input type="checkbox" onchange="dismissCard(this)" style="width: 1.1rem; height: 1.1rem; cursor: pointer; accent-color: #10b981;">
                                 </label>
                             </div>
-                            <div style="color: #4b5563; font-size: 0.95rem; line-height: 1.5;">
+                            <div style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">
                                 ${flakyTests.length} tests are exhibiting flaky behavior:
-                                <div style="margin-top:0.5rem; font-size: 0.85rem; background: #fff; padding: 0.5rem; border-radius: 0.25rem; border: 1px solid #e5e7eb; max-height: 100px; overflow-y: auto;">
+                                <div style="margin-top:0.5rem; font-size: 0.85rem; background: var(--bg-body); padding: 0.5rem; border-radius: 0.25rem; border: 1px solid var(--border-color); max-height: 100px; overflow-y: auto;">
                                     ${flakyList}
                                 </div>
                             </div>
                             <div class="recommendation-action">
                                 <span class="material-symbols-outlined" style="color: var(--primary);">lightbulb</span>
-                                <span style="font-size: 0.9rem; font-weight: 500; color: #374151;"><strong>Recommendation:</strong> Review test isolation and environment stability.</span>
+                                <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);"><strong>Recommendation:</strong> Review test isolation and environment stability.</span>
                             </div>
                         </div>`;
         }
@@ -233,19 +233,19 @@ function generateDeepAnalysis() {
                                     <div class="recommendation-title">Optimize Slow Tests</div>
                                 </div>
                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;" title="Mark as resolved">
-                                    <span style="font-size: 0.75rem; color: #9ca3af;">Done</span>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Done</span>
                                     <input type="checkbox" onchange="dismissCard(this)" style="width: 1.1rem; height: 1.1rem; cursor: pointer; accent-color: #10b981;">
                                 </label>
                             </div>
-                            <div style="color: #4b5563; font-size: 0.95rem; line-height: 1.5;">
+                            <div style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">
                                 ${slowTests.length} tests have an average execution time > 10 minutes:
-                                <div style="margin-top:0.5rem; font-size: 0.85rem; background: #fff; padding: 0.5rem; border-radius: 0.25rem; border: 1px solid #e5e7eb; max-height: 100px; overflow-y: auto;">
+                                <div style="margin-top:0.5rem; font-size: 0.85rem; background: var(--bg-body); padding: 0.5rem; border-radius: 0.25rem; border: 1px solid var(--border-color); max-height: 100px; overflow-y: auto;">
                                     ${slowList}
                                 </div>
                             </div>
                             <div class="recommendation-action">
                                 <span class="material-symbols-outlined" style="color: var(--primary);">lightbulb</span>
-                                <span style="font-size: 0.9rem; font-weight: 500; color: #374151;"><strong>Recommendation:</strong> Investigate these tests for performance optimization.</span>
+                                <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);"><strong>Recommendation:</strong> Investigate these tests for performance optimization.</span>
                             </div>
                         </div>`;
         }
@@ -259,19 +259,19 @@ function generateDeepAnalysis() {
                                     <div class="recommendation-title">Long Pipeline Runs Detected</div>
                                 </div>
                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;" title="Mark as resolved">
-                                    <span style="font-size: 0.75rem; color: #9ca3af;">Done</span>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Done</span>
                                     <input type="checkbox" onchange="dismissCard(this)" style="width: 1.1rem; height: 1.1rem; cursor: pointer; accent-color: #10b981;">
                                 </label>
                             </div>
-                            <div style="color: #4b5563; font-size: 0.95rem; line-height: 1.5;">
+                            <div style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">
                                 Some runs took significantly longer than the average (${slowRuns[0].avg}m):
-                                <div style="margin-top:0.5rem; font-size: 0.85rem; background: #fff; padding: 0.5rem; border-radius: 0.25rem; border: 1px solid #e5e7eb; max-height: 100px; overflow-y: auto;">
+                                <div style="margin-top:0.5rem; font-size: 0.85rem; background: var(--bg-body); padding: 0.5rem; border-radius: 0.25rem; border: 1px solid var(--border-color); max-height: 100px; overflow-y: auto;">
                                     ${slowRunList}
                                 </div>
                             </div>
                             <div class="recommendation-action">
                                 <span class="material-symbols-outlined" style="color: var(--primary);">lightbulb</span>
-                                <span style="font-size: 0.9rem; font-weight: 500; color: #374151;"><strong>Recommendation:</strong> Check infrastructure load or test retries in these runs.</span>
+                                <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);"><strong>Recommendation:</strong> Check infrastructure load or test retries in these runs.</span>
                             </div>
                         </div>`;
         }
@@ -284,16 +284,16 @@ function generateDeepAnalysis() {
                                     <div class="recommendation-title">Missing Test Ownership</div>
                                 </div>
                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;" title="Mark as resolved">
-                                    <span style="font-size: 0.75rem; color: #9ca3af;">Done</span>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Done</span>
                                     <input type="checkbox" onchange="dismissCard(this)" style="width: 1.1rem; height: 1.1rem; cursor: pointer; accent-color: #10b981;">
                                 </label>
                             </div>
-                            <div style="color: #4b5563; font-size: 0.95rem; line-height: 1.5;">
+                            <div style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">
                                 ${testsWithoutGroup.length} tests are not assigned to any group. Tests without a group may lack ownership, making maintenance and targeted execution difficult.
                             </div>
                             <div class="recommendation-action">
                                 <span class="material-symbols-outlined" style="color: var(--primary);">lightbulb</span>
-                                <span style="font-size: 0.9rem; font-weight: 500; color: #374151;"><strong>Recommendation:</strong> Assign a 'test_group_name' to ensure accountability and better organization.</span>
+                                <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);"><strong>Recommendation:</strong> Assign a 'test_group_name' to ensure accountability and better organization.</span>
                             </div>
                         </div>`;
         }
@@ -306,16 +306,16 @@ function generateDeepAnalysis() {
                                     <div class="recommendation-title">Great Stability!</div>
                                 </div>
                                 <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;" title="Dismiss">
-                                    <span style="font-size: 0.75rem; color: #9ca3af;">Done</span>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Done</span>
                                     <input type="checkbox" onchange="dismissCard(this)" style="width: 1.1rem; height: 1.1rem; cursor: pointer; accent-color: #10b981;">
                                 </label>
                             </div>
-                            <div style="color: #4b5563; font-size: 0.95rem; line-height: 1.5;">
+                            <div style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">
                                 Your test suite appears very stable and performant.
                             </div>
                             <div class="recommendation-action">
                                 <span class="material-symbols-outlined" style="color: var(--primary);">lightbulb</span>
-                                <span style="font-size: 0.9rem; font-weight: 500; color: #374151;"><strong>Recommendation:</strong> Keep up the good work!</span>
+                                <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-main);"><strong>Recommendation:</strong> Keep up the good work!</span>
                             </div>
                         </div>`;
         }
@@ -671,7 +671,7 @@ function processJSON(jsonText, renderInitialData = true) {
             [...sortedDates].reverse().forEach(d => {
                 const badge = document.createElement('div');
                 badge.textContent = d;
-                badge.style.cssText = 'display: inline-block; background: #f3f4f6; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; color: #4b5563; border: 1px solid #e5e7eb; margin-right: 4px; margin-bottom: 4px; cursor: pointer;';
+                badge.style.cssText = 'display: inline-block; background: var(--bg-body); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; color: var(--text-secondary); border: 1px solid var(--border-color); margin-right: 4px; margin-bottom: 4px; cursor: pointer;';
                 badge.onclick = () => {
                     document.getElementById('filterDateFrom').value = d;
                     document.getElementById('filterDateTo').value = d;
@@ -739,6 +739,24 @@ function openFilter(event, column) {
     dropdown.style.display = 'block';
 }
 
+function toggleMainFilterMenu(e) {
+    e.stopPropagation();
+    const menu = document.getElementById('mainFilterMenu');
+    document.getElementById('savedFiltersMenu').style.display = 'none';
+    const dateMenu = document.getElementById('dateFilterMenu');
+    if (dateMenu) dateMenu.style.display = 'none';
+    
+    menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+}
+
+function toggleSavedFiltersMenu(e) {
+    e.stopPropagation();
+    const menu = document.getElementById('savedFiltersMenu');
+    document.getElementById('mainFilterMenu').style.display = 'none';
+    
+    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+}
+
 // Close dropdown when clicking outside
 document.addEventListener('click', function (e) {
     const dropdown = document.getElementById('filterDropdown');
@@ -750,6 +768,18 @@ document.addEventListener('click', function (e) {
     const dateBtn = document.getElementById('dateFilterBtn');
     if (dateMenu && dateMenu.style.display === 'block' && !dateMenu.contains(e.target) && !dateBtn.contains(e.target)) {
         dateMenu.style.display = 'none';
+    }
+
+    const mainMenu = document.getElementById('mainFilterMenu');
+    const mainBtn = document.getElementById('mainFilterBtn');
+    if (mainMenu && mainMenu.style.display === 'flex' && !mainMenu.contains(e.target) && !mainBtn.contains(e.target)) {
+        mainMenu.style.display = 'none';
+    }
+
+    const savedMenu = document.getElementById('savedFiltersMenu');
+    const savedBtn = document.getElementById('savedFiltersBtn');
+    if (savedMenu && savedMenu.style.display === 'block' && !savedMenu.contains(e.target) && !savedBtn.contains(e.target)) {
+        savedMenu.style.display = 'none';
     }
 });
 
@@ -1127,26 +1157,26 @@ function renderTable() {
                 <span style="text-transform: capitalize;">${currentStatus}</span></div>`;
         } else {
             statusCell.textContent = '-';
-            statusCell.style.color = '#9ca3af';
+            statusCell.style.color = 'var(--text-muted)';
         }
         row.appendChild(statusCell);
 
         // Run ID
         const runIdCell = document.createElement('td');
         runIdCell.textContent = runId;
-        runIdCell.style.cssText = 'color: #6b7280; font-size: 0.8rem; white-space: nowrap;';
+        runIdCell.style.cssText = 'color: var(--text-muted); font-size: 0.8rem; white-space: nowrap;';
         row.appendChild(runIdCell);
 
         // Start Time
         const startCell = document.createElement('td');
         startCell.textContent = startTime;
-        startCell.style.cssText = 'color: #6b7280; font-size: 0.8rem; white-space: nowrap;';
+        startCell.style.cssText = 'color: var(--text-muted); font-size: 0.8rem; white-space: nowrap;';
         row.appendChild(startCell);
 
         // End Time
         const endCell = document.createElement('td');
         endCell.textContent = endTime;
-        endCell.style.cssText = 'color: #6b7280; font-size: 0.8rem; white-space: nowrap;';
+        endCell.style.cssText = 'color: var(--text-muted); font-size: 0.8rem; white-space: nowrap;';
         row.appendChild(endCell);
 
         // Duration
@@ -1162,7 +1192,7 @@ function renderTable() {
         deviationCell.innerHTML = `
                     <span class="text-green" style="font-weight: 500;">${passedCount}</span> / 
                     <span class="text-red" style="font-weight: 500;">${failedCount}</span> / 
-                    <span style="color: #9ca3af; font-weight: 500;">${skippedCount}</span>
+                    <span style="color: var(--text-muted); font-weight: 500;">${skippedCount}</span>
                 `;
         row.appendChild(deviationCell);
 
@@ -1449,7 +1479,7 @@ function updateInsights(runIds = []) {
         });
 
         if (sortedGroups.length === 0) {
-            groupContainer.innerHTML = '<div style="color:#9ca3af; font-size:0.9rem;">No data available</div>';
+            groupContainer.innerHTML = '<div style="color:var(--text-muted); font-size:0.9rem;">No data available</div>';
         } else {
             const table = document.createElement('table');
             table.style.width = '100%';
@@ -1458,10 +1488,10 @@ function updateInsights(runIds = []) {
 
             const thead = document.createElement('thead');
             thead.innerHTML = `
-                <tr style="text-align: left; border-bottom: 1px solid #e5e7eb;">
-                    <th style="padding: 0.5rem; font-weight: 600; color: #374151; position: sticky; top: 0; background: #fff; z-index: 1;">Group</th>
-                    <th style="padding: 0.5rem; font-weight: 600; color: #374151; text-align: right; position: sticky; top: 0; background: #fff; z-index: 1;">P / F / S</th>
-                    <th style="padding: 0.5rem; font-weight: 600; color: #374151; width: 40%; position: sticky; top: 0; background: #fff; z-index: 1;">Distribution</th>
+                <tr style="text-align: left; border-bottom: 1px solid var(--border-color);">
+                    <th style="padding: 0.5rem; font-weight: 600; color: var(--text-main); position: sticky; top: 0; background: var(--bg-surface); z-index: 1;">Group</th>
+                    <th style="padding: 0.5rem; font-weight: 600; color: var(--text-main); text-align: right; position: sticky; top: 0; background: var(--bg-surface); z-index: 1;">P / F / S</th>
+                    <th style="padding: 0.5rem; font-weight: 600; color: var(--text-main); width: 40%; position: sticky; top: 0; background: var(--bg-surface); z-index: 1;">Distribution</th>
                 </tr>
             `;
             table.appendChild(thead);
@@ -1474,13 +1504,13 @@ function updateInsights(runIds = []) {
                 const pSkip = (stats.skipped / stats.total) * 100;
 
                 const tr = document.createElement('tr');
-                tr.style.borderBottom = '1px solid #f3f4f6';
+                tr.style.borderBottom = '1px solid var(--border-color)';
                 tr.innerHTML = `
-                    <td style="padding: 0.5rem; font-weight: 500; color: #374151;">${groupName}</td>
+                    <td style="padding: 0.5rem; font-weight: 500; color: var(--text-main);">${groupName}</td>
                     <td style="padding: 0.5rem; text-align: right;">
                         <span class="text-green">${stats.passed}</span> / 
                         <span class="text-red">${stats.failed}</span> / 
-                        <span style="color: #9ca3af;">${stats.skipped}</span>
+                        <span style="color: var(--text-muted);">${stats.skipped}</span>
                     </td>
                     <td style="padding: 0.5rem; vertical-align: middle;">
                         <div class="progress-track" style="height: 6px; width: 100%; margin: 0;">
@@ -1657,7 +1687,7 @@ function renderTrendChart(containerId, data) {
     container.style.padding = '0';
 
     if (!data || data.length === 0) {
-        container.innerHTML = '<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#9ca3af;">No run data available</div>';
+        container.innerHTML = '<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-muted);">No run data available</div>';
         return;
     }
 
@@ -2120,52 +2150,3 @@ function exportDataToCsv() {
         });
     });
 })();
-
-let isFilterCompact = false;
-
-function toggleFilterCompactMode() {
-    isFilterCompact = !isFilterCompact;
-    const inputs = document.getElementById('filterInputsContainer');
-    const summary = document.getElementById('filterSummaryContainer');
-    const icon = document.getElementById('compactModeIcon');
-    const chartContainer = document.querySelector('.trend-chart-container');
-
-    if (isFilterCompact) {
-        inputs.classList.add('hidden');
-        summary.classList.remove('hidden');
-        if (chartContainer) chartContainer.classList.add('hidden');
-        icon.textContent = 'unfold_more';
-        updateFilterSummary();
-    } else {
-        inputs.classList.remove('hidden');
-        summary.classList.add('hidden');
-        if (chartContainer) chartContainer.classList.remove('hidden');
-        icon.textContent = 'unfold_less';
-    }
-}
-
-function updateFilterSummary() {
-    const type = document.getElementById('globalRunType').value;
-    const ver = document.getElementById('globalVersion').value;
-    const dateText = document.getElementById('dateFilterText').textContent;
-    const container = document.getElementById('filterSummaryContainer');
-    container.innerHTML = '';
-
-    const createBadge = (label, value) => {
-        const badge = document.createElement('span');
-        badge.style.cssText = 'background: #e5e7eb; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; color: #374151; border: 1px solid #d1d5db;';
-        badge.innerHTML = `<strong>${label}:</strong> ${value}`;
-        return badge;
-    };
-
-    let hasFilter = false;
-    if (type) { container.appendChild(createBadge('Type', type)); hasFilter = true; }
-    if (ver) { container.appendChild(createBadge('Version', ver)); hasFilter = true; }
-    if (dateText && dateText !== 'Date Range') { container.appendChild(createBadge('Date', dateText)); hasFilter = true; }
-    if (!hasFilter) {
-        const badge = document.createElement('span');
-        badge.style.cssText = 'color: #6b7280; font-style: italic; font-size: 0.85rem;';
-        badge.textContent = 'No filters applied';
-        container.appendChild(badge);
-    }
-}

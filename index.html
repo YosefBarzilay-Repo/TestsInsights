@@ -29,40 +29,36 @@
             </div>
             <h2 class="header-title">TestInsights</h2>
         </div>
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <button class="btn-icon-header" title="Settings" onclick="openSettingsModal()"
-                style="background: transparent; border: none; cursor: pointer;">
-                <span class="material-symbols-outlined">settings</span>
-            </button>
-        </div>
-    </header>
-
-    <div class="main-content">
-
-        <div id="dashboard" class="dashboard hidden">
-            <div id="runFiltersBar" class="run-filters-bar">
-                <div class="filters-row">
-                    <div id="filterInputsContainer"
-                        style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                        <select id="globalRunType" class="form-input" style="width: auto;"
-                            onchange="applyGlobalRunFilters()">
-                        </select>
-                        <select id="globalVersion" class="form-input" style="width: auto;"
-                            onchange="applyGlobalRunFilters()">
-                        </select>
-                        <div class="custom-dropdown" style="position: relative;">
-                            <button id="dateFilterBtn" class="form-input date-filter-btn"
-                                onclick="toggleDateDropdown(event)">
+        <div class="header-center">
+            <div class="custom-dropdown" style="position: relative;">
+                <button id="mainFilterBtn" class="btn btn-secondary" onclick="toggleMainFilterMenu(event)">
+                    <span class="material-symbols-outlined">filter_list</span>
+                    Filters
+                </button>
+                <div id="mainFilterMenu" class="dropdown-menu"
+                    style="display: none; position: absolute; top: 100%; left: 0; padding: 1rem; min-width: 280px; flex-direction: column; gap: 1rem; z-index: 101;">
+                    <div>
+                        <label class="form-label" style="margin-bottom: 0.25rem;">Run Type</label>
+                        <select id="globalRunType" class="form-input" onchange="applyGlobalRunFilters()"></select>
+                    </div>
+                    <div>
+                        <label class="form-label" style="margin-bottom: 0.25rem;">Version</label>
+                        <select id="globalVersion" class="form-input" onchange="applyGlobalRunFilters()"></select>
+                    </div>
+                    <div>
+                        <label class="form-label" style="margin-bottom: 0.25rem;">Date Range</label>
+                        <div class="custom-dropdown" style="position: relative; width: 100%;">
+                            <button id="dateFilterBtn" class="form-input date-filter-btn" onclick="toggleDateDropdown(event)" style="width: 100%;">
                                 <span id="dateFilterText"
-                                style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Date Range</span>
+                                    style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Date Range</span>
                                 <span class="material-symbols-outlined"
-                                    style="font-size: 1.2rem; color: #6b7280;">calendar_month</span>
+                                    style="font-size: 1.2rem; color: var(--text-muted);">calendar_month</span>
                             </button>
                             <div id="dateFilterMenu" class="dropdown-menu"
-                                style="display: none; position: absolute; top: 100%; left: 0; width: 280px; padding: 1rem; margin-top: 0.5rem;">
+                                style="display: none; position: absolute; top: 100%; left: 0; width: 100%; padding: 1rem; margin-top: 0.5rem; z-index: 102;">
                                 <div style="margin-bottom: 1rem;">
                                     <label
-                                        style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.5rem;">QUICK
+                                        style="display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem;">QUICK
                                         FILTER</label>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                                         <span style="font-size: 0.875rem;">Last</span>
@@ -72,19 +68,18 @@
                                         <span style="font-size: 0.875rem;">Days</span>
                                     </div>
                                 </div>
-                                <div style="border-top: 1px solid #e5e7eb; margin: 0.5rem 0; padding-top: 0.5rem;">
+                                <div style="border-top: 1px solid var(--border-color); margin: 0.5rem 0; padding-top: 0.5rem;">
                                     <div
                                         style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                        <label style="font-size: 0.75rem; font-weight: 600; color: #6b7280;">SPECIFIC
+                                        <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">SPECIFIC
                                             DATES</label>
                                         <button class="btn-icon" style="padding: 2px; height: 20px; width: 20px;"
                                             onclick="clearDateSelection()" title="Clear Selection">
-                                            <label style="font-size: 0.75rem; font-weight: 600; color: #6b7280;">DATE
+                                            <label style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted);">DATE
                                                 RANGE</label>
                                             <button class="btn-icon" style="padding: 2px; height: 20px; width: 20px;"
                                                 onclick="clearDateRange()" title="Clear Range">
-                                                <span class="material-symbols-outlined"
-                                                    style="font-size: 14px;">close</span>
+                                                <span class="material-symbols-outlined" style="font-size: 14px;">close</span>
                                             </button>
                                     </div>
                                     <div id="calendarWidget" class="calendar-widget"></div>
@@ -101,58 +96,53 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div style="border-top: 1px solid #e5e7eb; margin: 0.5rem 0; padding-top: 0.5rem;">
+                                <div style="border-top: 1px solid var(--border-color); margin: 0.5rem 0; padding-top: 0.5rem;">
                                     <label
-                                        style="font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.5rem; display: block;">AVAILABLE
+                                        style="font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem; display: block;">AVAILABLE
                                         DATES</label>
                                     <div id="availableDatesList" style="max-height: 150px; overflow-y: auto;"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div id="filterSummaryContainer" class="hidden"
-                        style="display: flex; align-items: center; gap: 0.5rem;"></div>
-                    <button class="btn-icon" onclick="toggleFilterCompactMode()" title="Toggle Compact Mode">
-                        <span class="material-symbols-outlined" id="compactModeIcon">unfold_less</span>
-                    </button>
-                    <div id="runTestCounts"
-                        style="display: flex; align-items: center; gap: 1rem; margin-left: 1rem; padding-left: 1rem; border-left: 1px solid var(--border-color);">
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">
-                            <strong id="filterBarRunCount"
-                                style="font-size: 1rem; color: var(--text-main); font-weight: 600;">-</strong> Runs
-                        </div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">
-                            <strong id="filterBarTestCount"
-                                style="font-size: 1rem; color: var(--text-main); font-weight: 600;">-</strong> Tests
-                        </div>
-                    </div>
-                    <button class="btn btn-primary" disabled
-                        style="margin-left: auto; opacity: 0.5; cursor: not-allowed;">
-                        <span class="material-symbols-outlined">sensors</span>
-                        Live
-                    </button>
-                </div>
-
-                <div class="trend-chart-container">
-                    <div id="trendChartSmall"
-                        style="width: 100%; height: 100%; display: flex; align-items: flex-end; padding-top: 10px;">
-                    </div>
-                    <div class="trend-chart-controls">
-                        <button id="compareRunsBtn" class="btn-icon"
-                            onclick="toggleComparisonMode(); switchTab('tests')" title="Select 2-3 runs to compare"
-                            disabled>
-                            <span class="material-symbols-outlined">compare_arrows</span>
-                        </button>
-                        <button id="clearRunFilterBtn" class="btn-icon" onclick="clearRunSelection()"
-                            title="Clear Selection" disabled>
-                            <span class="material-symbols-outlined">close</span>
-                        </button>
-                        <button class="btn-icon" onclick="openTrendModal()" title="Enlarge" disabled>
-                            <span class="material-symbols-outlined">open_in_full</span>
-                        </button>
-                    </div>
                 </div>
             </div>
+            <div class="custom-dropdown" style="position: relative;">
+                <button id="savedFiltersBtn" class="btn btn-secondary" onclick="toggleSavedFiltersMenu(event)">
+                    <span class="material-symbols-outlined">bookmark</span>
+                    Saved Filters
+                </button>
+                <div id="savedFiltersMenu" class="dropdown-menu"
+                    style="display: none; position: absolute; top: 100%; left: 0; min-width: 200px; z-index: 101;">
+                    <div class="dropdown-item">My Daily Check</div>
+                    <div class="dropdown-item">Critical Failures</div>
+                    <div class="dropdown-item">Performance Watch</div>
+                </div>
+            </div>
+            <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;">
+                <span class="material-symbols-outlined">sensors</span>
+                Live
+            </button>
+            <div id="runTestCounts" class="run-test-counts">
+                <div class="count-item">
+                    <strong id="filterBarRunCount">-</strong> Runs
+                </div>
+                <div class="count-item">
+                    <strong id="filterBarTestCount">-</strong> Tests
+                </div>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn-icon-header" title="Settings" onclick="openSettingsModal()"
+                style="background: transparent; border: none; cursor: pointer;">
+                <span class="material-symbols-outlined">settings</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="main-content">
+
+        <div id="dashboard" class="dashboard hidden">
             <div class="content-section">
                 <div class="tabs-header">
                     <div style="display: flex; gap: 1.5rem;">
@@ -166,14 +156,38 @@
                 <div id="tabContentContainer">
                         <div id="content-insights">
                             <div id="insightsContent" class="insights-grid">
+                                <!-- Trend Chart Card (Spans 2 columns) -->
+                                <div class="card col-span-2" style="min-height: 200px; display: flex; flex-direction: column;">
+                                    <div class="card-title">Execution Trend</div>
+                                    <div class="trend-chart-container" style="flex: 1; height: auto; margin-top: 10px;">
+                                        <div id="trendChartSmall"
+                                            style="width: 100%; height: 100%; display: flex; align-items: flex-end;">
+                                        </div>
+                                        <div class="trend-chart-controls">
+                                            <button id="compareRunsBtn" class="btn-icon"
+                                                onclick="toggleComparisonMode(); switchTab('tests')" title="Select 2-3 runs to compare"
+                                                disabled>
+                                                <span class="material-symbols-outlined">compare_arrows</span>
+                                            </button>
+                                            <button id="clearRunFilterBtn" class="btn-icon" onclick="clearRunSelection()"
+                                                title="Clear Selection" disabled>
+                                                <span class="material-symbols-outlined">close</span>
+                                            </button>
+                                            <button class="btn-icon" onclick="openTrendModal()" title="Enlarge" disabled>
+                                                <span class="material-symbols-outlined">open_in_full</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Status Distribution Card -->
                                 <div class="card">
                                     <div class="card-title"
                                         style="display: flex; justify-content: space-between; align-items: center;">
                                         <span>Status Distribution</span>
                                         <span id="totalExecutionsClickable" class="clickable-legend"
-                                            style="font-size: 0.75rem; color: #6b7280; text-transform: none; font-weight: normal;">Total:
-                                            <strong id="totalExecutions" style="color: #1f2937;">-</strong></span>
+                                            style="font-size: 0.75rem; color: var(--text-muted); text-transform: none; font-weight: normal;">Total:
+                                            <strong id="totalExecutions" style="color: var(--text-main);">-</strong></span>
                                     </div>
                                     <div class="status-legend">
                                         <div id="passedFilterClickable" class="legend-item clickable-legend">
@@ -289,7 +303,7 @@
                             <div class="deep-think-scroll">
                                 <div id="deepThinkIntro" style="margin-bottom: 1.5rem;">
                                     <span class="material-symbols-outlined"
-                                        style="font-size: 48px; color: #C1A35F;">psychology</span>
+                                        style="font-size: 48px; color: var(--status-skip);">psychology</span>
                                     <h3 style="margin: 0.5rem 0; color: #111827;">Deep Analysis & Recommendations</h3>
                                     <p style="color: #6b7280; max-width: 600px; margin: 0 auto;">
                                         Analyze patterns in your test execution history to identify root causes of
@@ -297,7 +311,7 @@
                                     </p>
                                 </div>
                                 <div id="deepThinkResults"
-                                    style="text-align: left; display: none; margin-bottom: 2rem;">
+                                    style="text-align: left; display: none; margin-bottom: 2rem; color: var(--text-main);">
                                 </div>
 
                                 <div style="display: flex; justify-content: center; gap: 1rem;">
@@ -349,7 +363,7 @@
                     <div style="margin-bottom: 2rem;">
                         <h4>Status Trend (Pass vs Fail)</h4>
                         <div id="chartContainer"
-                            style="width: 100%; height: 150px; border: 1px solid #e5e7eb; border-radius: 0.5rem; background: #f9fafb; position: relative;">
+                            style="width: 100%; height: 150px; border: 1px solid var(--border-color); border-radius: 0.5rem; background: var(--bg-body); position: relative;">
                             <!-- SVG Chart will be injected here -->
                         </div>
                     </div>
@@ -382,7 +396,7 @@
                             <h3
                                 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-main);">
                                 Thresholds & Rules</h3>
-                            <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 1rem;">
+                            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
                                 Define the criteria used to categorize test results in the Insights dashboard.
                             </p>
 
@@ -398,7 +412,7 @@
                                         <option value="runs">Runs</option>
                                     </select>
                                 </div>
-                                <p style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem;">
+                                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
                                     Tests that fail consecutively for this duration are marked as "Continuous Failing".
                                 </p>
                             </div>
@@ -410,7 +424,7 @@
                                         style="width: 70px;" value="7" min="1">
                                     <span style="font-size: 0.9rem;">Days</span>
                                 </div>
-                                <p style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem;">
+                                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
                                     Window to consider a failure as "new" (First Time Failure).
                                 </p>
                             </div>
