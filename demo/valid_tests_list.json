@@ -3,7 +3,7 @@
     "run_id": "0011_20241201",
     "test_name": "test_backend_241",
     "test_group_name": "backend",
-    "status": "pass",
+    "status": "manual skipped",
     "run_date": "2024-12-01",
     "start_time": "01:11:22",
     "end_time": "01:14:45"

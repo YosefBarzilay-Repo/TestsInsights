@@ -303,6 +303,7 @@ body {
     display: grid;
     grid-template-columns: 1fr;
     gap: 1rem;
+    align-items: start;
 }
 
 .card {
@@ -359,19 +360,19 @@ body {
 }
 
 .metric-card .card-value {
-    font-size: 2rem;
+    font-size: 2.75rem;
     line-height: 1;
     margin-bottom: 0.25rem;
 }
 
 .card-value {
-    font-size: 1.75rem;
+    font-size: 2.25rem;
     font-weight: 600;
     color: var(--text-main);
 }
 
 .card-subtext {
-    font-size: 12px;
+    font-size: 0.875rem;
     color: var(--text-secondary);
     margin-top: 0.25rem;
 }
@@ -429,6 +430,39 @@ th {
     position: sticky;
     top: 0;
     z-index: 10;
+}
+
+th .th-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    cursor: pointer;
+    user-select: none;
+}
+
+th .th-text {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+th .th-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+th:hover .th-actions,
+th .th-actions.active {
+    opacity: 1;
+}
+
+th .sort-indicator {
+    font-size: 14px;
+    color: var(--primary);
 }
 
 td {
@@ -806,8 +840,8 @@ td {
 .status-legend {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 0.75rem;
-    font-size: 13px;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
     color: var(--text-secondary);
 }
 
@@ -880,6 +914,26 @@ td {
 
 .btn-icon:hover {
     background-color: var(--border-color);
+}
+
+.btn-icon.active {
+    background-color: var(--primary);
+    color: white;
+}
+
+#btnCompareRuns.active .material-symbols-outlined {
+    position: relative;
+}
+
+#btnCompareRuns.active .material-symbols-outlined::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -10%;
+    width: 120%;
+    height: 2px;
+    background-color: currentColor;
+    transform: translateY(-50%) rotate(45deg);
 }
 
 .btn-icon:disabled {
@@ -1176,29 +1230,6 @@ td {
     display: none !important;
 }
 
-.trend-chart-controls {
-    position: absolute;
-    bottom: 5px;
-    right: 5px;
-    display: flex;
-    gap: 0.25rem;
-    opacity: 0;
-    transition: opacity 0.2s ease-in-out;
-    background: var(--bg-surface);
-    padding: 4px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border-color);
-    pointer-events: none;
-    z-index: 20;
-    transform: scale(0.6);
-    transform-origin: bottom right;
-}
-
-.trend-chart-container:hover .trend-chart-controls {
-    opacity: 1;
-    pointer-events: auto;
-}
-
 .form-input {
     background-color: var(--bg-body);
     color: var(--text-main);
@@ -1219,4 +1250,45 @@ footer {
     padding: 0.25rem;
     border-radius: var(--radius);
     border: 1px solid var(--border-color);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-body);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) var(--bg-body);
+}
+
+/* Custom Tooltip */
+.custom-tooltip {
+    position: fixed;
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 1rem;
+    z-index: 2000;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    color: var(--text-main);
+    font-size: 0.85rem;
+    min-width: 200px;
+    pointer-events: auto;
+    user-select: text;
 }
