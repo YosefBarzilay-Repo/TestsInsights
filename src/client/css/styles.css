@@ -1316,3 +1316,56 @@ footer {
     pointer-events: auto;
     user-select: text;
 }
+
+/* Deep Think Notification Panel */
+.notification-btn-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.notification-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: var(--status-fail);
+    color: white;
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border: 2px solid var(--bg-surface);
+    transform: translate(25%, -25%);
+}
+
+.deep-think-panel {
+    position: fixed;
+    top: 57px; /* Below header */
+    right: 0;
+    bottom: 0;
+    width: 400px;
+    background-color: var(--bg-surface);
+    border-left: 1px solid var(--border-color);
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.1);
+    z-index: 900;
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.deep-think-panel.open {
+    transform: translateX(0);
+}
+
+.deep-think-header {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

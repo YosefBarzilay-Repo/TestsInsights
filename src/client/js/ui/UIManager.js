@@ -18,7 +18,6 @@ window.App.UIManager = {
 
         document.getElementById('content-insights').classList.add('hidden');
         document.getElementById('details').classList.add('hidden');
-        document.getElementById('content-deepThink').classList.add('hidden');
 
         document.getElementById('btnAddCustomCard').classList.add('hidden');
         document.getElementById('btnInsightsSettings').classList.add('hidden');
@@ -37,9 +36,18 @@ window.App.UIManager = {
             document.getElementById('btnExportCsv').classList.remove('hidden');
             document.getElementById('testsSeparator').classList.remove('hidden');
             setTimeout(() => { this.renderTable(); }, 0);
-        } else if (tabName === 'deepThink') {
-            document.getElementById('content-deepThink').classList.remove('hidden');
         }
+    },
+
+    toggleDeepThink: function() {
+        const panel = document.getElementById('deepThinkPanel');
+        panel.classList.toggle('open');
+    },
+
+    updateDeepThinkBadge: function(count) {
+        const badge = document.getElementById('deepThinkBadge');
+        badge.textContent = count;
+        badge.classList.toggle('hidden', count === 0);
     },
 
     unlockDashboard: function() {

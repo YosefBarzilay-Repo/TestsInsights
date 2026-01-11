@@ -148,6 +148,9 @@ window.App.AnalysisService = {
             btn.innerHTML = '<span class="material-symbols-outlined">refresh</span> Regenerate Analysis';
             btn.disabled = false;
             if (exportBtn) exportBtn.classList.remove('hidden');
+
+            const totalIssues = brokenTests.length + flakyTests.length + slowTests.length + slowRuns.length + testsWithoutGroup.length;
+            App.UIManager.updateDeepThinkBadge(totalIssues);
         }, 800);
     },
 
