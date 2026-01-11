@@ -7,6 +7,7 @@ window.App.UIManager = {
     activeSavedFilterSettingsBtn: null,
     tooltipTimeout: null,
     sortState: { column: null, direction: 'asc' },
+    dashboardCards: [],
 
     switchTab: function(tabName) {
         const btn = document.getElementById(`tab-${tabName}`);
@@ -19,6 +20,7 @@ window.App.UIManager = {
         document.getElementById('details').classList.add('hidden');
         document.getElementById('content-deepThink').classList.add('hidden');
 
+        document.getElementById('btnAddCustomCard').classList.add('hidden');
         document.getElementById('btnInsightsSettings').classList.add('hidden');
         document.getElementById('btnExportCsv').classList.add('hidden');
         document.getElementById('testsSeparator').classList.add('hidden');
@@ -27,6 +29,7 @@ window.App.UIManager = {
 
         if (tabName === 'insights') {
             document.getElementById('content-insights').classList.remove('hidden');
+            document.getElementById('btnAddCustomCard').classList.remove('hidden');
             document.getElementById('btnInsightsSettings').classList.remove('hidden');
         } else if (tabName === 'tests') {
             document.getElementById('details').classList.remove('hidden');
@@ -43,6 +46,11 @@ window.App.UIManager = {
         document.getElementById('emptyState').classList.add('hidden');
         document.getElementById('tabContentContainer').classList.remove('hidden');
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('disabled'));
+
+        if (document.getElementById('tab-insights').classList.contains('active')) {
+            document.getElementById('btnAddCustomCard').classList.remove('hidden');
+            document.getElementById('btnInsightsSettings').classList.remove('hidden');
+        }
     },
 
     dismissCard: function(checkbox) {
@@ -68,63 +76,194 @@ window.App.UIManager = {
         document.getElementById('btnExportDeepThink')?.classList.add('hidden');
     },
 
+    initDashboardCards: function() {
+        const saved = localStorage.getItem('dashboardCards');
+        if (saved) {
+            this.dashboardCards = JSON.parse(saved);
+            return;
+        }
+
+        this.dashboardCards = [
+            { id: 'card_scope', type: 'SplitMetricCard', props: { title: 'Total Scope', leftId: 'filterBarRunCount', leftLabel: 'Runs', rightId: 'filterBarTestCount', rightLabel: 'Tests', leftOnClick: "App.UIManager.setFilter('all'); App.UIManager.switchTab('tests');", rightOnClick: "App.UIManager.setFilter('all'); App.UIManager.switchTab('tests');", leftTooltip: "Show all runs in the list", rightTooltip: "Show all tests in the list" } },
+            { id: 'card_trend', type: 'ChartCard', props: { title: 'Execution Trend', chartId: 'trendChartSmall' } },
+            { id: 'card_time', type: 'PropertyListCard', props: { title: 'Execution Time', items: [{ label: 'Average', valueId: 'statAvgTime' }, { label: 'Max', valueId: 'statMaxTime', linkId: 'statMaxRunLink' }, { label: 'Min', valueId: 'statMinTime', linkId: 'statMinRunLink' }] } },
+            { id: 'card_dist', type: 'DistributionCard', props: { title: 'Status Distribution', totalId: 'totalExecutions', items: [{ label: 'Passed', colorClass: 'bg-green', clickId: 'passedFilterClickable', percentId: 'percentPassed', countId: 'countPassed', barId: 'barPassed' }, { label: 'Failed', colorClass: 'bg-red', clickId: 'failedFilterClickable', percentId: 'percentFailed', countId: 'countFailed', barId: 'barFailed' }, { label: 'Skipped', colorClass: 'bg-grey', clickId: 'skippedFilterClickable', percentId: 'percentSkipped', countId: 'countSkipped', barId: 'barSkipped' }] } },
+            { id: 'card_stability', type: 'MetricCard', props: { title: 'Overall Stability Score', valueId: 'stabilityScore', subtextHtml: 'Based on flaky and broken test rates', tooltip: 'Score calculated from failure and flakiness rates' } },
+            { id: 'card_critical', type: 'MetricCard', props: { title: 'Critical Issues', valueId: 'criticalIssuesCount', valueClass: 'text-red', subtextHtml: 'Tests consistently failing', onClick: "App.UIManager.setFilter('broken'); App.UIManager.switchTab('tests');", tooltip: "Show tests that failed in all selected runs" } },
+            { id: 'card_flaky', type: 'MetricCard', props: { title: 'Flaky Tests', valueId: 'flakyRate', subtextHtml: '<span id="flakyCount" class="clickable-count">-</span> flaky tests of <span id="totalTests">-</span> total', onClick: "App.UIManager.setFilter('flaky'); App.UIManager.switchTab('tests');", tooltip: "Show tests with unstable results (flipping status)" } },
+            { id: 'card_broken', type: 'MetricCard', props: { title: 'Continuous Failing', valueId: 'brokenRate', subtextHtml: '<span id="brokenCount" class="clickable-count">-</span> failing tests of <span id="totalTestsBroken">-</span> total', onClick: "App.UIManager.setFilter('broken'); App.UIManager.switchTab('tests');", tooltip: "Show tests failing consecutively for a long period" } },
+            { id: 'card_newfail', type: 'MetricCard', props: { title: 'First Time Failure', valueId: 'newFailureRate', subtextHtml: '<span id="newFailureCount" class="clickable-count">-</span> tests started failing in last <span id="displayNewFailureDays">7</span> days', onClick: "App.UIManager.setFilter('new-failure'); App.UIManager.switchTab('tests');", tooltip: "Show tests that recently started failing" } },
+            { id: 'card_group', type: 'TableWidgetCard', props: { title: 'Group Status Deviation', containerId: 'groupDeviationContainer' } }
+        ];
+    },
+
     renderDashboard: function() {
         const container = document.getElementById('insightsContent');
         if (!container) return;
         if (!window.UI) window.UI = {};
 
+        if (this.dashboardCards.length === 0) this.initDashboardCards();
+
         let html = '';
-        html += window.UI.SplitMetricCard({ 
-            title: 'Total Scope', 
-            leftId: 'filterBarRunCount', 
-            leftLabel: 'Runs', 
-            rightId: 'filterBarTestCount', 
-            rightLabel: 'Tests',
-            leftOnClick: "App.UIManager.setFilter('all'); App.UIManager.switchTab('tests');",
-            rightOnClick: "App.UIManager.setFilter('all'); App.UIManager.switchTab('tests');",
-            leftTooltip: "Show all runs in the list",
-            rightTooltip: "Show all tests in the list"
+        this.dashboardCards.forEach(card => {
+            let cardHtml = '';
+            // Regenerate data for custom cards on render
+            if (card.isCustom && card.filterCriteria) {
+                const data = this.generateCustomCardData(card.filterCriteria);
+                card.props.data = data.results;
+                card.props.columns = data.columns;
+            }
+
+            if (window.UI[card.type]) {
+                cardHtml = window.UI[card.type](card.props);
+            }
+            
+            html += this.wrapCard(card, cardHtml);
         });
-        html += window.UI.ChartCard({ title: 'Execution Trend', chartId: 'trendChartSmall', extraClasses: 'col-span-2' });
-        html += window.UI.PropertyListCard({ title: 'Execution Time', items: [{ label: 'Average', valueId: 'statAvgTime' }, { label: 'Max', valueId: 'statMaxTime', linkId: 'statMaxRunLink' }, { label: 'Min', valueId: 'statMinTime', linkId: 'statMinRunLink' }] });
-        html += window.UI.DistributionCard({ title: 'Status Distribution', totalId: 'totalExecutions', items: [
-            { label: 'Passed', colorClass: 'bg-green', clickId: 'passedFilterClickable', percentId: 'percentPassed', countId: 'countPassed', barId: 'barPassed' },
-            { label: 'Failed', colorClass: 'bg-red', clickId: 'failedFilterClickable', percentId: 'percentFailed', countId: 'countFailed', barId: 'barFailed' },
-            { label: 'Skipped', colorClass: 'bg-grey', clickId: 'skippedFilterClickable', percentId: 'percentSkipped', countId: 'countSkipped', barId: 'barSkipped' }
-        ] });
-        html += window.UI.MetricCard({ title: 'Overall Stability Score', valueId: 'stabilityScore', subtextHtml: 'Based on flaky and broken test rates', tooltip: 'Score calculated from failure and flakiness rates' });
-        html += window.UI.MetricCard({ 
-            title: 'Critical Issues', 
-            valueId: 'criticalIssuesCount', 
-            valueClass: 'text-red', 
-            subtextHtml: 'Tests consistently failing',
-            onClick: "App.UIManager.setFilter('broken'); App.UIManager.switchTab('tests');",
-            tooltip: "Show tests that failed in all selected runs"
-        });
-        html += window.UI.MetricCard({ 
-            title: 'Flaky Tests', 
-            valueId: 'flakyRate', 
-            subtextHtml: '<span id="flakyCount" class="clickable-count">-</span> flaky tests of <span id="totalTests">-</span> total',
-            onClick: "App.UIManager.setFilter('flaky'); App.UIManager.switchTab('tests');",
-            tooltip: "Show tests with unstable results (flipping status)"
-        });
-        html += window.UI.MetricCard({ 
-            title: 'Continuous Failing', 
-            valueId: 'brokenRate', 
-            subtextHtml: '<span id="brokenCount" class="clickable-count">-</span> failing tests of <span id="totalTestsBroken">-</span> total',
-            onClick: "App.UIManager.setFilter('broken'); App.UIManager.switchTab('tests');",
-            tooltip: "Show tests failing consecutively for a long period"
-        });
-        html += window.UI.MetricCard({ 
-            title: 'First Time Failure', 
-            valueId: 'newFailureRate', 
-            subtextHtml: '<span id="newFailureCount" class="clickable-count">-</span> tests started failing in last <span id="displayNewFailureDays">7</span> days',
-            onClick: "App.UIManager.setFilter('new-failure'); App.UIManager.switchTab('tests');",
-            tooltip: "Show tests that recently started failing"
-        });
-        html += window.UI.TableWidgetCard({ title: 'Group Status Deviation', containerId: 'groupDeviationContainer' });
 
         container.innerHTML = html;
+        this.addDragListeners();
+    },
+
+    wrapCard: function(card, innerHtml) {
+        const extraClass = card.extraClasses || '';
+        const editBtn = card.isCustom ? 
+            `<button class="btn-icon" onclick="App.UIManager.editCustomCard('${card.id}')" title="Edit Card" style="width: 20px; height: 20px;"><span class="material-symbols-outlined" style="font-size: 14px;">edit</span></button>` : '';
+        
+        return `
+            <div class="card-wrapper ${extraClass}" data-id="${card.id}" style="position: relative;">
+                <div class="card-actions" style="position: absolute; top: 8px; right: 8px; z-index: 10; display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; background: var(--bg-surface); padding: 4px; border-radius: 6px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);">
+                    <span class="drag-handle material-symbols-outlined" draggable="true" title="Drag to reorder" style="font-size: 16px; color: var(--text-muted); padding: 2px;">drag_indicator</span>
+                    ${editBtn}
+                    <button class="btn-icon" onclick="App.UIManager.deleteCard('${card.id}')" title="Remove Card" style="width: 20px; height: 20px;">
+                        <span class="material-symbols-outlined" style="font-size: 14px;">close</span>
+                    </button>
+                </div>
+                ${innerHtml}
+            </div>
+        `;
+    },
+
+    addDragListeners: function() {
+        const container = document.getElementById('insightsContent');
+        
+        // Re-attach hover listeners to new elements
+        const wrappers = container.querySelectorAll('.card-wrapper');
+        wrappers.forEach(wrapper => {
+            wrapper.addEventListener('mouseenter', () => wrapper.querySelector('.card-actions').style.opacity = '1');
+            wrapper.addEventListener('mouseleave', () => wrapper.querySelector('.card-actions').style.opacity = '0');
+        });
+
+        // Only attach container drag listeners once
+        if (container.dataset.listenersAttached) return;
+
+        let placeholder = document.createElement('div');
+        placeholder.className = 'card-placeholder';
+
+        container.addEventListener('dragstart', (e) => {
+            if (!e.target.classList.contains('drag-handle')) return;
+
+            const wrapper = e.target.closest('.card-wrapper');
+            if (!wrapper) return;
+
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', wrapper.dataset.id);
+            
+            // Set drag image to the whole card, adjusted for cursor position
+            const rect = wrapper.getBoundingClientRect();
+            e.dataTransfer.setDragImage(wrapper, e.clientX - rect.left, e.clientY - rect.top);
+
+            // Setup placeholder
+            placeholder.style.width = rect.width + 'px';
+            placeholder.style.height = rect.height + 'px';
+            placeholder.className = 'card-placeholder ' + Array.from(wrapper.classList).filter(c => c !== 'card-wrapper' && c !== 'dragging').join(' ');
+
+            wrapper.classList.add('dragging');
+
+            // Defer hiding to allow drag image generation
+            setTimeout(() => {
+                wrapper.style.display = 'none';
+                if (wrapper.parentNode) wrapper.parentNode.insertBefore(placeholder, wrapper.nextSibling);
+            }, 0);
+        });
+
+        container.addEventListener('dragend', (e) => {
+            const wrapper = container.querySelector('.dragging');
+            if (!wrapper) return;
+
+            wrapper.classList.remove('dragging');
+            wrapper.style.display = '';
+
+            if (placeholder.parentNode) {
+                placeholder.parentNode.insertBefore(wrapper, placeholder);
+                placeholder.parentNode.removeChild(placeholder);
+            }
+
+            this.saveCardOrder();
+        });
+
+        container.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+
+            const afterElement = this.getDragAfterElement(container, e.clientY, e.clientX);
+            
+            // Prevent unnecessary DOM updates (flickering)
+            if (afterElement) {
+                if (placeholder.nextElementSibling === afterElement) return;
+            } else {
+                if (placeholder.nextElementSibling === null && container.lastElementChild === placeholder) return;
+            }
+
+            if (afterElement == null) {
+                container.appendChild(placeholder);
+            } else {
+                container.insertBefore(placeholder, afterElement);
+            }
+        });
+
+        container.dataset.listenersAttached = 'true';
+    },
+
+    getDragAfterElement: function(container, y, x) {
+        const draggableElements = [...container.querySelectorAll('.card-wrapper:not(.dragging)')];
+
+        const result = draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            // Simple distance check for grid
+            const offsetX = x - (box.left + box.width / 2);
+            const offsetY = y - (box.top + box.height / 2);
+            const dist = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
+            
+            if (closest == null || dist < closest.dist) {
+                return { offset: dist, element: child, dist: dist };
+            } else {
+                return closest;
+            }
+        }, null);
+
+        return result ? result.element : null;
+    },
+
+    saveCardOrder: function() {
+        const newOrderIds = Array.from(document.getElementById('insightsContent').children).map(el => el.dataset.id);
+        const newCards = [];
+        newOrderIds.forEach(id => {
+            const card = this.dashboardCards.find(c => c.id === id);
+            if (card) newCards.push(card);
+        });
+        this.dashboardCards = newCards;
+        localStorage.setItem('dashboardCards', JSON.stringify(this.dashboardCards));
+    },
+
+    deleteCard: function(id) {
+        if (confirm('Are you sure you want to remove this card?')) {
+            this.dashboardCards = this.dashboardCards.filter(c => c.id !== id);
+            localStorage.setItem('dashboardCards', JSON.stringify(this.dashboardCards));
+            this.renderDashboard();
+            this.updateInsights(); // Refresh data
+            this.renderTrendChart('trendChartSmall', App.FilterManager.activeRunFilters.length > 0 ? App.FilterManager.activeRunFilters.map(rid => App.DataStore.runStats.find(r => r.id === rid)) : App.DataStore.runStats);
+        }
     },
 
     updateFilterDisplay: function() {
@@ -1180,5 +1319,282 @@ window.App.UIManager = {
         container.innerHTML = `<svg width="100%" height="100%"><polyline points="${points}" fill="none" stroke="var(--primary)" stroke-width="2"/></svg>`;
     },
 
-    closeModal: function() { document.getElementById('detailModal').classList.add('hidden'); }
+    closeModal: function() { document.getElementById('detailModal').classList.add('hidden'); },
+
+    openAddCustomCardModal: function() {
+        document.getElementById('customCardType').value = 'list';
+        this.toggleCustomCardType();
+        document.getElementById('customCardModalTitle').textContent = 'Add Custom Card';
+        document.getElementById('btnSaveCustomCard').textContent = 'Add Card';
+        document.getElementById('editingCardId').value = '';
+        document.getElementById('customCardTitle').value = '';
+        document.getElementById('customCardTestName').value = '';
+        document.getElementById('customCardGroup').value = '';
+        document.getElementById('customCardStatus').value = '';
+        document.getElementById('customCardRunId').value = '';
+        document.getElementById('customCardRunType').innerHTML = '<option value="">All</option>';
+        document.getElementById('customCardVersion').innerHTML = '<option value="">All</option>';
+        document.getElementById('customCardDateFrom').value = '';
+        document.getElementById('customCardDateTo').value = '';
+        document.getElementById('customCardStartTimeMin').value = '';
+        document.getElementById('customCardStartTimeMax').value = '';
+        document.getElementById('customCardDurationMin').value = '';
+        document.getElementById('customCardDurationMax').value = '';
+
+        App.DataStore.runTypes.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t; opt.textContent = t; document.getElementById('customCardRunType').appendChild(opt);
+        });
+        App.DataStore.versions.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v; opt.textContent = v; document.getElementById('customCardVersion').appendChild(opt);
+        });
+
+        document.querySelectorAll('input[name="customCardCol"]').forEach(cb => {
+            cb.checked = ['testName', 'status', 'runId'].includes(cb.value);
+        });
+
+        document.getElementById('addCustomCardModal').classList.remove('hidden');
+    },
+
+    editCustomCard: function(id) {
+        const card = this.dashboardCards.find(c => c.id === id);
+        if (!card || !card.isCustom) return;
+
+        const f = card.filterCriteria;
+        document.getElementById('customCardModalTitle').textContent = 'Edit Custom Card';
+        document.getElementById('btnSaveCustomCard').textContent = 'Save Changes';
+        document.getElementById('editingCardId').value = id;
+
+        document.getElementById('customCardType').value = f.cardType;
+        this.toggleCustomCardType();
+        document.getElementById('customCardTitle').value = f.title;
+        document.getElementById('customCardTestName').value = f.fName;
+        document.getElementById('customCardGroup').value = f.fGroup;
+        document.getElementById('customCardStatus').value = f.fStatus;
+        document.getElementById('customCardRunId').value = f.fRunId;
+        document.getElementById('customCardRunType').value = f.fRunType;
+        document.getElementById('customCardVersion').value = f.fVersion;
+        document.getElementById('customCardDateFrom').value = f.fDateFrom;
+        document.getElementById('customCardDateTo').value = f.fDateTo;
+        document.getElementById('customCardStartTimeMin').value = f.fStartTimeMin;
+        document.getElementById('customCardStartTimeMax').value = f.fStartTimeMax;
+        document.getElementById('customCardDurationMin').value = f.fDurationMin;
+        document.getElementById('customCardDurationMax').value = f.fDurationMax;
+
+        if (f.columns) {
+            document.querySelectorAll('input[name="customCardCol"]').forEach(cb => {
+                cb.checked = f.columns.some(c => c.key === cb.value);
+            });
+        }
+
+        document.getElementById('addCustomCardModal').classList.remove('hidden');
+    },
+
+    toggleCustomCardType: function() {
+        const type = document.getElementById('customCardType').value;
+        const colGroup = document.getElementById('customCardColumnsGroup');
+        if (type === 'distribution' || type === 'matrix' || type === 'run_matrix') colGroup.classList.add('hidden');
+        else colGroup.classList.remove('hidden');
+    },
+
+    closeAddCustomCardModal: function() {
+        document.getElementById('addCustomCardModal').classList.add('hidden');
+    },
+
+    handleCustomCardColumnChange: function(checkbox) {
+        const checked = document.querySelectorAll('input[name="customCardCol"]:checked');
+        if (checked.length > 3) {
+            checkbox.checked = false;
+        }
+    },
+
+    saveCustomCard: function() {
+        const cardType = document.getElementById('customCardType').value;
+        const editingId = document.getElementById('editingCardId').value;
+        const title = document.getElementById('customCardTitle').value || 'Custom Card';
+        const fName = document.getElementById('customCardTestName').value.toLowerCase();
+        const fGroup = document.getElementById('customCardGroup').value.toLowerCase();
+        const fStatus = document.getElementById('customCardStatus').value.toLowerCase();
+        const fRunId = document.getElementById('customCardRunId').value;
+        const fRunType = document.getElementById('customCardRunType').value;
+        const fVersion = document.getElementById('customCardVersion').value;
+        const fDateFrom = document.getElementById('customCardDateFrom').value;
+        const fDateTo = document.getElementById('customCardDateTo').value;
+        const fStartTimeMin = document.getElementById('customCardStartTimeMin').value;
+        const fStartTimeMax = document.getElementById('customCardStartTimeMax').value;
+        const fDurationMin = document.getElementById('customCardDurationMin').value;
+        const fDurationMax = document.getElementById('customCardDurationMax').value;
+
+        let columns = [];
+        if (cardType === 'list') {
+            const checkboxes = document.querySelectorAll('input[name="customCardCol"]:checked');
+            if (checkboxes.length === 0) {
+                alert("Please select at least one column.");
+                return;
+            }
+            columns = Array.from(checkboxes).map(cb => ({ key: cb.value, label: cb.parentElement.textContent.trim() }));
+        }
+
+        const filterCriteria = {
+            cardType, title, fName, fGroup, fStatus, fRunId, fRunType, fVersion, fDateFrom, fDateTo, fStartTimeMin, fStartTimeMax, fDurationMin, fDurationMax, columns
+        };
+
+        const data = this.generateCustomCardData(filterCriteria);
+
+        if (editingId) {
+            const cardIndex = this.dashboardCards.findIndex(c => c.id === editingId);
+            if (cardIndex > -1) {
+                this.dashboardCards[cardIndex].props.title = title;
+                this.dashboardCards[cardIndex].props.data = data.results;
+                this.dashboardCards[cardIndex].props.columns = data.columns;
+                this.dashboardCards[cardIndex].filterCriteria = filterCriteria;
+            }
+        } else {
+            const cardId = 'custom-card-' + Date.now();
+            this.dashboardCards.push({
+                id: cardId,
+                type: 'CustomTableCard',
+                isCustom: true,
+                filterCriteria: filterCriteria,
+                props: { id: cardId, title: title, data: data.results, columns: data.columns }
+            });
+        }
+
+        localStorage.setItem('dashboardCards', JSON.stringify(this.dashboardCards));
+        this.renderDashboard();
+        
+        // Refresh data for all cards
+        const activeRunIds = App.FilterManager.activeRunFilters.length > 0 ? App.FilterManager.activeRunFilters : App.FilterManager.currentVisibleRunIds;
+        this.updateInsights(activeRunIds);
+        
+        // Refresh trend chart
+        const runsData = App.DataStore.runStats.filter(r => activeRunIds.includes(r.id));
+        this.renderTrendChart('trendChartSmall', runsData);
+
+        this.closeAddCustomCardModal();
+    },
+
+    generateCustomCardData: function(criteria) {
+        const DataStore = App.DataStore;
+        const { cardType, fName, fGroup, fStatus, fRunId, fRunType, fVersion, fDateFrom, fDateTo, fStartTimeMin, fStartTimeMax, fDurationMin, fDurationMax } = criteria;
+        const results = [];
+
+        Object.keys(DataStore.testDetails).forEach(testKey => {
+            const displayName = DataStore.testNames[testKey] || testKey;
+            const group = DataStore.testGroups[testKey] || '--';
+            
+            if (fName && !displayName.toLowerCase().includes(fName)) return;
+            if (fGroup && !group.toLowerCase().includes(fGroup)) return;
+
+            const details = DataStore.testDetails[testKey];
+            details.forEach(d => {
+                if (fStatus && d.status !== fStatus) return;
+                if (fRunId && !String(d.runId).includes(fRunId)) return;
+                if (fRunType && d.runType !== fRunType) return;
+                if (fVersion && d.version !== fVersion) return;
+                if (fDateFrom && d.date < fDateFrom) return;
+                if (fDateTo && d.date > fDateTo) return;
+
+                if (fStartTimeMin || fStartTimeMax) {
+                    const t = App.Utils.parseTimeSeconds(d.start);
+                    if (fStartTimeMin && t < App.Utils.parseTimeSeconds(fStartTimeMin + ':00')) return;
+                    if (fStartTimeMax && t > App.Utils.parseTimeSeconds(fStartTimeMax + ':59')) return;
+                }
+                if (fDurationMin || fDurationMax) {
+                    let dur = App.Utils.parseTimeSeconds(d.end) - App.Utils.parseTimeSeconds(d.start);
+                    if (dur < 0) dur += 86400;
+                    if (fDurationMin && dur < parseFloat(fDurationMin)) return;
+                    if (fDurationMax && dur > parseFloat(fDurationMax)) return;
+                }
+                
+                let durationStr = '-';
+                if (d.start && d.end && d.start !== '-' && d.end !== '-') {
+                    const s = App.Utils.parseTimeSeconds(d.start);
+                    const e = App.Utils.parseTimeSeconds(d.end);
+                    let dur = e - s;
+                    if (dur < 0) dur += 86400;
+                    durationStr = App.Utils.formatDuration(dur);
+                }
+
+                results.push({
+                    testName: displayName,
+                    group: group,
+                    runId: d.runId,
+                    status: d.status,
+                    runType: d.runType || '-',
+                    version: d.version || '-',
+                    date: d.date || '-',
+                    start: d.start || '-',
+                    duration: durationStr
+                });
+            });
+        });
+
+        let finalData = results;
+        let finalColumns = criteria.columns || [];
+        if (cardType === 'distribution') {
+            const counts = { passed: 0, failed: 0, skipped: 0, total: 0 };
+            results.forEach(r => {
+                const s = r.status.toLowerCase();
+                if (counts[s] !== undefined) counts[s]++;
+                counts.total++;
+            });
+            finalData = ['passed', 'failed', 'skipped'].map(s => ({
+                status: s.charAt(0).toUpperCase() + s.slice(1),
+                count: counts[s],
+                percent: counts.total ? ((counts[s] / counts.total) * 100).toFixed(1) + '%' : '0.0%'
+            }));
+            finalColumns = [
+                { key: 'status', label: 'Status' },
+                { key: 'count', label: 'Count' },
+                { key: 'percent', label: 'Percentage' }
+            ];
+        } else if (cardType === 'matrix') {
+            const runIds = new Set();
+            results.forEach(r => runIds.add(r.runId));
+            const sortedRunIds = Array.from(runIds).sort((a, b) => (parseFloat(b) || 0) - (parseFloat(a) || 0));
+
+            const testMap = {};
+            results.forEach(r => {
+                if (!testMap[r.testName]) {
+                    testMap[r.testName] = { testName: r.testName, group: r.group };
+                }
+                testMap[r.testName][`run_${r.runId}`] = r.status;
+            });
+            finalData = Object.values(testMap);
+            finalData.sort((a, b) => a.testName.localeCompare(b.testName));
+
+            finalColumns = [
+                { key: 'testName', label: 'Test Name' },
+                { key: 'group', label: 'Group' }
+            ];
+            sortedRunIds.forEach(rid => finalColumns.push({ key: `run_${rid}`, label: rid }));
+        } else if (cardType === 'run_matrix') {
+            const testNames = new Set();
+            results.forEach(r => testNames.add(r.testName));
+            const sortedTestNames = Array.from(testNames).sort();
+
+            const runMap = {};
+            results.forEach(r => {
+                if (!runMap[r.runId]) {
+                    runMap[r.runId] = { runId: r.runId, date: r.date, runType: r.runType };
+                }
+                runMap[r.runId][`test_${r.testName}`] = r.status;
+            });
+            finalData = Object.values(runMap);
+            finalData.sort((a, b) => (parseFloat(b.runId) || 0) - (parseFloat(a.runId) || 0));
+
+            finalColumns = [
+                { key: 'runId', label: 'Run ID' },
+                { key: 'date', label: 'Date' },
+                { key: 'runType', label: 'Type' }
+            ];
+            sortedTestNames.forEach(tn => finalColumns.push({ key: `test_${tn}`, label: tn }));
+        } else {
+            finalData.sort((a, b) => (parseFloat(b.runId) || 0) - (parseFloat(a.runId) || 0));
+        }
+
+        return { results: finalData, columns: finalColumns };
+    }
 };

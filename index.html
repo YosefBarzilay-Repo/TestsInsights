@@ -166,6 +166,9 @@
                     <div class="toolbar">
                         <div id="commonFilterDisplay" style="font-size: 12px; color: var(--text-main);"></div>
                         <div class="actions-container">
+                            <button id="btnAddCustomCard" class="btn-icon hidden" onclick="App.UIManager.openAddCustomCardModal()" title="Add Custom Card">
+                                <span class="material-symbols-outlined">add_box</span>
+                            </button>
                             <button id="btnInsightsSettings" class="btn-icon hidden" onclick="openSettingsModal()" title="Configuration">
                                 <span class="material-symbols-outlined">settings</span>
                             </button>
@@ -388,6 +391,98 @@
                 </div>
             </div>
 
+            <!-- Add Custom Card Modal -->
+            <div id="addCustomCardModal" class="modal-overlay hidden">
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="modal-header">
+                        <h2 id="customCardModalTitle">Add Custom Card</h2>
+                        <button class="close-btn" onclick="App.UIManager.closeAddCustomCardModal()">&times;</button>
+                        <input type="hidden" id="editingCardId">
+                    </div>
+                    <div class="filter-form">
+                        <div class="form-group">
+                            <label class="form-label">Card Type</label>
+                            <select id="customCardType" class="form-input" onchange="App.UIManager.toggleCustomCardType()"><option value="list">Detailed List</option><option value="distribution">Status Distribution</option><option value="matrix">Test Execution Matrix (Tests vs Runs)</option><option value="run_matrix">Run Execution Matrix (Runs vs Tests)</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Card Title</label>
+                            <input type="text" id="customCardTitle" class="form-input" placeholder="My Custom View">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Test Name</label>
+                            <input type="text" id="customCardTestName" class="form-input" placeholder="Contains...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Group</label>
+                            <input type="text" id="customCardGroup" class="form-input" placeholder="Contains..." list="testGroupOptions">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select id="customCardStatus" class="form-input">
+                                <option value="">All</option>
+                                <option value="passed">Passed</option>
+                                <option value="failed">Failed</option>
+                                <option value="skipped">Skipped</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Run ID</label>
+                            <input type="text" id="customCardRunId" class="form-input" placeholder="Contains...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Run Type</label>
+                            <select id="customCardRunType" class="form-input"><option value="">All</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Version</label>
+                            <select id="customCardVersion" class="form-input"><option value="">All</option></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Date Range</label>
+                            <div class="form-row">
+                                <input type="date" id="customCardDateFrom" class="form-input">
+                                <span style="align-self: center;">-</span>
+                                <input type="date" id="customCardDateTo" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Start Time</label>
+                            <div class="form-row">
+                                <input type="time" id="customCardStartTimeMin" class="form-input">
+                                <span style="align-self: center;">-</span>
+                                <input type="time" id="customCardStartTimeMax" class="form-input">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Duration (sec)</label>
+                            <div class="form-row">
+                                <input type="number" id="customCardDurationMin" class="form-input" placeholder="Min" min="0">
+                                <span style="align-self: center;">-</span>
+                                <input type="number" id="customCardDurationMax" class="form-input" placeholder="Max" min="0">
+                            </div>
+                        </div>
+                        <div class="form-group" id="customCardColumnsGroup">
+                            <label class="form-label">Visible Columns (Max 3)</label>
+                            <div class="columns-selector" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; font-size: 0.85rem;">
+                                <label><input type="checkbox" name="customCardCol" value="testName" checked onchange="App.UIManager.handleCustomCardColumnChange(this)"> Test Name</label>
+                                <label><input type="checkbox" name="customCardCol" value="group" onchange="App.UIManager.handleCustomCardColumnChange(this)"> Group</label>
+                                <label><input type="checkbox" name="customCardCol" value="status" checked onchange="App.UIManager.handleCustomCardColumnChange(this)"> Status</label>
+                                <label><input type="checkbox" name="customCardCol" value="runId" checked onchange="App.UIManager.handleCustomCardColumnChange(this)"> Run ID</label>
+                                <label><input type="checkbox" name="customCardCol" value="runType" onchange="App.UIManager.handleCustomCardColumnChange(this)"> Run Type</label>
+                                <label><input type="checkbox" name="customCardCol" value="version" onchange="App.UIManager.handleCustomCardColumnChange(this)"> Version</label>
+                                <label><input type="checkbox" name="customCardCol" value="date" onchange="App.UIManager.handleCustomCardColumnChange(this)"> Date</label>
+                                <label><input type="checkbox" name="customCardCol" value="start" onchange="App.UIManager.handleCustomCardColumnChange(this)"> Start Time</label>
+                                <label><input type="checkbox" name="customCardCol" value="duration" onchange="App.UIManager.handleCustomCardColumnChange(this)"> Duration</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+                        <button class="btn btn-secondary" onclick="App.UIManager.closeAddCustomCardModal()">Cancel</button>
+                        <button id="btnSaveCustomCard" class="btn btn-primary" onclick="App.UIManager.saveCustomCard()">Add Card</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Filter Dropdown -->
             <div id="filterDropdown" class="dropdown-menu"></div>
 
@@ -525,6 +620,7 @@
         <script src="src/client/js/ui/DistributionCard.js"></script>
         <script src="src/client/js/ui/ChartCard.js"></script>
         <script src="src/client/js/ui/TableWidgetCard.js"></script>
+        <script src="src/client/js/ui/CustomTableCard.js"></script>
         <script src="src/client/js/Utils.js"></script>
         <script src="src/client/js/DataStore.js"></script>
         <script src="src/client/js/FilterManager.js"></script>
