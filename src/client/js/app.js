@@ -171,6 +171,12 @@ document.addEventListener('click', function (e) {
     if (mainMenu && mainMenu.style.display === 'flex' && !mainMenu.contains(e.target) && !mainBtn.contains(e.target)) {
         mainMenu.style.display = 'none';
     }
+
+    const profileMenu = document.getElementById('profileMenu');
+    const profileBtn = document.getElementById('btnProfile');
+    if (profileMenu && profileMenu.style.display === 'block' && !profileMenu.contains(e.target) && !profileBtn.contains(e.target)) {
+        profileMenu.style.display = 'none';
+    }
 });
 
 // Close modal on outside click

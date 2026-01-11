@@ -25,11 +25,13 @@ window.App.UIManager = {
         document.getElementById('testsSeparator').classList.add('hidden');
         document.getElementById('btnClearFilters').classList.add('hidden');
         document.getElementById('btnCompareRuns').classList.add('hidden');
+        document.getElementById('btnDeepThink').classList.add('hidden');
 
         if (tabName === 'insights') {
             document.getElementById('content-insights').classList.remove('hidden');
             document.getElementById('btnAddCustomCard').classList.remove('hidden');
             document.getElementById('btnInsightsSettings').classList.remove('hidden');
+            document.getElementById('btnDeepThink').classList.remove('hidden');
         } else if (tabName === 'tests') {
             document.getElementById('details').classList.remove('hidden');
             document.getElementById('btnCompareRuns').classList.remove('hidden');
@@ -39,15 +41,12 @@ window.App.UIManager = {
         }
     },
 
-    toggleDeepThink: function() {
-        const panel = document.getElementById('deepThinkPanel');
-        panel.classList.toggle('open');
+    openDeepThinkModal: function() {
+        document.getElementById('deepThinkModal').classList.remove('hidden');
     },
 
-    updateDeepThinkBadge: function(count) {
-        const badge = document.getElementById('deepThinkBadge');
-        badge.textContent = count;
-        badge.classList.toggle('hidden', count === 0);
+    closeDeepThinkModal: function() {
+        document.getElementById('deepThinkModal').classList.add('hidden');
     },
 
     unlockDashboard: function() {
@@ -58,6 +57,7 @@ window.App.UIManager = {
         if (document.getElementById('tab-insights').classList.contains('active')) {
             document.getElementById('btnAddCustomCard').classList.remove('hidden');
             document.getElementById('btnInsightsSettings').classList.remove('hidden');
+            document.getElementById('btnDeepThink').classList.remove('hidden');
         }
     },
 
@@ -414,6 +414,18 @@ window.App.UIManager = {
         const dateMenu = document.getElementById('dateFilterMenu');
         if (dateMenu) dateMenu.style.display = 'none';
         menu.style.display = menu.style.display === 'flex' ? 'none' : 'flex';
+    },
+
+    toggleProfileMenu: function(e) {
+        e.stopPropagation();
+        const menu = document.getElementById('profileMenu');
+        // Close other menus
+        const dateMenu = document.getElementById('dateFilterMenu');
+        if (dateMenu) dateMenu.style.display = 'none';
+        const mainMenu = document.getElementById('mainFilterMenu');
+        if (mainMenu) mainMenu.style.display = 'none';
+        
+        menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     },
 
     toggleSavedFilterSettings: function(e) {
