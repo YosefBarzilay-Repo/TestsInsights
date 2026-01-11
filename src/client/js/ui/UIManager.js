@@ -19,23 +19,25 @@ window.App.UIManager = {
         document.getElementById('content-insights').classList.add('hidden');
         document.getElementById('details').classList.add('hidden');
 
-        document.getElementById('btnAddCustomCard').classList.add('hidden');
         document.getElementById('btnInsightsSettings').classList.add('hidden');
-        document.getElementById('btnExportCsv').classList.add('hidden');
+        document.getElementById('btnTestsSettings').classList.add('hidden');
         document.getElementById('testsSeparator').classList.add('hidden');
         document.getElementById('btnClearFilters').classList.add('hidden');
         document.getElementById('btnCompareRuns').classList.add('hidden');
         document.getElementById('btnDeepThink').classList.add('hidden');
+        document.getElementById('btnExitEditMode').classList.add('hidden');
+        document.getElementById('btnAddCustomCard').classList.add('hidden');
+        const insightsContent = document.getElementById('insightsContent');
+        if (insightsContent) insightsContent.classList.remove('edit-mode');
 
         if (tabName === 'insights') {
             document.getElementById('content-insights').classList.remove('hidden');
-            document.getElementById('btnAddCustomCard').classList.remove('hidden');
             document.getElementById('btnInsightsSettings').classList.remove('hidden');
             document.getElementById('btnDeepThink').classList.remove('hidden');
         } else if (tabName === 'tests') {
             document.getElementById('details').classList.remove('hidden');
             document.getElementById('btnCompareRuns').classList.remove('hidden');
-            document.getElementById('btnExportCsv').classList.remove('hidden');
+            document.getElementById('btnTestsSettings').classList.remove('hidden');
             document.getElementById('testsSeparator').classList.remove('hidden');
             setTimeout(() => { this.renderTable(); }, 0);
         }
@@ -55,9 +57,10 @@ window.App.UIManager = {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('disabled'));
 
         if (document.getElementById('tab-insights').classList.contains('active')) {
-            document.getElementById('btnAddCustomCard').classList.remove('hidden');
             document.getElementById('btnInsightsSettings').classList.remove('hidden');
             document.getElementById('btnDeepThink').classList.remove('hidden');
+        } else if (document.getElementById('tab-tests').classList.contains('active')) {
+            document.getElementById('btnTestsSettings').classList.remove('hidden');
         }
     },
 
@@ -153,7 +156,7 @@ window.App.UIManager = {
         
         return `
             <div class="card-wrapper ${extraClass}" data-id="${card.id}" style="position: relative; width: 100%;">
-                <div class="card-actions" style="position: absolute; top: 8px; right: 8px; z-index: 10; display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; background: var(--bg-surface); padding: 4px; border-radius: 6px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);">
+                <div class="card-actions">
                     <span class="drag-handle material-symbols-outlined" draggable="true" title="Drag to reorder" style="font-size: 16px; color: var(--text-muted); padding: 2px;">drag_indicator</span>
                     ${editBtn}
                     <button class="btn-icon" onclick="App.UIManager.deleteCard('${card.id}')" title="Remove Card" style="width: 20px; height: 20px;">
@@ -168,13 +171,6 @@ window.App.UIManager = {
     addDragListeners: function() {
         const container = document.getElementById('insightsContent');
         
-        // Re-attach hover listeners to new elements
-        const wrappers = container.querySelectorAll('.card-wrapper');
-        wrappers.forEach(wrapper => {
-            wrapper.addEventListener('mouseenter', () => wrapper.querySelector('.card-actions').style.opacity = '1');
-            wrapper.addEventListener('mouseleave', () => wrapper.querySelector('.card-actions').style.opacity = '0');
-        });
-
         // Only attach container drag listeners once
         if (container.dataset.listenersAttached) return;
 
@@ -424,8 +420,78 @@ window.App.UIManager = {
         if (dateMenu) dateMenu.style.display = 'none';
         const mainMenu = document.getElementById('mainFilterMenu');
         if (mainMenu) mainMenu.style.display = 'none';
+        const insightsMenu = document.getElementById('insightsSettingsMenu');
+        if (insightsMenu) insightsMenu.style.display = 'none';
+        const testsMenu = document.getElementById('testsSettingsMenu');
+        if (testsMenu) testsMenu.style.display = 'none';
         
         menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    },
+
+    toggleInsightsSettingsMenu: function(e) {
+        e.stopPropagation();
+        const menu = document.getElementById('insightsSettingsMenu');
+        const btn = document.getElementById('btnInsightsSettings');
+
+        // Close other menus
+        const dateMenu = document.getElementById('dateFilterMenu');
+        if (dateMenu) dateMenu.style.display = 'none';
+        const mainMenu = document.getElementById('mainFilterMenu');
+        if (mainMenu) mainMenu.style.display = 'none';
+        const profileMenu = document.getElementById('profileMenu');
+        if (profileMenu) profileMenu.style.display = 'none';
+        const testsMenu = document.getElementById('testsSettingsMenu');
+        if (testsMenu) testsMenu.style.display = 'none';
+        
+        if (menu.style.display === 'block') {
+            menu.style.display = 'none';
+        } else {
+            menu.style.display = 'block';
+            const rect = btn.getBoundingClientRect();
+            menu.style.top = (rect.bottom + 4) + 'px';
+            menu.style.left = (rect.right - menu.offsetWidth) + 'px';
+        }
+    },
+
+    toggleTestsSettingsMenu: function(e) {
+        e.stopPropagation();
+        const menu = document.getElementById('testsSettingsMenu');
+        const btn = document.getElementById('btnTestsSettings');
+
+        // Close other menus
+        const dateMenu = document.getElementById('dateFilterMenu');
+        if (dateMenu) dateMenu.style.display = 'none';
+        const mainMenu = document.getElementById('mainFilterMenu');
+        if (mainMenu) mainMenu.style.display = 'none';
+        const profileMenu = document.getElementById('profileMenu');
+        if (profileMenu) profileMenu.style.display = 'none';
+        const insightsMenu = document.getElementById('insightsSettingsMenu');
+        if (insightsMenu) insightsMenu.style.display = 'none';
+        
+        if (menu.style.display === 'block') {
+            menu.style.display = 'none';
+        } else {
+            menu.style.display = 'block';
+            const rect = btn.getBoundingClientRect();
+            menu.style.top = (rect.bottom + 4) + 'px';
+            menu.style.left = (rect.right - menu.offsetWidth) + 'px';
+        }
+    },
+
+    toggleEditMode: function() {
+        const container = document.getElementById('insightsContent');
+        container.classList.toggle('edit-mode');
+        const isEdit = container.classList.contains('edit-mode');
+        
+        const exitBtn = document.getElementById('btnExitEditMode');
+        if (exitBtn) exitBtn.classList.toggle('hidden', !isEdit);
+        const addBtn = document.getElementById('btnAddCustomCard');
+        if (addBtn) addBtn.classList.toggle('hidden', !isEdit);
+        
+        const menu = document.getElementById('insightsSettingsMenu');
+        if (menu) menu.style.display = 'none';
+        const testsMenu = document.getElementById('testsSettingsMenu');
+        if (testsMenu) testsMenu.style.display = 'none';
     },
 
     toggleSavedFilterSettings: function(e) {

@@ -739,6 +739,28 @@ td {
     pointer-events: none;
 }
 
+.card-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+    background: var(--bg-surface);
+    padding: 4px;
+    border-radius: 6px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    pointer-events: none;
+}
+
+.insights-grid.edit-mode .card-actions {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 .drag-handle {
     cursor: grab;
     opacity: 0.6;

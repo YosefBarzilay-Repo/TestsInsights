@@ -35,6 +35,10 @@
                 </button>
                 <div id="mainFilterMenu" class="dropdown-menu"
                     style="display: none; position: absolute; top: 100%; left: 0; right: auto; padding: 1rem; min-width: 280px; flex-direction: column; gap: 1rem; z-index: 101;">
+                    <button class="btn btn-primary" disabled style="width: 100%; justify-content: center; opacity: 0.5; cursor: not-allowed;">
+                        <span class="material-symbols-outlined">sensors</span>
+                        Live
+                    </button>
                     <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem;">
                         <label class="form-label" style="margin-bottom: 0.5rem;">Saved Filters</label>
                         <div class="dropdown-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.25rem 0.5rem; border-radius: 4px;">
@@ -131,10 +135,6 @@
                     </div>
                 </div>
             </div>
-            <button class="btn btn-primary" disabled style="opacity: 0.5; cursor: not-allowed;">
-                <span class="material-symbols-outlined">sensors</span>
-                Live
-            </button>
         </div>
         <div class="header-center">
             <nav class="nav-tabs-container">
@@ -184,13 +184,16 @@
                     <div class="toolbar">
                         <div id="commonFilterDisplay" style="font-size: 12px; color: var(--text-main);"></div>
                         <div class="actions-container">
-                            <button id="btnAddCustomCard" class="btn-icon hidden" onclick="App.UIManager.openAddCustomCardModal()" title="Add Custom Card">
-                                <span class="material-symbols-outlined">add_box</span>
-                            </button>
                             <button id="btnDeepThink" class="btn-icon hidden" onclick="App.UIManager.openDeepThinkModal()" title="Deep Think Analysis">
                                 <span class="material-symbols-outlined">psychology</span>
                             </button>
-                            <button id="btnInsightsSettings" class="btn-icon hidden" onclick="openSettingsModal()" title="Configuration">
+                            <button id="btnExitEditMode" class="btn btn-primary hidden" onclick="App.UIManager.toggleEditMode()" style="height: 32px; font-size: 13px;">
+                                <span class="material-symbols-outlined" style="font-size: 18px;">check</span> Done
+                            </button>
+                            <button id="btnAddCustomCard" class="btn-icon hidden" onclick="App.UIManager.openAddCustomCardModal()" title="Add Custom Card">
+                                <span class="material-symbols-outlined" style="font-size: 18px;">add_box</span>
+                            </button>
+                            <button id="btnInsightsSettings" class="btn-icon hidden" onclick="App.UIManager.toggleInsightsSettingsMenu(event)" title="Settings">
                                 <span class="material-symbols-outlined">settings</span>
                             </button>
                             <button id="btnClearFilters" class="btn-icon hidden" onclick="App.UIManager.clearAllFilters()" title="Clear Filters">
@@ -203,8 +206,8 @@
                                 <span class="material-symbols-outlined">filter_alt</span>
                             </button>
                             <div id="testsSeparator" class="separator hidden"></div>
-                            <button id="btnExportCsv" class="btn-icon hidden" title="Export CSV">
-                                <span class="material-symbols-outlined">download</span>
+                            <button id="btnTestsSettings" class="btn-icon hidden" onclick="App.UIManager.toggleTestsSettingsMenu(event)" title="Table Settings">
+                                <span class="material-symbols-outlined">settings</span>
                             </button>
                         </div>
                     </div>
@@ -477,6 +480,26 @@
 
             <!-- Filter Dropdown -->
             <div id="filterDropdown" class="dropdown-menu"></div>
+
+            <!-- Insights Settings Menu -->
+            <div id="insightsSettingsMenu" class="dropdown-menu" style="display: none; position: fixed; min-width: 200px; z-index: 1000;">
+                <div class="dropdown-item" onclick="App.UIManager.toggleEditMode()">
+                    <span class="material-symbols-outlined" style="font-size: 18px; margin-right: 8px; color: var(--text-muted);">dashboard_customize</span>
+                    <span>Edit Dashboard</span>
+                </div>
+                <div class="dropdown-item" onclick="openSettingsModal()">
+                    <span class="material-symbols-outlined" style="font-size: 18px; margin-right: 8px; color: var(--text-muted);">tune</span>
+                    <span>Configuration</span>
+                </div>
+            </div>
+
+            <!-- Tests Settings Menu -->
+            <div id="testsSettingsMenu" class="dropdown-menu" style="display: none; position: fixed; min-width: 200px; z-index: 1000;">
+                <div class="dropdown-item" id="btnExportCsv">
+                    <span class="material-symbols-outlined" style="font-size: 18px; margin-right: 8px; color: var(--text-muted);">download</span>
+                    <span>Export CSV</span>
+                </div>
+            </div>
 
             <!-- Advanced Filter Modal -->
             <div id="advancedFilterModal" class="modal-overlay hidden">

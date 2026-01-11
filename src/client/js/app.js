@@ -177,6 +177,18 @@ document.addEventListener('click', function (e) {
     if (profileMenu && profileMenu.style.display === 'block' && !profileMenu.contains(e.target) && !profileBtn.contains(e.target)) {
         profileMenu.style.display = 'none';
     }
+
+    const insightsMenu = document.getElementById('insightsSettingsMenu');
+    const insightsBtn = document.getElementById('btnInsightsSettings');
+    if (insightsMenu && insightsMenu.style.display === 'block' && !insightsMenu.contains(e.target) && !insightsBtn.contains(e.target)) {
+        insightsMenu.style.display = 'none';
+    }
+
+    const testsMenu = document.getElementById('testsSettingsMenu');
+    const testsBtn = document.getElementById('btnTestsSettings');
+    if (testsMenu && testsMenu.style.display === 'block' && !testsMenu.contains(e.target) && !testsBtn.contains(e.target)) {
+        testsMenu.style.display = 'none';
+    }
 });
 
 // Close modal on outside click
