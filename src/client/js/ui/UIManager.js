@@ -104,8 +104,11 @@ window.App.UIManager = {
 
         if (this.dashboardCards.length === 0) this.initDashboardCards();
 
-        let html = '';
-        this.dashboardCards.forEach(card => {
+        // Fixed 4 columns layout
+        const colCount = 4;
+        const columns = Array.from({ length: colCount }, () => []);
+
+        this.dashboardCards.forEach((card, index) => {
             let cardHtml = '';
             // Regenerate data for custom cards on render
             if (card.isCustom && card.filterCriteria) {
@@ -118,10 +121,20 @@ window.App.UIManager = {
                 cardHtml = window.UI[card.type](card.props);
             }
             
-            html += this.wrapCard(card, cardHtml);
+            const fullCardHtml = this.wrapCard(card, cardHtml);
+            
+            // Determine column
+            let colIdx = card.column;
+            if (colIdx === undefined || colIdx >= colCount || colIdx < 0) {
+                colIdx = index % colCount;
+            }
+            columns[colIdx].push(fullCardHtml);
         });
 
-        container.innerHTML = html;
+        container.innerHTML = columns.map((cards, i) => 
+            `<div class="dashboard-column" data-col="${i}">${cards.join('')}</div>`
+        ).join('');
+
         this.addDragListeners();
     },
 
@@ -131,7 +144,7 @@ window.App.UIManager = {
             `<button class="btn-icon" onclick="App.UIManager.editCustomCard('${card.id}')" title="Edit Card" style="width: 20px; height: 20px;"><span class="material-symbols-outlined" style="font-size: 14px;">edit</span></button>` : '';
         
         return `
-            <div class="card-wrapper ${extraClass}" data-id="${card.id}" style="position: relative;">
+            <div class="card-wrapper ${extraClass}" data-id="${card.id}" style="position: relative; width: 100%;">
                 <div class="card-actions" style="position: absolute; top: 8px; right: 8px; z-index: 10; display: flex; gap: 4px; opacity: 0; transition: opacity 0.2s; background: var(--bg-surface); padding: 4px; border-radius: 6px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color);">
                     <span class="drag-handle material-symbols-outlined" draggable="true" title="Drag to reorder" style="font-size: 16px; color: var(--text-muted); padding: 2px;">drag_indicator</span>
                     ${editBtn}
@@ -174,7 +187,7 @@ window.App.UIManager = {
             e.dataTransfer.setDragImage(wrapper, e.clientX - rect.left, e.clientY - rect.top);
 
             // Setup placeholder
-            placeholder.style.width = rect.width + 'px';
+            placeholder.style.width = '100%';
             placeholder.style.height = rect.height + 'px';
             placeholder.className = 'card-placeholder ' + Array.from(wrapper.classList).filter(c => c !== 'card-wrapper' && c !== 'dragging').join(' ');
 
@@ -206,51 +219,52 @@ window.App.UIManager = {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
 
-            const afterElement = this.getDragAfterElement(container, e.clientY, e.clientX);
+            const targetColumn = e.target.closest('.dashboard-column');
+            if (!targetColumn) return;
+
+            const afterElement = this.getDragAfterElement(targetColumn, e.clientY);
             
-            // Prevent unnecessary DOM updates (flickering)
             if (afterElement) {
                 if (placeholder.nextElementSibling === afterElement) return;
+                targetColumn.insertBefore(placeholder, afterElement);
             } else {
-                if (placeholder.nextElementSibling === null && container.lastElementChild === placeholder) return;
-            }
-
-            if (afterElement == null) {
-                container.appendChild(placeholder);
-            } else {
-                container.insertBefore(placeholder, afterElement);
+                if (placeholder.parentElement === targetColumn && placeholder.nextElementSibling === null) return;
+                targetColumn.appendChild(placeholder);
             }
         });
 
         container.dataset.listenersAttached = 'true';
     },
 
-    getDragAfterElement: function(container, y, x) {
-        const draggableElements = [...container.querySelectorAll('.card-wrapper:not(.dragging)')];
+    getDragAfterElement: function(column, y) {
+        const draggableElements = [...column.querySelectorAll('.card-wrapper:not(.dragging)')];
 
-        const result = draggableElements.reduce((closest, child) => {
+        return draggableElements.reduce((closest, child) => {
             const box = child.getBoundingClientRect();
-            // Simple distance check for grid
-            const offsetX = x - (box.left + box.width / 2);
-            const offsetY = y - (box.top + box.height / 2);
-            const dist = Math.sqrt(offsetX * offsetX + offsetY * offsetY);
+            const offset = y - box.top - box.height / 2;
             
-            if (closest == null || dist < closest.dist) {
-                return { offset: dist, element: child, dist: dist };
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
             } else {
                 return closest;
             }
-        }, null);
-
-        return result ? result.element : null;
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
     },
 
     saveCardOrder: function() {
-        const newOrderIds = Array.from(document.getElementById('insightsContent').children).map(el => el.dataset.id);
+        const columns = document.querySelectorAll('.dashboard-column');
         const newCards = [];
-        newOrderIds.forEach(id => {
-            const card = this.dashboardCards.find(c => c.id === id);
-            if (card) newCards.push(card);
+        
+        columns.forEach((col, colIndex) => {
+            const cardWrappers = col.querySelectorAll('.card-wrapper');
+            cardWrappers.forEach(wrapper => {
+                const id = wrapper.dataset.id;
+                const card = this.dashboardCards.find(c => c.id === id);
+                if (card) {
+                    card.column = colIndex;
+                    newCards.push(card);
+                }
+            });
         });
         this.dashboardCards = newCards;
         localStorage.setItem('dashboardCards', JSON.stringify(this.dashboardCards));
