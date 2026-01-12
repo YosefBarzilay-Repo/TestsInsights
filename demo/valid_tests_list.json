@@ -12,7 +12,7 @@
     "run_id": "0011_20241201",
     "test_name": "test_security_190",
     "test_group_name": "security",
-    "status": "pass",
+    "status": "new_status",
     "run_date": "2024-12-01",
     "start_time": "01:29:00",
     "end_time": "01:30:43"
@@ -21,7 +21,7 @@
     "run_id": "0011_20241201",
     "test_name": "test_smoke_681",
     "test_group_name": "smoke",
-    "status": "pass",
+    "status": "status2",
     "run_date": "2024-12-01",
     "start_time": "01:23:23",
     "end_time": "01:24:59"
@@ -30,7 +30,7 @@
     "run_id": "0011_20241201",
     "test_name": "test_smoke_278",
     "test_group_name": "smoke",
-    "status": "pass",
+    "status": "status3",
     "run_date": "2024-12-01",
     "start_time": "01:34:18",
     "end_time": "01:35:02"
@@ -39,7 +39,7 @@
     "run_id": "0011_20241201",
     "test_name": "test_performance_550",
     "test_group_name": "performance",
-    "status": "pass",
+    "status": "status4",
     "run_date": "2024-12-01",
     "start_time": "01:30:48",
     "end_time": "01:35:00"

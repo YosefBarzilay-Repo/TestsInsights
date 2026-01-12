@@ -5,6 +5,7 @@ window.App.UIManager = {
     itemsPerPage: 20,
     isComparisonMode: false,
     activeSavedFilterSettingsBtn: null,
+    activeResizeMenuBtn: null,
     tooltipTimeout: null,
     sortState: { column: null, direction: 'asc' },
     dashboardCards: [],
@@ -91,6 +92,12 @@ window.App.UIManager = {
         const saved = localStorage.getItem('dashboardCards');
         if (saved) {
             this.dashboardCards = JSON.parse(saved);
+            // Migration: Update card_dist to TableWidgetCard if it's DistributionCard
+            const distCard = this.dashboardCards.find(c => c.id === 'card_dist');
+            if (distCard && distCard.type === 'DistributionCard') {
+                distCard.type = 'TableWidgetCard';
+                distCard.props = { title: 'Status Distribution', containerId: 'statusDistributionContainer' };
+            }
             return;
         }
 
@@ -98,7 +105,7 @@ window.App.UIManager = {
             { id: 'card_scope', type: 'SplitMetricCard', props: { title: 'Total Scope', leftId: 'filterBarRunCount', leftLabel: 'Runs', rightId: 'filterBarTestCount', rightLabel: 'Tests', leftOnClick: "App.UIManager.setFilter('all'); App.UIManager.switchTab('tests');", rightOnClick: "App.UIManager.setFilter('all'); App.UIManager.switchTab('tests');", leftTooltip: "Show all runs in the list", rightTooltip: "Show all tests in the list" } },
             { id: 'card_trend', type: 'ChartCard', props: { title: 'Execution Trend', chartId: 'trendChartSmall' } },
             { id: 'card_time', type: 'PropertyListCard', props: { title: 'Execution Time', items: [{ label: 'Average', valueId: 'statAvgTime' }, { label: 'Max', valueId: 'statMaxTime', linkId: 'statMaxRunLink' }, { label: 'Min', valueId: 'statMinTime', linkId: 'statMinRunLink' }] } },
-            { id: 'card_dist', type: 'DistributionCard', props: { title: 'Status Distribution', totalId: 'totalExecutions', items: [{ label: 'Passed', colorClass: 'bg-green', clickId: 'passedFilterClickable', percentId: 'percentPassed', countId: 'countPassed', barId: 'barPassed' }, { label: 'Failed', colorClass: 'bg-red', clickId: 'failedFilterClickable', percentId: 'percentFailed', countId: 'countFailed', barId: 'barFailed' }, { label: 'Skipped', colorClass: 'bg-grey', clickId: 'skippedFilterClickable', percentId: 'percentSkipped', countId: 'countSkipped', barId: 'barSkipped' }] } },
+            { id: 'card_dist', type: 'TableWidgetCard', props: { title: 'Status Distribution', containerId: 'statusDistributionContainer' } },
             { id: 'card_stability', type: 'MetricCard', props: { title: 'Overall Stability Score', valueId: 'stabilityScore', subtextHtml: 'Based on flaky and broken test rates', tooltip: 'Score calculated from failure and flakiness rates' } },
             { id: 'card_critical', type: 'MetricCard', props: { title: 'Critical Issues', valueId: 'criticalIssuesCount', valueClass: 'text-red', subtextHtml: 'Tests consistently failing', onClick: "App.UIManager.setFilter('broken'); App.UIManager.switchTab('tests');", tooltip: "Show tests that failed in all selected runs" } },
             { id: 'card_flaky', type: 'MetricCard', props: { title: 'Flaky Tests', valueId: 'flakyRate', subtextHtml: '<span id="flakyCount" class="clickable-count">-</span> flaky tests of <span id="totalTests">-</span> total', onClick: "App.UIManager.setFilter('flaky'); App.UIManager.switchTab('tests');", tooltip: "Show tests with unstable results (flipping status)" } },
@@ -108,6 +115,75 @@ window.App.UIManager = {
         ];
     },
 
+    toggleResizeMenu: function(e, cardId) {
+        e.stopPropagation();
+        const btn = e.currentTarget;
+        
+        const existing = document.getElementById('cardResizeMenu');
+        if (existing) {
+            existing.remove();
+            if (this.activeResizeMenuBtn === btn) {
+                this.activeResizeMenuBtn = null;
+                return;
+            }
+        }
+        
+        this.activeResizeMenuBtn = btn;
+        const rect = btn.getBoundingClientRect();
+        
+        const menu = document.createElement('div');
+        menu.id = 'cardResizeMenu';
+        menu.className = 'dropdown-menu';
+        menu.style.display = 'block';
+        menu.style.position = 'fixed';
+        menu.style.top = (rect.bottom + 5) + 'px';
+        menu.style.left = (rect.right - 120) + 'px';
+        menu.style.minWidth = '120px';
+        menu.style.zIndex = '10000';
+        
+        [1, 2, 3, 4].forEach(size => {
+            const item = document.createElement('div');
+            item.className = 'dropdown-item';
+            item.textContent = `${size} Column${size > 1 ? 's' : ''}`;
+            item.onclick = (ev) => {
+                ev.stopPropagation();
+                this.setCardSize(cardId, size);
+                menu.remove();
+                this.activeResizeMenuBtn = null;
+            };
+            menu.appendChild(item);
+        });
+        
+        document.body.appendChild(menu);
+        
+        setTimeout(() => {
+            const closeMenu = () => {
+                if (menu.parentNode) menu.parentNode.removeChild(menu);
+                App.UIManager.activeResizeMenuBtn = null;
+                document.removeEventListener('click', closeMenu);
+            };
+            document.addEventListener('click', closeMenu);
+        }, 0);
+    },
+
+    setCardSize: function(id, size) {
+        const card = this.dashboardCards.find(c => c.id === id);
+        if (card) {
+            card.colSpan = size;
+            this.saveCardOrder();
+            this.renderDashboard();
+            
+            const activeIds = App.FilterManager.activeRunFilters.length > 0 ? App.FilterManager.activeRunFilters : App.FilterManager.currentVisibleRunIds;
+            this.updateInsights(activeIds);
+            
+            const trendCard = this.dashboardCards.find(c => c.id === 'card_trend');
+            if (trendCard) {
+                 const runsData = App.DataStore.runStats.filter(r => activeIds.includes(r.id));
+                 this.renderTrendChart('trendChartSmall', runsData);
+            }
+        }
+    },
+
     renderDashboard: function() {
         const container = document.getElementById('insightsContent');
         if (!container) return;
@@ -115,11 +191,7 @@ window.App.UIManager = {
 
         if (this.dashboardCards.length === 0) this.initDashboardCards();
 
-        // Fixed 4 columns layout
-        const colCount = 4;
-        const columns = Array.from({ length: colCount }, () => []);
-
-        this.dashboardCards.forEach((card, index) => {
+        const cardsHtml = this.dashboardCards.map((card) => {
             let cardHtml = '';
             // Regenerate data for custom cards on render
             if (card.isCustom && card.filterCriteria) {
@@ -132,32 +204,44 @@ window.App.UIManager = {
                 cardHtml = window.UI[card.type](card.props);
             }
             
-            const fullCardHtml = this.wrapCard(card, cardHtml);
-            
-            // Determine column
-            let colIdx = card.column;
-            if (colIdx === undefined || colIdx >= colCount || colIdx < 0) {
-                colIdx = index % colCount;
-            }
-            columns[colIdx].push(fullCardHtml);
-        });
+            return this.wrapCard(card, cardHtml);
+        }).join('');
 
-        container.innerHTML = columns.map((cards, i) => 
-            `<div class="dashboard-column" data-col="${i}">${cards.join('')}</div>`
-        ).join('');
+        container.innerHTML = cardsHtml;
 
         this.addDragListeners();
+        
+        if (this._resizeObserver) this._resizeObserver.disconnect();
+        this._resizeObserver = new ResizeObserver(entries => {
+            entries.forEach(entry => {
+                const card = entry.target;
+                const wrapper = card.closest('.card-wrapper');
+                if (wrapper) {
+                    const span = Math.ceil(card.getBoundingClientRect().height + 16);
+                    wrapper.style.gridRowEnd = `span ${span}`;
+                }
+            });
+        });
+        container.querySelectorAll('.card').forEach(c => this._resizeObserver.observe(c));
     },
 
     wrapCard: function(card, innerHtml) {
         const extraClass = card.extraClasses || '';
+        const colSpan = card.colSpan || 1;
         const editBtn = card.isCustom ? 
             `<button class="btn-icon" onclick="App.UIManager.editCustomCard('${card.id}')" title="Edit Card" style="width: 20px; height: 20px;"><span class="material-symbols-outlined" style="font-size: 14px;">edit</span></button>` : '';
         
+        const resizeBtn = `
+            <button class="btn-icon" onclick="App.UIManager.toggleResizeMenu(event, '${card.id}')" title="Resize Card" style="width: 20px; height: 20px;"><span class="material-symbols-outlined" style="font-size: 14px;">aspect_ratio</span></button>
+        `;
+
         return `
-            <div class="card-wrapper ${extraClass}" data-id="${card.id}" style="position: relative; width: 100%;">
+            <div class="card-wrapper ${extraClass}" data-id="${card.id}" style="position: relative; grid-column: span ${colSpan};">
                 <div class="card-actions">
                     <span class="drag-handle material-symbols-outlined" draggable="true" title="Drag to reorder" style="font-size: 16px; color: var(--text-muted); padding: 2px;">drag_indicator</span>
+                    <div style="width: 1px; height: 16px; background: var(--border-color); margin: 0 4px;"></div>
+                    ${resizeBtn}
+                    <div style="width: 1px; height: 16px; background: var(--border-color); margin: 0 4px;"></div>
                     ${editBtn}
                     <button class="btn-icon" onclick="App.UIManager.deleteCard('${card.id}')" title="Remove Card" style="width: 20px; height: 20px;">
                         <span class="material-symbols-outlined" style="font-size: 14px;">close</span>
@@ -176,6 +260,32 @@ window.App.UIManager = {
 
         let placeholder = document.createElement('div');
         placeholder.className = 'card-placeholder';
+        placeholder.style.pointerEvents = 'none';
+
+        let isScrolling = false;
+        let scrollDirection = 0;
+        let scrollInterval = null;
+        const scrollContainer = document.querySelector('.main-content');
+
+        const startScrolling = () => {
+            if (isScrolling) return;
+            isScrolling = true;
+            const scroll = () => {
+                if (scrollDirection !== 0 && scrollContainer) {
+                    scrollContainer.scrollBy(0, scrollDirection * 15);
+                    scrollInterval = requestAnimationFrame(scroll);
+                } else {
+                    isScrolling = false;
+                }
+            };
+            scroll();
+        };
+
+        const stopScrolling = () => {
+            scrollDirection = 0;
+            isScrolling = false;
+            if (scrollInterval) cancelAnimationFrame(scrollInterval);
+        };
 
         container.addEventListener('dragstart', (e) => {
             if (!e.target.classList.contains('drag-handle')) return;
@@ -192,6 +302,8 @@ window.App.UIManager = {
 
             // Setup placeholder
             placeholder.style.width = '100%';
+            placeholder.style.gridColumn = wrapper.style.gridColumn;
+            placeholder.style.gridRowEnd = wrapper.style.gridRowEnd;
             placeholder.style.height = rect.height + 'px';
             placeholder.className = 'card-placeholder ' + Array.from(wrapper.classList).filter(c => c !== 'card-wrapper' && c !== 'dragging').join(' ');
 
@@ -205,6 +317,7 @@ window.App.UIManager = {
         });
 
         container.addEventListener('dragend', (e) => {
+            stopScrolling();
             const wrapper = container.querySelector('.dragging');
             if (!wrapper) return;
 
@@ -219,56 +332,88 @@ window.App.UIManager = {
             this.saveCardOrder();
         });
 
+        let lastUpdate = 0;
         container.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
 
-            const targetColumn = e.target.closest('.dashboard-column');
-            if (!targetColumn) return;
+            // Auto-scroll logic
+            const threshold = 100;
+            if (e.clientY < threshold) {
+                scrollDirection = -1;
+                startScrolling();
+            } else if (window.innerHeight - e.clientY < threshold) {
+                scrollDirection = 1;
+                startScrolling();
+            } else {
+                scrollDirection = 0;
+            }
 
-            const afterElement = this.getDragAfterElement(targetColumn, e.clientY);
+            // Throttle layout updates
+            const now = Date.now();
+            if (now - lastUpdate < 30) return;
+            lastUpdate = now;
+
+            const afterElement = this.getDragAfterElement(container, e.clientX, e.clientY);
             
             if (afterElement) {
                 if (placeholder.nextElementSibling === afterElement) return;
-                targetColumn.insertBefore(placeholder, afterElement);
+                container.insertBefore(placeholder, afterElement);
             } else {
-                if (placeholder.parentElement === targetColumn && placeholder.nextElementSibling === null) return;
-                targetColumn.appendChild(placeholder);
+                if (placeholder.nextElementSibling !== null) {
+                    container.appendChild(placeholder);
+                }
             }
         });
 
         container.dataset.listenersAttached = 'true';
     },
 
-    getDragAfterElement: function(column, y) {
-        const draggableElements = [...column.querySelectorAll('.card-wrapper:not(.dragging)')];
+    getDragAfterElement: function(container, x, y) {
+        const draggableElements = [...container.querySelectorAll('.card-wrapper:not(.dragging)')];
 
-        return draggableElements.reduce((closest, child) => {
+        const closest = draggableElements.reduce((closest, child) => {
             const box = child.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
+            const centerX = box.left + box.width / 2;
+            const centerY = box.top + box.height / 2;
+            const dist = Math.hypot(x - centerX, y - centerY);
             
-            if (offset < 0 && offset > closest.offset) {
-                return { offset: offset, element: child };
+            if (dist < closest.dist) {
+                return { dist: dist, element: child, box: box };
             } else {
                 return closest;
             }
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }, { dist: Number.POSITIVE_INFINITY });
+
+        if (!closest.element) return null;
+
+        const box = closest.box;
+        const centerX = box.left + box.width / 2;
+        const centerY = box.top + box.height / 2;
+        
+        // If cursor is significantly below or to the right of the center, insert after
+        const isAfter = (y > centerY + 20) || (Math.abs(y - centerY) < box.height/2 && x > centerX);
+
+        if (isAfter) {
+            return closest.element.nextElementSibling;
+        } else {
+            return closest.element;
+        }
     },
 
     saveCardOrder: function() {
-        const columns = document.querySelectorAll('.dashboard-column');
+
+
+        const container = document.getElementById('insightsContent');
+        const wrappers = container.querySelectorAll('.card-wrapper');
         const newCards = [];
         
-        columns.forEach((col, colIndex) => {
-            const cardWrappers = col.querySelectorAll('.card-wrapper');
-            cardWrappers.forEach(wrapper => {
-                const id = wrapper.dataset.id;
-                const card = this.dashboardCards.find(c => c.id === id);
-                if (card) {
-                    card.column = colIndex;
-                    newCards.push(card);
-                }
-            });
+        wrappers.forEach(wrapper => {
+            const id = wrapper.dataset.id;
+            const card = this.dashboardCards.find(c => c.id === id);
+            if (card) {
+                newCards.push(card);
+            }
         });
         this.dashboardCards = newCards;
         localStorage.setItem('dashboardCards', JSON.stringify(this.dashboardCards));
@@ -279,8 +424,12 @@ window.App.UIManager = {
             this.dashboardCards = this.dashboardCards.filter(c => c.id !== id);
             localStorage.setItem('dashboardCards', JSON.stringify(this.dashboardCards));
             this.renderDashboard();
-            this.updateInsights(); // Refresh data
-            this.renderTrendChart('trendChartSmall', App.FilterManager.activeRunFilters.length > 0 ? App.FilterManager.activeRunFilters.map(rid => App.DataStore.runStats.find(r => r.id === rid)) : App.DataStore.runStats);
+            
+            const activeIds = App.FilterManager.activeRunFilters.length > 0 ? App.FilterManager.activeRunFilters : App.FilterManager.currentVisibleRunIds;
+            this.updateInsights(activeIds);
+            
+            const runsData = App.DataStore.runStats.filter(r => activeIds.includes(r.id));
+            this.renderTrendChart('trendChartSmall', runsData);
         }
     },
 
@@ -297,7 +446,10 @@ window.App.UIManager = {
 
         if (FilterManager.currentFilter !== 'all') {
             const names = { 'flaky': 'Flaky Tests', 'broken': 'Continuous Failing', 'new-failure': 'New Failures', 'passed-only': 'Passed Tests', 'failing': 'Failed Tests', 'skipped-any': 'Skipped Tests' };
-            parts.push(createTag('Status', names[FilterManager.currentFilter] || FilterManager.currentFilter, "App.UIManager.setFilter('all')"));
+            let label = names[FilterManager.currentFilter];
+            if (!label && FilterManager.currentFilter.startsWith('status-')) label = FilterManager.currentFilter.replace('status-', '').toUpperCase();
+            if (!label) label = FilterManager.currentFilter;
+            parts.push(createTag('Status', label, "App.UIManager.setFilter('all')"));
         }
 
         if (FilterManager.activeRunFilters.length > 0) {
@@ -342,9 +494,10 @@ window.App.UIManager = {
         toggleActive('flakyCount', filter === 'flaky');
         toggleActive('brokenCount', filter === 'broken');
         toggleActive('newFailureCount', filter === 'new-failure');
-        toggleActive('passedFilterClickable', filter === 'passed-only');
-        toggleActive('failedFilterClickable', filter === 'failing');
-        toggleActive('skippedFilterClickable', filter === 'skipped-any');
+        
+        // Dynamic status filters
+        App.DataStore.statuses.forEach(s => toggleActive(`filter-status-${s}`, filter === `status-${s}`));
+        
         toggleActive('totalExecutionsClickable', filter === 'all');
 
         this.updateFilterDisplay();
@@ -587,7 +740,7 @@ window.App.UIManager = {
 
         if (!FilterManager.isAnyFilterActive() && !isColFilterActive) {
             tbody.innerHTML = '';
-            document.getElementById('pageStart').textContent = 0;
+            document.getElementById('pageStart').textContent = 0; 
             document.getElementById('pageEnd').textContent = 0;
             document.getElementById('totalItems').textContent = 0;
             document.getElementById('btnPrev').disabled = true;
@@ -630,6 +783,7 @@ window.App.UIManager = {
                 else if (FilterManager.currentFilter === 'broken') return !statuses.has('passed') && statuses.has('failed');
                 else if (FilterManager.currentFilter === 'passed-only') return statuses.size === 1 && statuses.has('passed');
                 else if (FilterManager.currentFilter === 'skipped-any') return statuses.has('skipped');
+                else if (FilterManager.currentFilter.startsWith('status-')) return statuses.has(FilterManager.currentFilter.replace('status-', ''));
                 else if (FilterManager.currentFilter === 'new-failure') {
                     const details = DataStore.testDetails[name] || [];
                     const failures = details.filter(d => d.status === 'failed');
@@ -735,7 +889,7 @@ window.App.UIManager = {
                     cell.className = 'text-center';
                     const runDetail = DataStore.testDetails[testName].find(d => d.runId === runId);
                     if (runDetail) {
-                        let pillClass = ['passed', 'failed', 'skipped'].includes(runDetail.status) ? `pill-${runDetail.status}` : 'pill-other';
+                        let pillClass = ['passed', 'failed', 'skipped'].includes(runDetail.status) ? `pill-${runDetail.status}` : `pill-other pill-${runDetail.status}`;
                         cell.innerHTML = `<span class="status-pill ${pillClass}"></span>${runDetail.status}`;
                     } else {
                         cell.innerHTML = '<span style="color:#ccc">-</span>';
@@ -794,6 +948,7 @@ window.App.UIManager = {
             if (details.status === 'passed') { iconName = 'check_circle'; iconColor = 'var(--status-pass)'; }
             else if (details.status === 'failed') { iconName = 'cancel'; iconColor = 'var(--status-fail)'; }
             else if (details.status === 'skipped') { iconName = 'remove_circle'; iconColor = 'var(--status-skip)'; }
+            else { iconName = 'help'; iconColor = 'var(--status-info)'; }
             if (details.status !== '-') {
                 statusCell.innerHTML = `<div style="display: flex; align-items: center; gap: 6px;"><span class="material-symbols-outlined" style="font-size: 16px; color: ${iconColor};">${iconName}</span><span style="text-transform: capitalize;">${details.status}</span></div>`;
             } else {
@@ -886,7 +1041,7 @@ window.App.UIManager = {
                 if (dur < 0) dur += 86400;
                 durationStr = Utils.formatDuration(dur);
             }
-            let pillClass = ['passed', 'failed', 'skipped'].includes(d.status) ? `pill-${d.status}` : 'pill-other';
+            let pillClass = ['passed', 'failed', 'skipped'].includes(d.status) ? `pill-${d.status}` : `pill-other pill-${d.status}`;
             row.innerHTML = `<td>${d.runId}</td><td>${d.date}</td><td>${d.start} - ${d.end}</td><td style="font-family: var(--font-mono);">${durationStr}</td><td><span class="status-pill ${pillClass}"></span>${d.status}</td>`;
             tbody.appendChild(row);
         });
@@ -911,7 +1066,7 @@ window.App.UIManager = {
 
         if (!FilterManager.isAnyFilterActive()) runIds = [];
 
-        let totalRuns, totalTests, totalPassed = 0, totalFailed = 0, totalSkipped = 0, flakyCount = 0, brokenCount = 0, newFailureCount = 0, criticalCount = 0;
+        let totalRuns, totalTests, flakyCount = 0, brokenCount = 0, newFailureCount = 0, criticalCount = 0;
         const settings = JSON.parse(localStorage.getItem('insightsSettings')) || { continuousFailVal: 7, continuousFailUnit: 'weeks', newFailureVal: 7, flakyThreshold: 1 };
         const newFailureDays = parseInt(settings.newFailureVal) || 7;
         const flakyThreshold = parseInt(settings.flakyThreshold) || 1;
@@ -920,6 +1075,8 @@ window.App.UIManager = {
         const allDates = DataStore.runStats.map(r => r.date).filter(d => d).sort();
         const latestDate = allDates.length > 0 ? new Date(allDates[allDates.length - 1]) : new Date();
         const newFailureWindowMs = newFailureDays * 24 * 60 * 60 * 1000;
+        
+        const statusCounts = {};
 
         const calculateStats = (testName, details) => {
             let flips = 0, lastStatus = null;
@@ -954,11 +1111,12 @@ window.App.UIManager = {
         };
 
         if (runIds !== null && runIds.length > 0) {
+            DataStore.statuses.forEach(s => statusCounts[s] = 0);
             const selectedRunData = DataStore.runStats.filter(r => runIds.includes(r.id));
             const testsInRuns = new Set();
             selectedRunData.forEach(runData => {
-                totalPassed += runData.passed; totalFailed += runData.failed; totalSkipped += runData.skipped;
-                (DataStore.runToTestsMap[runData.id] || new Set()).forEach(t => testsInRuns.add(t));
+                DataStore.statuses.forEach(s => statusCounts[s] += (runData[s] || 0));
+                (DataStore.runToTestsMap[runData.id] || new Set()).forEach(t => testsInRuns.add(t)); 
             });
             totalRuns = selectedRunData.length; totalTests = testsInRuns.size;
             testsInRuns.forEach(testName => {
@@ -968,16 +1126,25 @@ window.App.UIManager = {
         } else if (runIds === null || runIds.length === 0) {
             if (runIds !== null) { totalRuns = 0; totalTests = 0; }
             else {
+                DataStore.statuses.forEach(s => statusCounts[s] = 0);
                 totalRuns = DataStore.runStats.length; totalTests = Object.keys(DataStore.testHistory).length;
-                DataStore.runStats.forEach(run => { totalPassed += run.passed; totalFailed += run.failed; totalSkipped += run.skipped; });
+                DataStore.runStats.forEach(run => { 
+                    DataStore.statuses.forEach(s => statusCounts[s] += (run[s] || 0));
+                });
                 for (const testName in DataStore.testResults) {
                     const details = (DataStore.testDetails[testName] || []).slice().sort((a, b) => (a.runId > b.runId ? 1 : -1));
                     calculateStats(testName, details);
                 }
             }
         }
+        
+        let totalExecutions = 0;
+        DataStore.statuses.forEach(s => totalExecutions += (statusCounts[s] || 0));
+        
+        const totalPassed = statusCounts['passed'] || 0;
+        const totalFailed = statusCounts['failed'] || 0;
+        const totalSkipped = statusCounts['skipped'] || 0;
 
-        const totalExecutions = totalPassed + totalFailed + totalSkipped;
         const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
         const setWidth = (id, val) => { const el = document.getElementById(id); if (el) el.style.width = val; };
 
@@ -985,9 +1152,67 @@ window.App.UIManager = {
         setText('countPassed', totalPassed); setText('countFailed', totalFailed); setText('countSkipped', totalSkipped); setText('totalExecutions', totalExecutions);
         const pPass = totalExecutions ? (totalPassed / totalExecutions) * 100 : 0;
         const pFail = totalExecutions ? (totalFailed / totalExecutions) * 100 : 0;
-        const pSkip = totalExecutions ? (totalSkipped / totalExecutions) * 100 : 0;
-        setWidth('barPassed', pPass + '%'); setWidth('barFailed', pFail + '%'); setWidth('barSkipped', pSkip + '%');
-        setText('percentPassed', pPass.toFixed(1)); setText('percentFailed', pFail.toFixed(1)); setText('percentSkipped', pSkip.toFixed(1));
+        
+        DataStore.statuses.forEach(s => {
+            setText(`count-${s}`, statusCounts[s] || 0);
+            const pct = totalExecutions ? ((statusCounts[s] || 0) / totalExecutions * 100) : 0;
+            setText(`percent-${s}`, pct.toFixed(1));
+            setWidth(`bar-${s}`, pct + '%');
+        });
+        
+        // Status Distribution Table
+        const statusDistContainer = document.getElementById('statusDistributionContainer');
+        if (statusDistContainer) {
+            statusDistContainer.innerHTML = '';
+            const allStatuses = Array.from(DataStore.statuses);
+            const statusOrder = ['passed', 'failed', 'skipped'];
+            allStatuses.sort((a, b) => {
+                const idxA = statusOrder.indexOf(a);
+                const idxB = statusOrder.indexOf(b);
+                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                if (idxA !== -1) return -1;
+                if (idxB !== -1) return 1;
+                return a.localeCompare(b);
+            });
+
+            const table = document.createElement('table');
+            table.style.width = '100%'; 
+            table.style.borderCollapse = 'collapse'; 
+            table.style.fontSize = '0.85rem';
+            table.innerHTML = `<thead><tr style="text-align: left; border-bottom: 1px solid var(--border-color);"><th style="padding: 0.5rem 1rem;">Status</th><th style="padding: 0.5rem 1rem; text-align: right;">Count</th><th style="padding: 0.5rem 1rem; width: 40%;">Distribution</th></tr></thead>`;
+            const tbody = document.createElement('tbody');
+            
+            allStatuses.forEach((s, i) => {
+                const count = statusCounts[s] || 0;
+                if (count === 0) return;
+                const pct = totalExecutions ? (count / totalExecutions) * 100 : 0;
+                
+                let colorClass = 'bg-grey';
+                let textColor = 'var(--text-main)';
+                let pillClass = 'pill-other';
+                
+                if (s === 'passed') { colorClass = 'bg-green'; textColor = 'var(--status-pass)'; pillClass = 'pill-passed'; }
+                else if (s === 'failed') { colorClass = 'bg-red'; textColor = 'var(--status-fail)'; pillClass = 'pill-failed'; }
+                else if (s === 'skipped') { colorClass = 'bg-grey'; textColor = 'var(--status-skip)'; pillClass = 'pill-skipped'; }
+                else {
+                    const colors = ['bg-blue', 'bg-purple', 'bg-orange', 'bg-teal'];
+                    colorClass = colors[i % colors.length];
+                    pillClass = `pill-other ${colorClass}`;
+                }
+
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid var(--border-color)';
+                
+                const statusHtml = `<div style="display: flex; align-items: center; gap: 0.5rem;"><span class="status-pill ${pillClass}"></span><span style="text-transform: capitalize; color: ${textColor}; font-weight: 500;">${s}</span></div>`;
+                const countHtml = `<span class="clickable-count ${App.FilterManager.currentFilter === 'status-'+s ? 'filter-active' : ''}" onclick="App.UIManager.setFilter(App.FilterManager.currentFilter === 'status-${s}' ? 'all' : 'status-${s}'); App.UIManager.switchTab('tests');">${count}</span>`;
+                const barHtml = `<div style="display: flex; align-items: center; gap: 0.5rem;"><div class="progress-track" style="height: 6px; flex: 1; margin: 0;"><div class="progress-fill ${colorClass}" style="width: ${pct}%"></div></div><div style="font-size: 11px; color: var(--text-muted); width: 35px; text-align: right;">${pct.toFixed(1)}%</div></div>`;
+
+                tr.innerHTML = `<td style="padding: 0.5rem 1rem;">${statusHtml}</td><td style="padding: 0.5rem 1rem; text-align: right;">${countHtml}</td><td style="padding: 0.5rem 1rem;">${barHtml}</td>`;
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            statusDistContainer.appendChild(table);
+        }
 
         const setRate = (id, count) => {
             const rate = totalTests ? (count / totalTests) * 100 : 0;
@@ -1032,33 +1257,79 @@ window.App.UIManager = {
         // Group Deviation
         const groupStats = {};
         const targetRunIds = (runIds !== null) ? new Set(runIds) : null;
+        
+        const allStatuses = Array.from(DataStore.statuses);
+        const statusOrder = ['passed', 'failed', 'skipped'];
+        allStatuses.sort((a, b) => {
+            const idxA = statusOrder.indexOf(a);
+            const idxB = statusOrder.indexOf(b);
+            if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+            if (idxA !== -1) return -1;
+            if (idxB !== -1) return 1;
+            return a.localeCompare(b);
+        });
+
         for (const [testName, details] of Object.entries(DataStore.testDetails)) {
             const group = (DataStore.testGroups[testName] && DataStore.testGroups[testName] !== '--') ? DataStore.testGroups[testName] : 'Unassigned';
-            if (!groupStats[group]) groupStats[group] = { passed: 0, failed: 0, skipped: 0, total: 0 };
+            if (!groupStats[group]) {
+                groupStats[group] = { total: 0 };
+                allStatuses.forEach(s => groupStats[group][s] = 0);
+            }
             details.forEach(d => {
                 if (targetRunIds && !targetRunIds.has(d.runId)) return;
-                if (d.status === 'passed') groupStats[group].passed++;
-                else if (d.status === 'failed') groupStats[group].failed++;
-                else if (d.status === 'skipped') groupStats[group].skipped++;
-                groupStats[group].total++;
+                if (groupStats[group][d.status] !== undefined) {
+                    groupStats[group][d.status]++;
+                    groupStats[group].total++;
+                }
             });
         }
         const groupContainer = document.getElementById('groupDeviationContainer');
         if (groupContainer) {
             groupContainer.innerHTML = '';
-            const sortedGroups = Object.entries(groupStats).sort((a, b) => (b[1].failed - a[1].failed) || (b[1].total - a[1].total));
+            const sortedGroups = Object.entries(groupStats).sort((a, b) => {
+                const failA = a[1]['failed'] || 0;
+                const failB = b[1]['failed'] || 0;
+                return (failB - failA) || (b[1].total - a[1].total);
+            });
+
             if (sortedGroups.length === 0) groupContainer.innerHTML = '<div style="color:var(--text-muted); font-size:0.9rem;">No data available</div>';
             else {
                 const table = document.createElement('table');
                 table.style.width = '100%'; table.style.borderCollapse = 'collapse'; table.style.fontSize = '0.85rem';
-                table.innerHTML = `<thead><tr style="text-align: left; border-bottom: 1px solid var(--border-color);"><th style="padding: 0.75rem 1rem;">Group</th><th style="padding: 0.75rem 1rem; text-align: right;">P / F / S</th><th style="padding: 0.75rem 1rem; width: 40%;">Distribution</th></tr></thead>`;
+                table.innerHTML = `<thead><tr style="text-align: left; border-bottom: 1px solid var(--border-color);"><th style="padding: 0.75rem 1rem;">Group</th><th style="padding: 0.75rem 1rem; text-align: right;">Breakdown</th><th style="padding: 0.75rem 1rem; width: 40%;">Distribution</th></tr></thead>`;
                 const tbody = document.createElement('tbody');
                 sortedGroups.forEach(([groupName, stats]) => {
                     if (stats.total === 0) return;
                     const safeGroupName = groupName.replace(/'/g, "\\'");
                     const tr = document.createElement('tr');
                     tr.style.borderBottom = '1px solid var(--border-color)';
-                    tr.innerHTML = `<td style="padding: 0.75rem 1rem;">${groupName}</td><td style="padding: 0.75rem 1rem; text-align: right;"><span class="text-green" style="cursor: pointer; text-decoration: underline;" onclick="App.UIManager.filterByGroupStatus('${safeGroupName}', 'passed')">${stats.passed}</span> / <span class="text-red" style="cursor: pointer; text-decoration: underline;" onclick="App.UIManager.filterByGroupStatus('${safeGroupName}', 'failed')">${stats.failed}</span> / <span style="color: var(--text-muted); cursor: pointer; text-decoration: underline;" onclick="App.UIManager.filterByGroupStatus('${safeGroupName}', 'skipped')">${stats.skipped}</span></td><td style="padding: 0.75rem 1rem;"><div class="progress-track" style="height: 6px; width: 100%; margin: 0;"><div class="progress-fill bg-green" style="width: ${(stats.passed/stats.total)*100}%"></div><div class="progress-fill bg-red" style="width: ${(stats.failed/stats.total)*100}%"></div><div class="progress-fill bg-grey" style="width: ${(stats.skipped/stats.total)*100}%"></div></div></td>`;
+                    
+                    const breakdownHtml = allStatuses.map(s => {
+                        if (!stats[s]) return null;
+                        let color = 'var(--text-main)';
+                        if (s === 'passed') color = 'var(--status-pass)';
+                        else if (s === 'failed') color = 'var(--status-fail)';
+                        else if (s === 'skipped') color = 'var(--status-skip)';
+                        return `<span style="color: ${color}; cursor: pointer; text-decoration: underline;" onclick="App.UIManager.filterByGroupStatus('${safeGroupName}', '${s}')">${stats[s]}</span>`;
+                    }).filter(Boolean).join(' / ');
+
+                    let progressHtml = '<div class="progress-track" style="height: 6px; width: 100%; margin: 0;">';
+                    allStatuses.forEach((s, i) => {
+                        if (!stats[s]) return;
+                        const pct = (stats[s] / stats.total) * 100;
+                        let colorClass = 'bg-grey';
+                        if (s === 'passed') colorClass = 'bg-green';
+                        else if (s === 'failed') colorClass = 'bg-red';
+                        else if (s === 'skipped') colorClass = 'bg-grey';
+                        else {
+                            const colors = ['bg-blue', 'bg-purple', 'bg-orange', 'bg-teal'];
+                            colorClass = colors[i % colors.length];
+                        }
+                        progressHtml += `<div class="progress-fill ${colorClass}" style="width: ${pct}%" title="${s}: ${stats[s]}"></div>`;
+                    });
+                    progressHtml += '</div>';
+
+                    tr.innerHTML = `<td style="padding: 0.75rem 1rem;">${groupName}</td><td style="padding: 0.75rem 1rem; text-align: right;">${breakdownHtml}</td><td style="padding: 0.75rem 1rem;">${progressHtml}</td>`;
                     tbody.appendChild(tr);
                 });
                 table.appendChild(tbody);
@@ -1070,7 +1341,7 @@ window.App.UIManager = {
     toggleRunFilter: function(runId, event) {
         const isMultiSelect = event.ctrlKey || event.metaKey || event.shiftKey;
         App.FilterManager.toggleRunFilter(runId, isMultiSelect);
-        ['flakyCount', 'brokenCount', 'newFailureCount', 'passedFilterClickable', 'failedFilterClickable', 'skippedFilterClickable', 'totalExecutionsClickable'].forEach(id => {
+        ['flakyCount', 'brokenCount', 'newFailureCount', 'totalExecutionsClickable'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.classList.remove('filter-active');
         });
@@ -1191,10 +1462,26 @@ window.App.UIManager = {
             if (h < 2) h = 2; // Minimum height for visibility
             bar.style.height = `${h}%`;
 
-            const pPass = run.total ? (run.passed / run.total) * 100 : 0;
-            const pFail = run.total ? (run.failed / run.total) * 100 : 0;
-            const pSkip = run.total ? (run.skipped / run.total) * 100 : 0;
-            bar.innerHTML = `<div class="chart-bar-segment bg-green" style="height: ${pPass}%"></div><div class="chart-bar-segment bg-red" style="height: ${pFail}%"></div>${pSkip > 0 ? `<div class="chart-bar-segment bg-grey" style="height: ${pSkip}%"></div>` : ''}`;
+            let segmentsHtml = '';
+            const statuses = Array.from(App.DataStore.statuses).sort();
+            // Prioritize passed/failed/skipped for consistent bottom-up stacking
+            const order = ['passed', 'failed', 'skipped'];
+            statuses.sort((a, b) => {
+                const idxA = order.indexOf(a); const idxB = order.indexOf(b);
+                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                if (idxA !== -1) return -1; if (idxB !== -1) return 1;
+                return a.localeCompare(b);
+            });
+            
+            statuses.forEach((s, i) => {
+                const count = run[s] || 0;
+                if (count > 0) {
+                    const pct = (count / run.total) * 100;
+                    let colorClass = s === 'passed' ? 'bg-green' : (s === 'failed' ? 'bg-red' : (s === 'skipped' ? 'bg-grey' : ['bg-blue', 'bg-purple', 'bg-orange', 'bg-teal'][i % 4]));
+                    segmentsHtml += `<div class="chart-bar-segment ${colorClass}" style="height: ${pct}%"></div>`;
+                }
+            });
+            bar.innerHTML = segmentsHtml;
             bar.onclick = (event) => this.toggleRunFilter(run.id, event);
             
             if (containerId === 'trendChartSmall') {
@@ -1245,20 +1532,27 @@ window.App.UIManager = {
     generateTooltipContent: function(run) {
         const duration = App.Utils.formatDuration(run.durationSeconds);
         const totalExec = App.Utils.formatDuration(run.totalTestDuration || 0);
+        
+        let statusRows = '';
+        App.DataStore.statuses.forEach(s => {
+            if (run[s] > 0) {
+                let color = s === 'passed' ? 'var(--status-pass)' : (s === 'failed' ? 'var(--status-fail)' : (s === 'skipped' ? 'var(--status-skip)' : 'var(--text-main)'));
+                statusRows += `<span style="color: ${color}; text-transform: capitalize;">${s}:</span> <span style="color: ${color}; font-weight: 600;">${run[s]}</span>`;
+            }
+        });
+
         return `
             <div style="display: flex; flex-direction: column; gap: 0.5rem;">
                 <div style="font-weight: 600; border-bottom: 1px solid var(--border-color); padding-bottom: 0.25rem; margin-bottom: 0.25rem; color: var(--text-main);">
                     Run ${run.id}
                 </div>
-                <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-size: 0.8rem;">
+                <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 1rem; font-size: 0.8rem; align-items: center;">
                     <span style="color: var(--text-muted);">Date:</span> <span style="color: var(--text-secondary);">${run.date}</span>
                     <span style="color: var(--text-muted);">Time:</span> <span style="color: var(--text-secondary);">${run.startTime || '-'}</span>
                     <span style="color: var(--text-muted);">Duration:</span> <span style="font-family: var(--font-mono); color: var(--text-secondary);">${duration}</span>
                     <span style="color: var(--text-muted);">Total Exec:</span> <span style="font-family: var(--font-mono); color: var(--text-secondary);">${totalExec}</span>
                     <span style="color: var(--text-muted);">Total:</span> <span style="color: var(--text-main); font-weight: 600;">${run.total}</span>
-                    <span style="color: var(--status-pass);">Passed:</span> <span style="color: var(--status-pass); font-weight: 600;">${run.passed}</span>
-                    <span style="color: var(--status-fail);">Failed:</span> <span style="color: var(--status-fail); font-weight: 600;">${run.failed}</span>
-                    <span style="color: var(--status-skip);">Skipped:</span> <span style="color: var(--status-skip); font-weight: 600;">${run.skipped}</span>
+                    ${statusRows}
                 </div>
             </div>
         `;
@@ -1393,7 +1687,7 @@ window.App.UIManager = {
         this.isComparisonMode = false;
         this.updateCompareButtonState();
         this.updateFilterDisplay();
-        ['flakyCount', 'brokenCount', 'newFailureCount', 'passedFilterClickable', 'failedFilterClickable', 'skippedFilterClickable', 'totalExecutionsClickable'].forEach(id => document.getElementById(id).classList.remove('filter-active'));
+        ['flakyCount', 'brokenCount', 'newFailureCount', 'totalExecutionsClickable'].forEach(id => document.getElementById(id).classList.remove('filter-active'));
         this.applyGlobalRunFilters();
         this.updateInsights(App.FilterManager.currentVisibleRunIds);
         this.renderTable();

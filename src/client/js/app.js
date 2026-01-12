@@ -14,9 +14,6 @@ function initEventListeners() {
     addListener('flakyCount', 'click', () => { UIManager.setFilter(FilterManager.currentFilter === 'flaky' ? 'all' : 'flaky'); UIManager.switchTab('tests'); });
     addListener('brokenCount', 'click', () => { UIManager.setFilter(FilterManager.currentFilter === 'broken' ? 'all' : 'broken'); UIManager.switchTab('tests'); });
     addListener('newFailureCount', 'click', () => { UIManager.setFilter(FilterManager.currentFilter === 'new-failure' ? 'all' : 'new-failure'); UIManager.switchTab('tests'); });
-    addListener('passedFilterClickable', 'click', () => { UIManager.setFilter(FilterManager.currentFilter === 'passed-only' ? 'all' : 'passed-only'); UIManager.switchTab('tests'); });
-    addListener('failedFilterClickable', 'click', () => { UIManager.setFilter(FilterManager.currentFilter === 'failing' ? 'all' : 'failing'); UIManager.switchTab('tests'); });
-    addListener('skippedFilterClickable', 'click', () => { UIManager.setFilter(FilterManager.currentFilter === 'skipped-any' ? 'all' : 'skipped-any'); UIManager.switchTab('tests'); });
     addListener('totalExecutionsClickable', 'click', () => { UIManager.setFilter('all'); UIManager.switchTab('tests'); });
 
     addListener('btnExportCsv', 'click', exportDataToCsv);
@@ -30,6 +27,15 @@ function initEventListeners() {
     addListener('btnNext', 'click', () => {
         UIManager.currentPage++;
         UIManager.renderTable();
+    });
+    
+    // Dynamic status filter delegation
+    document.addEventListener('click', (e) => {
+        if (e.target && e.target.id && e.target.id.startsWith('filter-status-')) {
+            const status = e.target.id.replace('filter-status-', '');
+            UIManager.setFilter(FilterManager.currentFilter === `status-${status}` ? 'all' : `status-${status}`);
+            UIManager.switchTab('tests');
+        }
     });
 }
 
@@ -71,6 +77,8 @@ window.addEventListener('DOMContentLoaded', () => {
 function processJSON(jsonText, renderInitialData = true) {
     const success = DataStore.processJSON(jsonText);
     if (!success) return;
+
+    UIManager.renderDashboard();
 
     FilterManager.activeRunFilters = [];
     UIManager.isComparisonMode = false;

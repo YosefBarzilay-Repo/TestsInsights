@@ -108,9 +108,7 @@ window.App.DataStore = {
                 runStatsMap[runId].totalTestDuration = (runStatsMap[runId].totalTestDuration || 0) + testDuration;
 
                 runStatsMap[runId].total++;
-                if (status === 'passed') runStatsMap[runId].passed++;
-                else if (status === 'failed') runStatsMap[runId].failed++;
-                else if (status === 'skipped') runStatsMap[runId].skipped++;
+                runStatsMap[runId][status] = (runStatsMap[runId][status] || 0) + 1;
 
                 if (currentStartTime && (!runStatsMap[runId].startTime || currentStartTime < runStatsMap[runId].startTime)) {
                     runStatsMap[runId].startTime = currentStartTime;
