@@ -37,6 +37,14 @@ function initEventListeners() {
             UIManager.switchTab('tests');
         }
     });
+
+    // Global Filters
+    addListener('globalRunType', 'change', () => UIManager.applyGlobalRunFilters());
+    addListener('globalVersion', 'change', () => UIManager.applyGlobalRunFilters());
+    addListener('globalRunId', 'input', () => UIManager.applyGlobalRunFilters());
+    addListener('filterDateFrom', 'change', () => UIManager.handleDateRangeChange());
+    addListener('filterDateTo', 'change', () => UIManager.handleDateRangeChange());
+    addListener('filterLastDays', 'input', () => UIManager.handleLastDaysInput());
 }
 
 window.addEventListener('DOMContentLoaded', () => {
