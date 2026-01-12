@@ -102,86 +102,17 @@ window.App.UIManager = {
         }
 
         this.dashboardCards = [
-            { id: 'card_scope', type: 'SplitMetricCard', props: { title: 'Total Scope', leftId: 'filterBarRunCount', leftLabel: 'Runs', rightId: 'filterBarTestCount', rightLabel: 'Tests', leftOnClick: "App.UIManager.setFilter('all'); App.UIManager.switchTab('tests');", rightOnClick: "App.UIManager.setFilter('all'); App.UIManager.switchTab('tests');", leftTooltip: "Show all runs in the list", rightTooltip: "Show all tests in the list" } },
-            { id: 'card_trend', type: 'ChartCard', props: { title: 'Execution Trend', chartId: 'trendChartSmall' } },
-            { id: 'card_time', type: 'PropertyListCard', props: { title: 'Execution Time', items: [{ label: 'Average', valueId: 'statAvgTime' }, { label: 'Max', valueId: 'statMaxTime', linkId: 'statMaxRunLink' }, { label: 'Min', valueId: 'statMinTime', linkId: 'statMinRunLink' }] } },
-            { id: 'card_dist', type: 'TableWidgetCard', props: { title: 'Status Distribution', containerId: 'statusDistributionContainer' } },
-            { id: 'card_stability', type: 'MetricCard', props: { title: 'Overall Stability Score', valueId: 'stabilityScore', subtextHtml: 'Based on flaky and broken test rates', tooltip: 'Score calculated from failure and flakiness rates' } },
-            { id: 'card_critical', type: 'MetricCard', props: { title: 'Critical Issues', valueId: 'criticalIssuesCount', valueClass: 'text-red', subtextHtml: 'Tests consistently failing', onClick: "App.UIManager.setFilter('broken'); App.UIManager.switchTab('tests');", tooltip: "Show tests that failed in all selected runs" } },
-            { id: 'card_flaky', type: 'MetricCard', props: { title: 'Flaky Tests', valueId: 'flakyRate', subtextHtml: '<span id="flakyCount" class="clickable-count">-</span> flaky tests of <span id="totalTests">-</span> total', onClick: "App.UIManager.setFilter('flaky'); App.UIManager.switchTab('tests');", tooltip: "Show tests with unstable results (flipping status)" } },
-            { id: 'card_broken', type: 'MetricCard', props: { title: 'Continuous Failing', valueId: 'brokenRate', subtextHtml: '<span id="brokenCount" class="clickable-count">-</span> failing tests of <span id="totalTestsBroken">-</span> total', onClick: "App.UIManager.setFilter('broken'); App.UIManager.switchTab('tests');", tooltip: "Show tests failing consecutively for a long period" } },
-            { id: 'card_newfail', type: 'MetricCard', props: { title: 'First Time Failure', valueId: 'newFailureRate', subtextHtml: '<span id="newFailureCount" class="clickable-count">-</span> tests started failing in last <span id="displayNewFailureDays">7</span> days', onClick: "App.UIManager.setFilter('new-failure'); App.UIManager.switchTab('tests');", tooltip: "Show tests that recently started failing" } },
-            { id: 'card_group', type: 'TableWidgetCard', props: { title: 'Group Status Deviation', containerId: 'groupDeviationContainer' } }
+            { id: 'card_scope', gridColumn: 1, type: 'SplitMetricCard', props: { title: 'Total Scope', leftId: 'filterBarRunCount', leftLabel: 'Runs', rightId: 'filterBarTestCount', rightLabel: 'Tests', leftOnClick: "App.UIManager.setFilter('all'); App.UIManager.switchTab('tests');", rightOnClick: "App.UIManager.setFilter('all'); App.UIManager.switchTab('tests');", leftTooltip: "Show all runs in the list", rightTooltip: "Show all tests in the list" } },
+            { id: 'card_trend', gridColumn: 2, type: 'ChartCard', props: { title: 'Execution Trend', chartId: 'trendChartSmall' } },
+            { id: 'card_time', gridColumn: 3, type: 'PropertyListCard', props: { title: 'Execution Time', items: [{ label: 'Average', valueId: 'statAvgTime' }, { label: 'Max', valueId: 'statMaxTime', linkId: 'statMaxRunLink' }, { label: 'Min', valueId: 'statMinTime', linkId: 'statMinRunLink' }] } },
+            { id: 'card_dist', gridColumn: 4, type: 'TableWidgetCard', props: { title: 'Status Distribution', containerId: 'statusDistributionContainer' } },
+            { id: 'card_stability', gridColumn: 1, type: 'MetricCard', props: { title: 'Overall Stability Score', valueId: 'stabilityScore', subtextHtml: 'Based on flaky and broken test rates', tooltip: 'Score calculated from failure and flakiness rates' } },
+            { id: 'card_critical', gridColumn: 2, type: 'MetricCard', props: { title: 'Critical Issues', valueId: 'criticalIssuesCount', valueClass: 'text-red', subtextHtml: 'Tests consistently failing', onClick: "App.UIManager.setFilter('broken'); App.UIManager.switchTab('tests');", tooltip: "Show tests that failed in all selected runs" } },
+            { id: 'card_flaky', gridColumn: 3, type: 'MetricCard', props: { title: 'Flaky Tests', valueId: 'flakyRate', subtextHtml: '<span id="flakyCount" class="clickable-count">-</span> flaky tests of <span id="totalTests">-</span> total', onClick: "App.UIManager.setFilter('flaky'); App.UIManager.switchTab('tests');", tooltip: "Show tests with unstable results (flipping status)" } },
+            { id: 'card_broken', gridColumn: 4, type: 'MetricCard', props: { title: 'Continuous Failing', valueId: 'brokenRate', subtextHtml: '<span id="brokenCount" class="clickable-count">-</span> failing tests of <span id="totalTestsBroken">-</span> total', onClick: "App.UIManager.setFilter('broken'); App.UIManager.switchTab('tests');", tooltip: "Show tests failing consecutively for a long period" } },
+            { id: 'card_newfail', gridColumn: 1, type: 'MetricCard', props: { title: 'First Time Failure', valueId: 'newFailureRate', subtextHtml: '<span id="newFailureCount" class="clickable-count">-</span> tests started failing in last <span id="displayNewFailureDays">7</span> days', onClick: "App.UIManager.setFilter('new-failure'); App.UIManager.switchTab('tests');", tooltip: "Show tests that recently started failing" } },
+            { id: 'card_group', gridColumn: 2, type: 'TableWidgetCard', props: { title: 'Group Status Deviation', containerId: 'groupDeviationContainer' } }
         ];
-    },
-
-    toggleResizeMenu: function(e, cardId) {
-        e.stopPropagation();
-        const btn = e.currentTarget;
-        
-        const existing = document.getElementById('cardResizeMenu');
-        if (existing) {
-            existing.remove();
-            if (this.activeResizeMenuBtn === btn) {
-                this.activeResizeMenuBtn = null;
-                return;
-            }
-        }
-        
-        this.activeResizeMenuBtn = btn;
-        const rect = btn.getBoundingClientRect();
-        
-        const menu = document.createElement('div');
-        menu.id = 'cardResizeMenu';
-        menu.className = 'dropdown-menu';
-        menu.style.display = 'block';
-        menu.style.position = 'fixed';
-        menu.style.top = (rect.bottom + 5) + 'px';
-        menu.style.left = (rect.right - 120) + 'px';
-        menu.style.minWidth = '120px';
-        menu.style.zIndex = '10000';
-        
-        [1, 2, 3, 4].forEach(size => {
-            const item = document.createElement('div');
-            item.className = 'dropdown-item';
-            item.textContent = `${size} Column${size > 1 ? 's' : ''}`;
-            item.onclick = (ev) => {
-                ev.stopPropagation();
-                this.setCardSize(cardId, size);
-                menu.remove();
-                this.activeResizeMenuBtn = null;
-            };
-            menu.appendChild(item);
-        });
-        
-        document.body.appendChild(menu);
-        
-        setTimeout(() => {
-            const closeMenu = () => {
-                if (menu.parentNode) menu.parentNode.removeChild(menu);
-                App.UIManager.activeResizeMenuBtn = null;
-                document.removeEventListener('click', closeMenu);
-            };
-            document.addEventListener('click', closeMenu);
-        }, 0);
-    },
-
-    setCardSize: function(id, size) {
-        const card = this.dashboardCards.find(c => c.id === id);
-        if (card) {
-            card.colSpan = size;
-            this.saveCardOrder();
-            this.renderDashboard();
-            
-            const activeIds = App.FilterManager.activeRunFilters.length > 0 ? App.FilterManager.activeRunFilters : App.FilterManager.currentVisibleRunIds;
-            this.updateInsights(activeIds);
-            
-            const trendCard = this.dashboardCards.find(c => c.id === 'card_trend');
-            if (trendCard) {
-                 const runsData = App.DataStore.runStats.filter(r => activeIds.includes(r.id));
-                 this.renderTrendChart('trendChartSmall', runsData);
-            }
-        }
     },
 
     renderDashboard: function() {
@@ -191,7 +122,15 @@ window.App.UIManager = {
 
         if (this.dashboardCards.length === 0) this.initDashboardCards();
 
-        const cardsHtml = this.dashboardCards.map((card) => {
+        // Group cards by column
+        const columns = { 1: [], 2: [], 3: [], 4: [] };
+        
+        this.dashboardCards.forEach((card, index) => {
+            if (!card.gridColumn) card.gridColumn = (index % 4) + 1;
+            // Clamp column
+            if (card.gridColumn < 1) card.gridColumn = 1;
+            if (card.gridColumn > 4) card.gridColumn = 4;
+
             let cardHtml = '';
             // Regenerate data for custom cards on render
             if (card.isCustom && card.filterCriteria) {
@@ -204,43 +143,32 @@ window.App.UIManager = {
                 cardHtml = window.UI[card.type](card.props);
             }
             
-            return this.wrapCard(card, cardHtml);
-        }).join('');
+            columns[card.gridColumn].push(this.wrapCard(card, cardHtml));
+        });
 
-        container.innerHTML = cardsHtml;
+        let html = '';
+        for (let i = 1; i <= 4; i++) {
+            html += `<div class="dashboard-column" data-col="${i}">${columns[i].join('')}</div>`;
+        }
+        container.innerHTML = html;
 
         this.addDragListeners();
         
-        if (this._resizeObserver) this._resizeObserver.disconnect();
-        this._resizeObserver = new ResizeObserver(entries => {
-            entries.forEach(entry => {
-                const card = entry.target;
-                const wrapper = card.closest('.card-wrapper');
-                if (wrapper) {
-                    const span = Math.ceil(card.getBoundingClientRect().height + 16);
-                    wrapper.style.gridRowEnd = `span ${span}`;
-                }
-            });
-        });
-        container.querySelectorAll('.card').forEach(c => this._resizeObserver.observe(c));
+        if (this._resizeObserver) {
+            this._resizeObserver.disconnect();
+            this._resizeObserver = null;
+        }
     },
 
     wrapCard: function(card, innerHtml) {
         const extraClass = card.extraClasses || '';
-        const colSpan = card.colSpan || 1;
         const editBtn = card.isCustom ? 
             `<button class="btn-icon" onclick="App.UIManager.editCustomCard('${card.id}')" title="Edit Card" style="width: 20px; height: 20px;"><span class="material-symbols-outlined" style="font-size: 14px;">edit</span></button>` : '';
         
-        const resizeBtn = `
-            <button class="btn-icon" onclick="App.UIManager.toggleResizeMenu(event, '${card.id}')" title="Resize Card" style="width: 20px; height: 20px;"><span class="material-symbols-outlined" style="font-size: 14px;">aspect_ratio</span></button>
-        `;
-
         return `
-            <div class="card-wrapper ${extraClass}" data-id="${card.id}" style="position: relative; grid-column: span ${colSpan};">
+            <div class="card-wrapper ${extraClass}" data-id="${card.id}">
                 <div class="card-actions">
                     <span class="drag-handle material-symbols-outlined" draggable="true" title="Drag to reorder" style="font-size: 16px; color: var(--text-muted); padding: 2px;">drag_indicator</span>
-                    <div style="width: 1px; height: 16px; background: var(--border-color); margin: 0 4px;"></div>
-                    ${resizeBtn}
                     <div style="width: 1px; height: 16px; background: var(--border-color); margin: 0 4px;"></div>
                     ${editBtn}
                     <button class="btn-icon" onclick="App.UIManager.deleteCard('${card.id}')" title="Remove Card" style="width: 20px; height: 20px;">
@@ -302,8 +230,6 @@ window.App.UIManager = {
 
             // Setup placeholder
             placeholder.style.width = '100%';
-            placeholder.style.gridColumn = wrapper.style.gridColumn;
-            placeholder.style.gridRowEnd = wrapper.style.gridRowEnd;
             placeholder.style.height = rect.height + 'px';
             placeholder.className = 'card-placeholder ' + Array.from(wrapper.classList).filter(c => c !== 'card-wrapper' && c !== 'dragging').join(' ');
 
@@ -332,7 +258,6 @@ window.App.UIManager = {
             this.saveCardOrder();
         });
 
-        let lastUpdate = 0;
         container.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
@@ -349,71 +274,54 @@ window.App.UIManager = {
                 scrollDirection = 0;
             }
 
-            // Throttle layout updates
-            const now = Date.now();
-            if (now - lastUpdate < 30) return;
-            lastUpdate = now;
+            const column = e.target.closest('.dashboard-column');
+            if (!column) return;
 
-            const afterElement = this.getDragAfterElement(container, e.clientX, e.clientY);
+            const afterElement = this.getDragAfterElement(column, e.clientY);
             
             if (afterElement) {
                 if (placeholder.nextElementSibling === afterElement) return;
-                container.insertBefore(placeholder, afterElement);
+                column.insertBefore(placeholder, afterElement);
             } else {
-                if (placeholder.nextElementSibling !== null) {
-                    container.appendChild(placeholder);
-                }
+                column.appendChild(placeholder);
             }
         });
 
         container.dataset.listenersAttached = 'true';
     },
 
-    getDragAfterElement: function(container, x, y) {
-        const draggableElements = [...container.querySelectorAll('.card-wrapper:not(.dragging)')];
+    getDragAfterElement: function(column, y) {
+        const draggableElements = [...column.querySelectorAll('.card-wrapper:not(.dragging)')];
 
-        const closest = draggableElements.reduce((closest, child) => {
+        return draggableElements.reduce((closest, child) => {
             const box = child.getBoundingClientRect();
-            const centerX = box.left + box.width / 2;
-            const centerY = box.top + box.height / 2;
-            const dist = Math.hypot(x - centerX, y - centerY);
+            const offset = y - (box.top + box.height / 2);
             
-            if (dist < closest.dist) {
-                return { dist: dist, element: child, box: box };
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
             } else {
                 return closest;
             }
-        }, { dist: Number.POSITIVE_INFINITY });
-
-        if (!closest.element) return null;
-
-        const box = closest.box;
-        const centerX = box.left + box.width / 2;
-        const centerY = box.top + box.height / 2;
-        
-        // If cursor is significantly below or to the right of the center, insert after
-        const isAfter = (y > centerY + 20) || (Math.abs(y - centerY) < box.height/2 && x > centerX);
-
-        if (isAfter) {
-            return closest.element.nextElementSibling;
-        } else {
-            return closest.element;
-        }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
     },
 
     saveCardOrder: function() {
-
-
         const container = document.getElementById('insightsContent');
-        const wrappers = container.querySelectorAll('.card-wrapper');
+        const columns = container.querySelectorAll('.dashboard-column');
         const newCards = [];
         
-        wrappers.forEach(wrapper => {
-            const id = wrapper.dataset.id;
-            const card = this.dashboardCards.find(c => c.id === id);
-            if (card) {
-                newCards.push(card);
-            }
+        columns.forEach(col => {
+            const colIdx = parseInt(col.dataset.col);
+            const wrappers = col.querySelectorAll('.card-wrapper');
+            wrappers.forEach(wrapper => {
+                const id = wrapper.dataset.id;
+                const card = this.dashboardCards.find(c => c.id === id);
+                if (card) {
+                    card.gridColumn = colIdx;
+                    card.colSpan = 1;
+                    newCards.push(card);
+                }
+            });
         });
         this.dashboardCards = newCards;
         localStorage.setItem('dashboardCards', JSON.stringify(this.dashboardCards));
@@ -994,18 +902,19 @@ window.App.UIManager = {
         const effectiveRunIdsSet = new Set(effectiveRunIds);
         details = details.filter(d => effectiveRunIdsSet.has(d.runId));
 
-        if (FilterManager.advancedFilters.runId) details = details.filter(d => String(d.runId).includes(FilterManager.advancedFilters.runId));
-        if (FilterManager.advancedFilters.status) details = details.filter(d => d.status.toLowerCase() === FilterManager.advancedFilters.status.toLowerCase());
-        if (FilterManager.advancedFilters.startTimeMin) {
-            const min = Utils.parseTimeSeconds(FilterManager.advancedFilters.startTimeMin + ':00');
+        const adv = FilterManager.advancedFilters || {};
+        if (adv.runId) details = details.filter(d => String(d.runId).includes(adv.runId));
+        if (adv.status) details = details.filter(d => d.status.toLowerCase() === adv.status.toLowerCase());
+        if (adv.startTimeMin) {
+            const min = Utils.parseTimeSeconds(adv.startTimeMin + ':00');
             details = details.filter(d => d.start !== '-' && Utils.parseTimeSeconds(d.start) >= min);
         }
-        if (FilterManager.advancedFilters.startTimeMax) {
-            const max = Utils.parseTimeSeconds(FilterManager.advancedFilters.startTimeMax + ':59');
+        if (adv.startTimeMax) {
+            const max = Utils.parseTimeSeconds(adv.startTimeMax + ':59');
             details = details.filter(d => d.start !== '-' && Utils.parseTimeSeconds(d.start) <= max);
         }
-        if (FilterManager.advancedFilters.durationMin) {
-            const min = parseFloat(FilterManager.advancedFilters.durationMin);
+        if (adv.durationMin) {
+            const min = parseFloat(adv.durationMin);
             details = details.filter(d => {
                 if (d.start === '-' || d.end === '-') return false;
                 let dur = Utils.parseTimeSeconds(d.end) - Utils.parseTimeSeconds(d.start);
@@ -1013,8 +922,8 @@ window.App.UIManager = {
                 return dur >= min;
             });
         }
-        if (FilterManager.advancedFilters.durationMax) {
-            const max = parseFloat(FilterManager.advancedFilters.durationMax);
+        if (adv.durationMax) {
+            const max = parseFloat(adv.durationMax);
             details = details.filter(d => {
                 if (d.start === '-' || d.end === '-') return false;
                 let dur = Utils.parseTimeSeconds(d.end) - Utils.parseTimeSeconds(d.start);

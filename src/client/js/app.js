@@ -64,7 +64,7 @@ window.addEventListener('DOMContentLoaded', () => {
             });
         }
         try {
-            processJSON(testsText, false);
+            processJSON(testsText, true);
         } catch (err) {
             console.error(err);
         }
